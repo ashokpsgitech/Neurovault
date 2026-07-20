@@ -21,6 +21,13 @@ app:
     secret: 4035763074377938355668596D6235723D723930516D61365468576D5A713474
     expiration-ms: 86400000 # 24 hours
 
+neurovault:
+  storage:
+    base-dir: ./neurovault-storage
+  host:
+    heartbeat-check-interval-ms: 60000
+    heartbeat-miss-threshold: 3
+
 logging:
   level:
     org.springframework.security: INFO
