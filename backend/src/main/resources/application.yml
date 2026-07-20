@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: neurovault-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/neurovault
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+app:
+  jwt:
+    # Base64-encoded or raw secret key (at least 256-bit for HS256)
+    secret: 4035763074377938355668596D6235723D723930516D61365468576D5A713474
+    expiration-ms: 86400000 # 24 hours
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    com.neurovault.backend: DEBUG

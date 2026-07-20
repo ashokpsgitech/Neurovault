@@ -1,0 +1,43 @@
+# External Binaries and Distributions
+gradle-bin/
+*.zip
+*.tar.gz
+*.tgz
+
+# Gradle Build directories
+.gradle/
+**/build/
+**/out/
+**/bin/
+.gradletasknamecache
+
+# Compiled class files
+*.class
+
+# IDE & Editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+
+# System & OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.bak
+*.swp
+
+# Log Files
+*.log
+**/logs/
+
+# Sensitive data / Local Configs
+*.env
+.env.local
+application-local.yml
+application-local.properties
