@@ -26,3 +26,14 @@ logging:
     org.springframework.security: INFO
     org.springframework.web: INFO
     com.neurovault.backend: DEBUG
+
+neurovault:
+  engine:
+    temp-dir: ${java.io.tmpdir}/neurovault
+    chunk-size-bytes: 4194304
+    max-retry-count: 3
+    upload-session-ttl-hours: 1
+
+spring.servlet.multipart:
+  max-file-size: 500MB
+  max-request-size: 500MB
