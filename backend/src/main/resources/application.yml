@@ -15,6 +15,11 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
 app:
   jwt:
     # Base64-encoded or raw secret key (at least 256-bit for HS256)
@@ -27,6 +32,11 @@ neurovault:
   host:
     heartbeat-check-interval-ms: 60000
     heartbeat-miss-threshold: 3
+  engine:
+    temp-dir: ${java.io.tmpdir}/neurovault
+    chunk-size-bytes: 4194304
+    max-retry-count: 3
+    upload-session-ttl-hours: 1
 
 logging:
   level:
