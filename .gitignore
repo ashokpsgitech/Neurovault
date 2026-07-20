@@ -41,3 +41,6 @@ desktop.ini
 .env.local
 application-local.yml
 application-local.properties
+
+# Downloaded JDKs
+jdk-21.0.2/
