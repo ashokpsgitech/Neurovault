@@ -1,25 +1,26 @@
 package com.neurovault.backend.upload;
 
-import com.neurovault.backend.dto.UploadProgressResponse;
+import com.neurovault.backend.dto.UploadCompleteRequest;
+import com.neurovault.backend.dto.UploadPlanRequest;
+import com.neurovault.backend.dto.UploadPlanResponse;
 import com.neurovault.backend.dto.UploadResponse;
+import com.neurovault.backend.entity.Host;
 import com.neurovault.backend.entity.User;
-import com.neurovault.backend.repository.ChunkRepository;
-import com.neurovault.backend.repository.FileMetadataRepository;
-import com.neurovault.backend.repository.UploadSessionRepository;
-import com.neurovault.backend.repository.UserRepository;
+import com.neurovault.backend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for {@link UploadService}.
- * Uses H2 in-memory database.
+ * Integration tests for refactored Metadata-Only {@link UploadService}.
  */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:uploadtestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL",
@@ -39,6 +40,9 @@ class UploadServiceTest {
     private UserRepository userRepository;
 
     @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
     private FileMetadataRepository fileMetadataRepository;
 
     @Autowired
@@ -47,13 +51,19 @@ class UploadServiceTest {
     @Autowired
     private UploadSessionRepository uploadSessionRepository;
 
+    @Autowired
+    private ChunkReplicaRepository chunkReplicaRepository;
+
     private User testUser;
+    private Host testHost;
 
     @BeforeEach
     void setUp() {
+        chunkReplicaRepository.deleteAll();
         chunkRepository.deleteAll();
         fileMetadataRepository.deleteAll();
         uploadSessionRepository.deleteAll();
+        hostRepository.deleteAll();
         userRepository.deleteAll();
 
         testUser = User.builder()
@@ -63,83 +73,71 @@ class UploadServiceTest {
                 .role(User.Role.CLIENT)
                 .build();
         testUser = userRepository.save(testUser);
+
+        testHost = Host.builder()
+                .owner(testUser)
+                .name("test-host")
+                .deviceType("Laptop")
+                .operatingSystem("macOS")
+                .publicIp("192.168.1.100")
+                .totalCapacityBytes(5000000000L)
+                .reservedCapacityBytes(1000000000L)
+                .usedCapacityBytes(0L)
+                .heartbeatIntervalSeconds(30)
+                .status(Host.Status.ONLINE)
+                .build();
+        testHost = hostRepository.save(testHost);
     }
 
     @Test
-    @DisplayName("initiateUpload should complete full pipeline successfully")
-    void testInitiateUpload_Success() {
-        byte[] content = "Hello, NeuroVault! This is a test file for upload.".getBytes();
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "test.txt", "text/plain", content);
+    @DisplayName("createUploadPlan should generate target host allocations and tokens")
+    void testCreateUploadPlan_Success() {
+        UploadPlanRequest request = UploadPlanRequest.builder()
+                .filename("plan-test.dat")
+                .fileSize(10485760L)
+                .totalChunks(3)
+                .checksum("sha256checksum")
+                .build();
 
-        UploadResponse response = uploadService.initiateUpload(file, testUser);
+        UploadPlanResponse plan = uploadService.createUploadPlan(request, testUser);
+
+        assertNotNull(plan);
+        assertNotNull(plan.getUploadSessionId());
+        assertEquals("plan-test.dat", plan.getFilename());
+        assertEquals(3, plan.getChunkAllocations().size());
+        assertNotNull(plan.getChunkAllocations().get(0).getChunkToken());
+    }
+
+    @Test
+    @DisplayName("completeUpload should finalize file metadata and chunk records")
+    void testCompleteUpload_Success() {
+        UploadPlanRequest planReq = UploadPlanRequest.builder()
+                .filename("complete-test.dat")
+                .fileSize(4194304L)
+                .totalChunks(1)
+                .checksum("sha256checksum")
+                .build();
+
+        UploadPlanResponse plan = uploadService.createUploadPlan(planReq, testUser);
+
+        UploadCompleteRequest completeReq = UploadCompleteRequest.builder()
+                .uploadSessionId(plan.getUploadSessionId())
+                .encryptedAesKey("encryptedAesEnvelope")
+                .uploadedChunks(List.of(
+                        UploadCompleteRequest.UploadedChunkSummary.builder()
+                                .chunkIndex(0)
+                                .chunkId(UUID.randomUUID())
+                                .chunkHash("chunk0hash")
+                                .sizeBytes(4194304L)
+                                .hostId(testHost.getId())
+                                .build()
+                ))
+                .build();
+
+        UploadResponse response = uploadService.completeUpload(completeReq, testUser);
 
         assertNotNull(response);
-        assertNotNull(response.getUploadId());
-        assertNotNull(response.getFileId());
-        assertEquals("test.txt", response.getFileName());
-        assertEquals(content.length, response.getFileSize());
-        assertTrue(response.getTotalChunks() >= 1);
         assertEquals("COMPLETED", response.getStatus());
-        assertNotNull(response.getEncryptedAesKey());
-        assertFalse(response.getEncryptedAesKey().isEmpty());
-    }
-
-    @Test
-    @DisplayName("initiateUpload should persist file metadata and chunks")
-    void testInitiateUpload_PersistsData() {
-        byte[] content = "Persistence test data".getBytes();
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "persist.txt", "text/plain", content);
-
-        UploadResponse response = uploadService.initiateUpload(file, testUser);
-
-        // Verify file metadata is persisted
         assertTrue(fileMetadataRepository.findById(response.getFileId()).isPresent());
-
-        // Verify chunks are persisted
-        var chunks = chunkRepository.findByFileId(response.getFileId());
-        assertEquals(response.getTotalChunks(), chunks.size());
-
-        // Verify upload session is persisted
-        assertTrue(uploadSessionRepository.findById(response.getUploadId()).isPresent());
-    }
-
-    @Test
-    @DisplayName("getProgress should return correct progress information")
-    void testGetProgress() {
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "progress.txt", "text/plain", "Progress tracking test".getBytes());
-
-        UploadResponse uploadResponse = uploadService.initiateUpload(file, testUser);
-        UploadProgressResponse progress = uploadService.getProgress(uploadResponse.getUploadId());
-
-        assertNotNull(progress);
-        assertEquals(uploadResponse.getUploadId(), progress.getUploadId());
-        assertEquals("progress.txt", progress.getFileName());
-        assertTrue(progress.getTotalChunks() >= 1);
-        assertEquals("COMPLETED", progress.getStatus());
-    }
-
-    @Test
-    @DisplayName("cancelUpload should mark session as FAILED")
-    void testCancelUpload() {
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "cancel.txt", "text/plain", "Cancel test".getBytes());
-
-        UploadResponse response = uploadService.initiateUpload(file, testUser);
-
-        // Since upload completes immediately in simulation, we can't cancel a completed one.
-        // Verify that cancelling a completed upload throws BadRequestException
-        assertThrows(Exception.class, () -> uploadService.cancelUpload(response.getUploadId()));
-    }
-
-    @Test
-    @DisplayName("initiateUpload with empty file should throw BadRequestException")
-    void testInitiateUpload_EmptyFile() {
-        MockMultipartFile emptyFile = new MockMultipartFile(
-                "file", "empty.txt", "text/plain", new byte[0]);
-
-        assertThrows(Exception.class, () -> uploadService.initiateUpload(emptyFile, testUser));
     }
 }

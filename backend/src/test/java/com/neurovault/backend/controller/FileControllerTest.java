@@ -1,11 +1,12 @@
 package com.neurovault.backend.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.neurovault.backend.dto.UploadCompleteRequest;
+import com.neurovault.backend.dto.UploadPlanRequest;
+import com.neurovault.backend.dto.UploadPlanResponse;
+import com.neurovault.backend.entity.Host;
 import com.neurovault.backend.entity.User;
-import com.neurovault.backend.repository.ChunkRepository;
-import com.neurovault.backend.repository.DownloadSessionRepository;
-import com.neurovault.backend.repository.FileMetadataRepository;
-import com.neurovault.backend.repository.UploadSessionRepository;
-import com.neurovault.backend.repository.UserRepository;
+import com.neurovault.backend.repository.*;
 import com.neurovault.backend.security.JwtUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,19 +15,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Integration tests for {@link FileController} REST endpoints.
- * Uses H2 in-memory database and authenticated JWT tokens.
+ * Integration tests for refactored Metadata-Only {@link FileController} REST endpoints.
  */
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:filetestdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL",
@@ -47,6 +49,9 @@ class FileControllerTest {
     private UserRepository userRepository;
 
     @Autowired
+    private HostRepository hostRepository;
+
+    @Autowired
     private FileMetadataRepository fileMetadataRepository;
 
     @Autowired
@@ -59,20 +64,29 @@ class FileControllerTest {
     private DownloadSessionRepository downloadSessionRepository;
 
     @Autowired
+    private ChunkReplicaRepository chunkReplicaRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     private User testUser;
+    private Host testHost;
     private String jwtToken;
 
     @BeforeEach
     void setUp() {
+        chunkReplicaRepository.deleteAll();
         downloadSessionRepository.deleteAll();
         chunkRepository.deleteAll();
         fileMetadataRepository.deleteAll();
         uploadSessionRepository.deleteAll();
+        hostRepository.deleteAll();
         userRepository.deleteAll();
 
         testUser = User.builder()
@@ -83,94 +97,104 @@ class FileControllerTest {
                 .build();
         testUser = userRepository.save(testUser);
 
-        // Generate JWT token for the test user (subject is email)
+        testHost = Host.builder()
+                .owner(testUser)
+                .name("test-host-node")
+                .deviceType("Desktop")
+                .operatingSystem("Linux")
+                .publicIp("127.0.0.1")
+                .totalCapacityBytes(10737418240L)
+                .reservedCapacityBytes(5368709120L)
+                .usedCapacityBytes(0L)
+                .heartbeatIntervalSeconds(30)
+                .status(Host.Status.ONLINE)
+                .build();
+        testHost = hostRepository.save(testHost);
+
         jwtToken = jwtUtils.generateToken(testUser.getEmail());
     }
 
     @Test
-    @DisplayName("POST /api/files/upload should succeed with authenticated user")
-    void testUploadFile_Authenticated() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "test-upload.txt", "text/plain",
-                "File content for controller test".getBytes());
+    @DisplayName("POST /api/files/upload-plan should return target host allocations and tokens")
+    void testRequestUploadPlan_Authenticated() throws Exception {
+        UploadPlanRequest request = UploadPlanRequest.builder()
+                .filename("test-file.dat")
+                .fileSize(8388608L)
+                .totalChunks(2)
+                .checksum("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+                .build();
 
-        mockMvc.perform(multipart("/api/files/upload")
-                        .file(file)
+        mockMvc.perform(post("/api/files/upload-plan")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.uploadId", notNullValue()))
-                .andExpect(jsonPath("$.fileId", notNullValue()))
-                .andExpect(jsonPath("$.fileName", is("test-upload.txt")))
-                .andExpect(jsonPath("$.totalChunks", greaterThanOrEqualTo(1)))
-                .andExpect(jsonPath("$.status", is("COMPLETED")))
-                .andExpect(jsonPath("$.encryptedAesKey", notNullValue()));
+                .andExpect(jsonPath("$.uploadSessionId", notNullValue()))
+                .andExpect(jsonPath("$.filename", is("test-file.dat")))
+                .andExpect(jsonPath("$.totalChunks", is(2)))
+                .andExpect(jsonPath("$.chunkAllocations", hasSize(2)))
+                .andExpect(jsonPath("$.chunkAllocations[0].chunkToken", notNullValue()));
     }
 
     @Test
-    @DisplayName("POST /api/files/upload should reject unauthenticated request")
-    void testUploadFile_Unauthenticated() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "test.txt", "text/plain", "Content".getBytes());
+    @DisplayName("POST /api/files/upload-plan should reject unauthenticated request")
+    void testRequestUploadPlan_Unauthenticated() throws Exception {
+        UploadPlanRequest request = UploadPlanRequest.builder()
+                .filename("unauth.dat")
+                .fileSize(1024L)
+                .totalChunks(1)
+                .checksum("dummy")
+                .build();
 
-        mockMvc.perform(multipart("/api/files/upload")
-                        .file(file))
+        mockMvc.perform(post("/api/files/upload-plan")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("GET /api/files/progress/{uploadId} should return progress info")
-    void testGetProgress() throws Exception {
-        // First upload a file
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "progress-test.txt", "text/plain",
-                "Progress tracking content".getBytes());
+    @DisplayName("POST /api/files/upload-complete should finalize metadata")
+    void testCompleteUpload() throws Exception {
+        // Step 1: Request upload plan
+        UploadPlanRequest planReq = UploadPlanRequest.builder()
+                .filename("complete-test.dat")
+                .fileSize(4194304L)
+                .totalChunks(1)
+                .checksum("dummyhash")
+                .build();
 
-        MvcResult uploadResult = mockMvc.perform(multipart("/api/files/upload")
-                        .file(file)
+        MvcResult planResult = mockMvc.perform(post("/api/files/upload-plan")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(planReq))
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isCreated())
                 .andReturn();
 
-        // Extract uploadId from response
-        String responseBody = uploadResult.getResponse().getContentAsString();
-        String uploadId = com.jayway.jsonpath.JsonPath.read(responseBody, "$.uploadId");
+        UploadPlanResponse planResp = objectMapper.readValue(
+                planResult.getResponse().getContentAsString(), UploadPlanResponse.class);
 
-        // Get progress
-        mockMvc.perform(get("/api/files/progress/" + uploadId)
+        // Step 2: Send completion notification
+        UploadCompleteRequest completeReq = UploadCompleteRequest.builder()
+                .uploadSessionId(planResp.getUploadSessionId())
+                .encryptedAesKey("base64EncryptedAesKeyEnvelope")
+                .uploadedChunks(List.of(
+                        UploadCompleteRequest.UploadedChunkSummary.builder()
+                                .chunkIndex(0)
+                                .chunkId(UUID.randomUUID())
+                                .chunkHash("chunk0hash")
+                                .sizeBytes(4194304L)
+                                .hostId(testHost.getId())
+                                .build()
+                ))
+                .build();
+
+        mockMvc.perform(post("/api/files/upload-complete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(completeReq))
                         .header("Authorization", "Bearer " + jwtToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.uploadId", is(uploadId)))
-                .andExpect(jsonPath("$.fileName", is("progress-test.txt")))
-                .andExpect(jsonPath("$.status", notNullValue()));
-    }
-
-    @Test
-    @DisplayName("DELETE /api/files/cancel/{uploadId} on completed upload should return error")
-    void testCancelUpload_CompletedUpload() throws Exception {
-        // Upload a file (completes immediately)
-        MockMultipartFile file = new MockMultipartFile(
-                "file", "cancel-test.txt", "text/plain", "Cancel test".getBytes());
-
-        MvcResult uploadResult = mockMvc.perform(multipart("/api/files/upload")
-                        .file(file)
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isCreated())
-                .andReturn();
-
-        String uploadId = com.jayway.jsonpath.JsonPath.read(
-                uploadResult.getResponse().getContentAsString(), "$.uploadId");
-
-        // Try to cancel a completed upload — should fail
-        mockMvc.perform(delete("/api/files/cancel/" + uploadId)
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("GET /api/files/progress/{uploadId} with invalid ID should return 404")
-    void testGetProgress_InvalidId() throws Exception {
-        mockMvc.perform(get("/api/files/progress/00000000-0000-0000-0000-000000000000")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isNotFound());
+                .andExpect(jsonPath("$.uploadId", is(planResp.getUploadSessionId().toString())))
+                .andExpect(jsonPath("$.fileId", notNullValue()))
+                .andExpect(jsonPath("$.status", is("COMPLETED")));
     }
 }

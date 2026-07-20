@@ -1,31 +1,27 @@
 package com.neurovault.backend.controller;
 
-import com.neurovault.backend.dto.DownloadResponse;
-import com.neurovault.backend.dto.UploadProgressResponse;
-import com.neurovault.backend.dto.UploadResponse;
+import com.neurovault.backend.dto.*;
 import com.neurovault.backend.download.DownloadService;
 import com.neurovault.backend.entity.User;
 import com.neurovault.backend.exception.ResourceNotFoundException;
 import com.neurovault.backend.repository.UserRepository;
 import com.neurovault.backend.upload.UploadService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
 /**
- * REST controller exposing the file upload, download, progress, retry, and cancel endpoints.
+ * Control Plane REST Controller exposing Metadata Coordination endpoints for upload and download planning.
  *
- * <p>All endpoints require JWT authentication. The authenticated user is resolved
- * from the Security Context via their email (the JWT subject).</p>
+ * <p>Strict Metadata-Only Architecture:
+ * The Coordinator handles metadata, host planning, and session verification.
+ * File bytes, encryption streams, and private keys NEVER pass through this controller.</p>
  */
 @RestController
 @RequestMapping("/api/files")
@@ -46,48 +42,54 @@ public class FileController {
     }
 
     /**
-     * Uploads a file. The file is encrypted, chunked, and persisted.
+     * Requests an upload plan from the Coordinator.
+     * Returns assigned target host node endpoints and signed chunk authorization tokens.
      *
-     * @param file the multipart file to upload
-     * @return the upload response with session and file metadata
+     * @param request metadata request from client
+     * @return upload plan response
      */
-    @PostMapping("/upload")
-    public ResponseEntity<UploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
+    @PostMapping("/upload-plan")
+    public ResponseEntity<UploadPlanResponse> requestUploadPlan(@Valid @RequestBody UploadPlanRequest request) {
         User user = getAuthenticatedUser();
-        log.info("Upload request from user {} for file '{}'", user.getId(), file.getOriginalFilename());
+        log.info("Upload plan request from user {} for file '{}'", user.getId(), request.getFilename());
 
-        UploadResponse response = uploadService.initiateUpload(file, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        UploadPlanResponse plan = uploadService.createUploadPlan(request, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(plan);
     }
 
     /**
-     * Downloads a file by its file ID. Requires the RSA private key to unwrap the AES key.
+     * Finalizes upload metadata after the client completes direct chunk uploads to host nodes.
      *
-     * @param fileId     the file metadata ID
-     * @param privateKey the Base64-encoded RSA private key (sent as a request header)
-     * @return the decrypted original file as a binary download
+     * @param request completion request containing encrypted AES key and chunk hashes
+     * @return upload completion response
      */
-    @GetMapping("/download/{fileId}")
-    public ResponseEntity<Resource> downloadFile(
-            @PathVariable UUID fileId,
-            @RequestHeader("X-Private-Key") String privateKey) {
-
+    @PostMapping("/upload-complete")
+    public ResponseEntity<UploadResponse> completeUpload(@Valid @RequestBody UploadCompleteRequest request) {
         User user = getAuthenticatedUser();
-        log.info("Download request from user {} for file {}", user.getId(), fileId);
+        log.info("Upload completion request from user {} for session {}", user.getId(), request.getUploadSessionId());
 
-        Resource resource = downloadService.downloadFile(fileId, user, privateKey);
-
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"download\"")
-                .body(resource);
+        UploadResponse response = uploadService.completeUpload(request, user);
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * Returns the current progress of an upload session.
+     * Requests a download plan from the Coordinator.
+     * Returns host chunk locations, chunk hashes, signed download tokens, and the encrypted AES key envelope.
      *
-     * @param uploadId the upload session ID
-     * @return the progress response
+     * @param fileId the metadata file ID
+     * @return download plan response
+     */
+    @PostMapping("/download-plan/{fileId}")
+    public ResponseEntity<DownloadPlanResponse> requestDownloadPlan(@PathVariable UUID fileId) {
+        User user = getAuthenticatedUser();
+        log.info("Download plan request from user {} for file {}", user.getId(), fileId);
+
+        DownloadPlanResponse plan = downloadService.createDownloadPlan(fileId, user);
+        return ResponseEntity.ok(plan);
+    }
+
+    /**
+     * Returns progress for an upload session.
      */
     @GetMapping("/progress/{uploadId}")
     public ResponseEntity<UploadProgressResponse> getUploadProgress(@PathVariable UUID uploadId) {
@@ -96,25 +98,7 @@ public class FileController {
     }
 
     /**
-     * Retries failed chunk uploads for a session.
-     *
-     * @param uploadId the upload session ID
-     * @return the updated upload response
-     */
-    @PostMapping("/retry/{uploadId}")
-    public ResponseEntity<UploadResponse> retryUpload(@PathVariable UUID uploadId) {
-        User user = getAuthenticatedUser();
-        log.info("Retry request from user {} for upload {}", user.getId(), uploadId);
-
-        UploadResponse response = uploadService.retryUpload(uploadId);
-        return ResponseEntity.ok(response);
-    }
-
-    /**
      * Cancels an upload session.
-     *
-     * @param uploadId the upload session ID
-     * @return 200 OK on success
      */
     @DeleteMapping("/cancel/{uploadId}")
     public ResponseEntity<Void> cancelUpload(@PathVariable UUID uploadId) {
@@ -126,11 +110,7 @@ public class FileController {
     }
 
     /**
-     * Resolves the currently authenticated user from the Security Context.
-     * The JWT subject is the user's email.
-     *
-     * @return the authenticated {@link User} entity
-     * @throws ResourceNotFoundException if the user cannot be found
+     * Resolves the authenticated user from the Security Context.
      */
     private User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
