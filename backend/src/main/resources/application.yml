@@ -26,3 +26,11 @@ logging:
     org.springframework.security: INFO
     org.springframework.web: INFO
     com.neurovault.backend: DEBUG
+
+neurovault:
+  replication:
+    factor: 3
+    heartbeat-timeout-seconds: 90
+    low-storage-threshold-percent: 10
+    max-concurrent-repairs: 5
+    scheduler-interval-ms: 30000
