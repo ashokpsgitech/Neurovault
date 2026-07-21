@@ -2,6 +2,7 @@ package com.neurovault.backend.host.scheduler;
 
 import com.neurovault.backend.entity.Host;
 import com.neurovault.backend.host.service.HeartbeatService;
+import com.neurovault.backend.replication.service.SelfHealingService;
 import com.neurovault.backend.repository.HostRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +16,7 @@ import java.util.List;
 /**
  * Scheduled task that periodically checks all ONLINE hosts and marks them
  * as OFFLINE if they have missed too many consecutive heartbeats.
- *
- * <p>The check interval and miss threshold are configurable via application properties:
- * <ul>
- *   <li>{@code neurovault.host.heartbeat-check-interval-ms} — how often this check runs (default: 60000ms)</li>
- *   <li>{@code neurovault.host.heartbeat-miss-threshold} — how many intervals a host can miss before going OFFLINE (default: 3)</li>
- * </ul>
+ * Triggers self-healing repairs when a host drops offline.
  */
 @Component
 public class HeartbeatScheduler {
@@ -29,13 +25,18 @@ public class HeartbeatScheduler {
 
     private final HostRepository hostRepository;
     private final HeartbeatService heartbeatService;
+    private final SelfHealingService selfHealingService;
 
     @Value("${neurovault.host.heartbeat-miss-threshold:3}")
     private int heartbeatMissThreshold;
 
-    public HeartbeatScheduler(HostRepository hostRepository, HeartbeatService heartbeatService) {
+    public HeartbeatScheduler(
+            HostRepository hostRepository,
+            HeartbeatService heartbeatService,
+            SelfHealingService selfHealingService) {
         this.hostRepository = hostRepository;
         this.heartbeatService = heartbeatService;
+        this.selfHealingService = selfHealingService;
     }
 
     /**
@@ -60,7 +61,6 @@ public class HeartbeatScheduler {
         for (Host host : onlineHosts) {
             LocalDateTime lastHeartbeat = host.getLastHeartbeat();
 
-            // If the host has never sent a heartbeat, use its creation time
             if (lastHeartbeat == null) {
                 lastHeartbeat = host.getCreatedAt();
             }
@@ -75,7 +75,12 @@ public class HeartbeatScheduler {
         }
 
         if (staleCount > 0) {
-            log.info("Marked {} host(s) as OFFLINE due to missed heartbeats", staleCount);
+            log.info("Marked {} host(s) as OFFLINE due to missed heartbeats. Initiating self-healing repair cycle...", staleCount);
+            try {
+                selfHealingService.runHealingCycle();
+            } catch (Exception e) {
+                log.error("Error running self-healing cycle after host failure: {}", e.getMessage(), e);
+            }
         }
     }
 }

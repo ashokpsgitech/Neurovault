@@ -5,6 +5,7 @@ import com.neurovault.backend.dto.*;
 import com.neurovault.backend.entity.*;
 import com.neurovault.backend.exception.BadRequestException;
 import com.neurovault.backend.exception.ResourceNotFoundException;
+import com.neurovault.backend.replication.service.ReplicationService;
 import com.neurovault.backend.repository.ChunkReplicaRepository;
 import com.neurovault.backend.repository.ChunkRepository;
 import com.neurovault.backend.repository.FileMetadataRepository;
@@ -37,6 +38,7 @@ public class UploadService {
     private final ChunkReplicaRepository chunkReplicaRepository;
     private final HostRepository hostRepository;
     private final StorageContainerRepository containerRepository;
+    private final ReplicationService replicationService;
 
     public UploadService(
             CoordinatorService coordinatorService,
@@ -45,7 +47,8 @@ public class UploadService {
             ChunkRepository chunkRepository,
             ChunkReplicaRepository chunkReplicaRepository,
             HostRepository hostRepository,
-            StorageContainerRepository containerRepository) {
+            StorageContainerRepository containerRepository,
+            ReplicationService replicationService) {
         this.coordinatorService = coordinatorService;
         this.sessionManager = sessionManager;
         this.fileMetadataRepository = fileMetadataRepository;
@@ -53,6 +56,7 @@ public class UploadService {
         this.chunkReplicaRepository = chunkReplicaRepository;
         this.hostRepository = hostRepository;
         this.containerRepository = containerRepository;
+        this.replicationService = replicationService;
     }
 
     /**
@@ -68,7 +72,7 @@ public class UploadService {
         log.info("Creating upload plan for file '{}' ({} bytes, {} chunks) for user {}",
                 request.getFilename(), request.getFileSize(), request.getTotalChunks(), user.getId());
 
-        // 1. Select active online hosts from host registry
+        // 1. Select active online hosts from host registry using weighted placement strategy
         List<Host> targetHosts = coordinatorService.selectTargetHosts(request.getTotalChunks());
 
         // 2. Create upload session
@@ -112,6 +116,7 @@ public class UploadService {
 
     /**
      * Finalizes upload metadata once the client completes direct chunk streaming to host storage nodes.
+     * Enforces replication factor assignment via ReplicationService.
      *
      * @param request completion payload containing encrypted AES key and chunk hashes
      * @param user    authenticated user
@@ -139,7 +144,7 @@ public class UploadService {
 
         FileMetadata savedFile = fileMetadataRepository.save(fileMetadata);
 
-        // 2. Create and persist Chunk and ChunkReplica metadata records
+        // 2. Create and persist Chunk and ChunkReplica metadata records via ReplicationService
         for (UploadCompleteRequest.UploadedChunkSummary chunkSummary : request.getUploadedChunks()) {
             Chunk chunkEntity = Chunk.builder()
                     .file(savedFile)
@@ -152,16 +157,7 @@ public class UploadService {
             Chunk savedChunk = chunkRepository.save(chunkEntity);
 
             if (chunkSummary.getHostId() != null) {
-                Host host = hostRepository.findById(chunkSummary.getHostId()).orElse(null);
-                if (host != null) {
-                    ChunkReplica replica = ChunkReplica.builder()
-                            .chunk(savedChunk)
-                            .host(host)
-                            .containerOffsetBytes(0L)
-                            .status(ChunkReplica.Status.ACTIVE)
-                            .build();
-                    chunkReplicaRepository.save(replica);
-                }
+                replicationService.assignReplicas(savedChunk.getId(), List.of(chunkSummary.getHostId()));
             }
         }
 

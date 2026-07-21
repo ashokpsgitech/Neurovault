@@ -2,12 +2,14 @@ package com.neurovault.backend.coordinator;
 
 import com.neurovault.backend.entity.Host;
 import com.neurovault.backend.exception.BadRequestException;
+import com.neurovault.backend.replication.service.HostSelectionStrategy;
 import com.neurovault.backend.repository.HostRepository;
 import com.neurovault.backend.security.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,30 +24,42 @@ public class CoordinatorService {
     private static final Logger log = LoggerFactory.getLogger(CoordinatorService.class);
 
     private final HostRepository hostRepository;
+    private final HostSelectionStrategy hostSelectionStrategy;
     private final JwtUtils jwtUtils;
 
-    public CoordinatorService(HostRepository hostRepository, JwtUtils jwtUtils) {
+    public CoordinatorService(
+            HostRepository hostRepository,
+            HostSelectionStrategy hostSelectionStrategy,
+            JwtUtils jwtUtils) {
         this.hostRepository = hostRepository;
+        this.hostSelectionStrategy = hostSelectionStrategy;
         this.jwtUtils = jwtUtils;
     }
 
     /**
-     * Selects online host devices available to store chunk blocks.
+     * Selects online host devices available to store chunk blocks using the weighted score host placement strategy.
      *
      * @param totalChunks required number of chunk allocations
      * @return list of active online hosts
      */
     public List<Host> selectTargetHosts(int totalChunks) {
-        List<Host> onlineHosts = hostRepository.findAll().stream()
-                .filter(h -> h.getStatus() == Host.Status.ONLINE)
-                .collect(Collectors.toList());
+        List<Host> selected = hostSelectionStrategy.selectHosts(
+                totalChunks, 4194304L, Collections.emptySet());
 
-        if (onlineHosts.isEmpty()) {
-            throw new BadRequestException("No online host nodes currently available in the storage network.");
+        if (selected.isEmpty()) {
+            List<Host> onlineHosts = hostRepository.findAll().stream()
+                    .filter(h -> h.getStatus() == Host.Status.ONLINE)
+                    .collect(Collectors.toList());
+
+            if (onlineHosts.isEmpty()) {
+                throw new BadRequestException("No online host nodes currently available in the storage network.");
+            }
+            selected = onlineHosts;
         }
 
-        log.info("Selected {} online target host nodes for {} chunk allocations", onlineHosts.size(), totalChunks);
-        return onlineHosts;
+        log.info("Selected {} target host nodes using strategy '{}' for {} chunk allocations",
+                selected.size(), hostSelectionStrategy.getStrategyName(), totalChunks);
+        return selected;
     }
 
     /**

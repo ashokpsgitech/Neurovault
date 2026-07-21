@@ -10,11 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 /**
  * Controller exposing REST API endpoints for user registration and authentication login.
+ * Supports both /api/auth and /api/v1/auth mappings for complete client compatibility.
  */
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping({"/api/auth", "/api/v1/auth"})
 public class AuthController {
 
     private final AuthService authService;
@@ -39,5 +42,14 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Endpoint to fetch current authenticated user profile.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> me(Principal principal) {
+        UserDto currentUser = authService.getCurrentUser(principal.getName());
+        return ResponseEntity.ok(currentUser);
     }
 }

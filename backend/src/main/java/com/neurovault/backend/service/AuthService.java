@@ -84,6 +84,15 @@ public class AuthService {
                 .build();
     }
 
+    /**
+     * Fetches current authenticated user profile by email.
+     */
+    public UserDto getCurrentUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        return mapToDto(user);
+    }
+
     private UserDto mapToDto(User user) {
         return UserDto.builder()
                 .id(user.getId())
