@@ -53,6 +53,7 @@ Neurovault decouples file management into a high-availability micro-server topol
 │       │   └── resources/
 │       │       └── application.yml # Environment and database configuration
 │       └── test/                  # Unit and integration test suite
+└── DOCUMENTATION.md           # Deep-dive architecture and design guide
 └── README.md
 ```
 
@@ -60,13 +61,25 @@ Neurovault decouples file management into a high-availability micro-server topol
 
 ## 📡 API Reference Summary
 
-### Authentication (`/api/auth`)
+### Authentication (`/api/auth` or `/api/v1/auth`)
 
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/register` | Register a new user | ❌ No |
-| `POST` | `/api/auth/login` | Authenticate user and receive JWT token | ❌ No |
-| `GET` | `/api/auth/me` | Fetch authenticated user details | ✅ Yes (Bearer Token) |
+| `POST` | `/api/v1/auth/register` | Register a new user | ❌ No |
+| `POST` | `/api/v1/auth/login` | Authenticate user and receive JWT token | ❌ No |
+| `GET` | `/api/v1/auth/me` | Fetch authenticated user details | ✅ Yes (Bearer Token) |
+
+### Cluster Management & Monitoring (`/api/cluster`)
+
+| Method | Endpoint | Description | Auth Required |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/cluster/status` | Fetch cluster summary statistics | ✅ Yes |
+| `GET` | `/api/cluster/hosts` | List status and health of all hosts | ✅ Yes |
+| `GET` | `/api/cluster/replicas` | Fetch placement info for all chunk replicas | ✅ Yes |
+| `POST` | `/api/cluster/repair` | Manually trigger self-healing recovery scan | ✅ Yes |
+| `GET` | `/api/cluster/health` | Get overall cluster health level and active issues | ✅ Yes |
+
+For details on self-healing workflows, replication algorithms, and load-balancing strategies, check [DOCUMENTATION.md](file:///c:/Users/Sri%20Ashwin/OneDrive/Desktop/neurovault/Neurovault/DOCUMENTATION.md).
 
 ---
 

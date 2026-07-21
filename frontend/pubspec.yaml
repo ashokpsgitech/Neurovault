@@ -1,0 +1,32 @@
+name: neurovault_frontend
+description: "NeuroVault - Secure Distributed Mobile Micro-Server Storage Platform (Flutter Client)"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management & Routing
+  flutter_riverpod: ^2.5.1
+  go_router: ^14.2.0
+
+  # Networking & Persistence
+  dio: ^5.4.3+1
+  flutter_secure_storage: ^9.2.2
+
+  # UI & Styling
+  google_fonts: ^6.2.1
+  intl: ^0.19.0
+  cupertino_icons: ^1.0.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

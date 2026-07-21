@@ -3,6 +3,8 @@ gradle-bin/
 *.zip
 *.tar.gz
 *.tgz
+.gradle-dist/
+jdk-21.0.2/
 
 # Gradle Build directories
 .gradle/
@@ -41,6 +43,3 @@ desktop.ini
 .env.local
 application-local.yml
 application-local.properties
-
-# Downloaded JDKs
-jdk-21.0.2/

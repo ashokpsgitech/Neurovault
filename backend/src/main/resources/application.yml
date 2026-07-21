@@ -37,6 +37,12 @@ neurovault:
     chunk-size-bytes: 4194304
     max-retry-count: 3
     upload-session-ttl-hours: 1
+  replication:
+    factor: 3
+    heartbeat-timeout-seconds: 90
+    low-storage-threshold-percent: 10
+    max-concurrent-repairs: 5
+    scheduler-interval-ms: 30000
 
 logging:
   level:
