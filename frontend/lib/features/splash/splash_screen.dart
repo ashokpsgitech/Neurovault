@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../../providers/core_providers.dart';
+import '../authentication/providers/auth_provider.dart';
+import '../authentication/providers/auth_state.dart';
 
 /// Animated Splash Screen that verifies stored JWT tokens and initializes session.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -17,26 +18,26 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthSession();
+    _initSession();
   }
 
-  Future<void> _checkAuthSession() async {
+  Future<void> _initSession() async {
     await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-
-    final storage = ref.read(secureStorageProvider);
-    final token = await storage.getToken();
-
-    if (token != null && token.isNotEmpty) {
-      context.go('/dashboard');
-    } else {
-      context.go('/login');
-    }
+    await ref.read(authStateProvider.notifier).checkAuthStatus();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    ref.listen<AuthState>(authStateProvider, (previous, next) {
+      if (next is Authenticated) {
+        context.go('/dashboard');
+      } else if (next is Unauthenticated || next is AuthError) {
+        context.go('/login');
+      }
+    });
 
     return Scaffold(
       body: Container(
