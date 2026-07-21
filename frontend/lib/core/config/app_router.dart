@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/register_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../../features/files/screens/file_manager_screen.dart';
 import '../../features/host/screens/host_screen.dart';
+import '../../features/settings/screens/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 /// App router configuration using go_router.
@@ -31,20 +33,13 @@ final GoRouter appRouter = GoRouter(
       path: '/host',
       builder: (context, state) => const HostScreen(),
     ),
+    GoRoute(
+      path: '/files',
+      builder: (context, state) => const FileManagerScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const SettingsScreen(),
+    ),
   ],
 );
-
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
-      ),
-    );
-  }
-}

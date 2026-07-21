@@ -335,16 +335,16 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildQuickActionsGrid(BuildContext context, bool isDesktop) {
     final actions = [
       _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
-        CustomSnackbar.showSuccess(context, 'Upload workflow starting (Phase 4)');
+        context.go('/files');
       }),
       _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
-        CustomSnackbar.showSuccess(context, 'Download workflow starting (Phase 5)');
+        context.go('/files');
       }),
       _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
         context.go('/host');
       }),
       _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
-        CustomSnackbar.showSuccess(context, 'Settings UI (Phase 5)');
+        context.go('/settings');
       }),
     ];
 
