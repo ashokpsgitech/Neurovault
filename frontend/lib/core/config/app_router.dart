@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/register_screen.dart';
+import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 /// App router configuration using go_router.
@@ -23,7 +24,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/dashboard',
-      builder: (context, state) => const PlaceholderScreen(title: 'Dashboard Screen (Phase 3)'),
+      builder: (context, state) => const DashboardScreen(),
     ),
   ],
 );
@@ -37,16 +38,7 @@ class PlaceholderScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.dashboard_customize_outlined, size: 64, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            const Text('Authentication Module Complete & Authenticated!'),
-          ],
-        ),
+        child: Text(title, style: Theme.of(context).textTheme.headlineMedium),
       ),
     );
   }
