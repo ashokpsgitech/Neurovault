@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/register_screen.dart';
 import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../../features/host/screens/host_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 /// App router configuration using go_router.
@@ -25,6 +26,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       builder: (context, state) => const DashboardScreen(),
+    ),
+    GoRoute(
+      path: '/host',
+      builder: (context, state) => const HostScreen(),
     ),
   ],
 );

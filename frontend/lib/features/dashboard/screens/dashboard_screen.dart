@@ -341,7 +341,7 @@ class DashboardScreen extends ConsumerWidget {
         CustomSnackbar.showSuccess(context, 'Download workflow starting (Phase 5)');
       }),
       _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
-        CustomSnackbar.showSuccess(context, 'Host Mode UI (Phase 4)');
+        context.go('/host');
       }),
       _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
         CustomSnackbar.showSuccess(context, 'Settings UI (Phase 5)');
