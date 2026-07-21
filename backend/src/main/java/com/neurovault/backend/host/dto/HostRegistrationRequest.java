@@ -1,17 +1,13 @@
 package com.neurovault.backend.host.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for host registration request sent by a Host Agent
+ * DTO for host registration request sent by a Host Agent or Flutter Client
  * to register itself with the Metadata Coordinator.
  */
 @Data
@@ -20,42 +16,58 @@ import lombok.NoArgsConstructor;
 @Builder
 public class HostRegistrationRequest {
 
-    @NotBlank(message = "Hostname is required")
-    @Size(max = 100, message = "Hostname must not exceed 100 characters")
+    @JsonAlias({"name", "hostname"})
     private String hostname;
 
-    @NotBlank(message = "Device name is required")
-    @Size(max = 100, message = "Device name must not exceed 100 characters")
+    @JsonAlias({"deviceType", "deviceName"})
     private String deviceName;
 
-    @NotBlank(message = "Operating system is required")
-    @Size(max = 50, message = "Operating system must not exceed 50 characters")
     private String operatingSystem;
 
-    @NotBlank(message = "Architecture is required")
-    @Size(max = 50, message = "Architecture must not exceed 50 characters")
     private String architecture;
 
-    @NotNull(message = "Available storage is required")
-    @Min(value = 0, message = "Available storage must be non-negative")
+    @JsonAlias({"totalCapacityBytes", "availableStorageBytes"})
     private Long availableStorageBytes;
 
-    @NotNull(message = "Reserved storage is required")
-    @Min(value = 0, message = "Reserved storage must be non-negative")
     private Long reservedStorageBytes;
 
-    @NotBlank(message = "Host version is required")
-    @Size(max = 20, message = "Host version must not exceed 20 characters")
     private String hostVersion;
 
-    @NotNull(message = "Listening port is required")
-    @Min(value = 1, message = "Port must be at least 1")
-    @Max(value = 65535, message = "Port must not exceed 65535")
     private Integer listeningPort;
 
-    @Size(max = 45, message = "Public IP must not exceed 45 characters")
     private String publicIp;
 
-    @Size(max = 45, message = "Local IP must not exceed 45 characters")
     private String localIp;
+
+    public String getHostname() {
+        return (hostname != null && !hostname.isBlank()) ? hostname : "MicroServer-Node";
+    }
+
+    public String getDeviceName() {
+        return (deviceName != null && !deviceName.isBlank()) ? deviceName : "Desktop";
+    }
+
+    public String getOperatingSystem() {
+        return (operatingSystem != null && !operatingSystem.isBlank()) ? operatingSystem : "Windows";
+    }
+
+    public String getArchitecture() {
+        return (architecture != null && !architecture.isBlank()) ? architecture : "x86_64";
+    }
+
+    public String getHostVersion() {
+        return (hostVersion != null && !hostVersion.isBlank()) ? hostVersion : "1.0.0";
+    }
+
+    public Integer getListeningPort() {
+        return listeningPort != null ? listeningPort : 8080;
+    }
+
+    public Long getAvailableStorageBytes() {
+        return availableStorageBytes != null ? availableStorageBytes : 53687091200L;
+    }
+
+    public Long getReservedStorageBytes() {
+        return reservedStorageBytes != null ? reservedStorageBytes : 10737418240L;
+    }
 }
