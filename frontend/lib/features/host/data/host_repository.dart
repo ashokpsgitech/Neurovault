@@ -53,8 +53,11 @@ class HostRepository extends BaseRepository {
   Future<void> createStorageContainer(int reservedGb) async {
     await safeApiCall(() async {
       String reservationEnum = 'MEDIUM_5GB';
-      if (reservedGb <= 1) reservationEnum = 'SMALL_1GB';
-      else if (reservedGb >= 10) reservationEnum = 'LARGE_10GB';
+      if (reservedGb <= 1) {
+        reservationEnum = 'SMALL_1GB';
+      } else if (reservedGb >= 10) {
+        reservationEnum = 'LARGE_10GB';
+      }
 
       await _service.createStorageContainer(
         containerPath: './neurovault-storage/storage.container',

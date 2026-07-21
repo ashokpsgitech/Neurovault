@@ -20,21 +20,8 @@ class HostScreen extends ConsumerStatefulWidget {
 class _HostScreenState extends ConsumerState<HostScreen> {
   double _reservedGb = 10.0;
 
-  String _formatBytes(int bytes) {
-    if (bytes <= 0) return '0 B';
-    const suffixes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    int i = 0;
-    double count = bytes.toDouble();
-    while (count >= 1024 && i < suffixes.length - 1) {
-      count /= 1024;
-      i++;
-    }
-    return '${count.toStringAsFixed(1)} ${suffixes[i]}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final hostState = ref.watch(hostProvider);
     final isLoading = hostState is HostLoading;
     final isEnabled = hostState is HostEnabled;
@@ -219,9 +206,9 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                       });
                     },
             ),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text('1 GB', style: TextStyle(fontSize: 12)),
                 Text('50 GB', style: TextStyle(fontSize: 12)),
                 Text('100 GB', style: TextStyle(fontSize: 12)),
@@ -316,11 +303,11 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            ListTile(
+            const ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.insert_drive_file_outlined),
-              title: const Text('Container File Path'),
-              subtitle: const Text('./neurovault-storage/storage.container'),
+              leading: Icon(Icons.insert_drive_file_outlined),
+              title: Text('Container File Path'),
+              subtitle: Text('./neurovault-storage/storage.container'),
             ),
             const Divider(height: 1),
             ListTile(

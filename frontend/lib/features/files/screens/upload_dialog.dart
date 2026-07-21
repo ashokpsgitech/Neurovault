@@ -31,7 +31,6 @@ class _UploadDialogState extends State<UploadDialog> {
         });
       }
     } catch (_) {
-      // Fallback for web/environments where pickFiles is restricted
       _createSampleFile();
     }
   }
@@ -127,8 +126,8 @@ class _UploadDialogState extends State<UploadDialog> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Row(
-                        children: const [
+                      const Row(
+                        children: [
                           Icon(Icons.lock_outlined, size: 16, color: Colors.green),
                           SizedBox(width: 6),
                           Text('AES-256-GCM Encryption Ready', style: TextStyle(fontSize: 12, color: Colors.green)),
@@ -176,17 +175,18 @@ class _UploadDialogState extends State<UploadDialog> {
                   });
                   try {
                     await widget.onUpload(_filename!, _fileBytes!);
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                      CustomSnackbar.showSuccess(context, 'File encrypted & uploaded to Vault!');
-                    }
+                    if (!mounted) return;
+                    // ignore: use_build_context_synchronously
+                    Navigator.of(context).pop();
+                    // ignore: use_build_context_synchronously
+                    CustomSnackbar.showSuccess(context, 'File encrypted & uploaded to Vault!');
                   } catch (e) {
-                    if (mounted) {
-                      setState(() {
-                        _isUploading = false;
-                      });
-                      CustomSnackbar.showError(context, 'Upload failed: $e');
-                    }
+                    if (!mounted) return;
+                    setState(() {
+                      _isUploading = false;
+                    });
+                    // ignore: use_build_context_synchronously
+                    CustomSnackbar.showError(context, 'Upload failed: $e');
                   }
                 },
         ),

@@ -76,9 +76,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 // Encryption Engine Parameters
                 Text('Encryption & Engine Parameters', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
-                Card(
+                const Card(
                   child: Column(
-                    children: const [
+                    children: [
                       ListTile(
                         leading: Icon(Icons.security_outlined),
                         title: Text('Cipher Suite'),

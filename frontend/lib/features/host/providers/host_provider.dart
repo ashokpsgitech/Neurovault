@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/failures.dart';
 import '../../../providers/core_providers.dart';
 import '../data/host_repository.dart';
-import '../models/host_info_model.dart';
 import '../services/host_service.dart';
 import 'host_state.dart';
 
@@ -60,7 +59,7 @@ class HostNotifier extends StateNotifier<HostState> {
     state = const HostLoading();
     try {
       final reservedBytes = reservedGb * 1024 * 1024 * 1024;
-      final totalBytes = 100 * 1024 * 1024 * 1024;
+      const totalBytes = 100 * 1024 * 1024 * 1024;
 
       final info = await _repository.registerHost(
         name: 'MicroServer-Node-${Random().nextInt(1000)}',

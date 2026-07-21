@@ -44,7 +44,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              theme.colorScheme.background,
+              theme.colorScheme.surface,
               theme.colorScheme.surface,
             ],
             begin: Alignment.topCenter,
@@ -72,14 +72,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 AppConstants.appName,
                 style: theme.textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onBackground,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Secure Distributed Micro-Server Vault',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withOpacity(0.7),
                 ),
               ),
               const SizedBox(height: 48),
