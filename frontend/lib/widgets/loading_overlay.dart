@@ -23,16 +23,18 @@ class LoadingOverlay extends StatelessWidget {
             color: Colors.black54,
             child: Center(
               child: Card(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(),
-                    if (message != null) ...[
-                      const SizedBox(height: 16),
-                      Text(message!, style: Theme.of(context).textTheme.bodyMedium),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      if (message != null) ...[
+                        const SizedBox(height: 16),
+                        Text(message!, style: Theme.of(context).textTheme.bodyMedium),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
