@@ -90,8 +90,9 @@ public class StorageService {
         Path resolvedPath;
         if (containerPath != null && !containerPath.isBlank()) {
             resolvedPath = Paths.get(containerPath);
-            // Ensure the path ends with storage.container filename
-            if (!resolvedPath.getFileName().toString().endsWith(".container")) {
+            Path fileName = resolvedPath.getFileName();
+            // If path is a root directory like "D:\" or doesn't end with .container, append storage.container
+            if (fileName == null || !fileName.toString().endsWith(".container")) {
                 resolvedPath = resolvedPath.resolve(CONTAINER_FILENAME);
             }
         } else {

@@ -62,12 +62,14 @@ class HostService {
 
   /// POST /api/storage/create
   Future<Map<String, dynamic>> createStorageContainer({
+    required String hostId,
     required String containerPath,
     required String reservationSize,
   }) async {
     final response = await _dioClient.dio.post(
       ApiConstants.createStorage,
       data: {
+        'hostId': hostId,
         'containerPath': containerPath,
         'reservationSize': reservationSize,
       },

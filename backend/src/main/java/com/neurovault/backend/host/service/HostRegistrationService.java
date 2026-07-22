@@ -97,7 +97,7 @@ public class HostRegistrationService {
      */
     @Transactional(readOnly = true)
     public List<HostStatusDto> getHostsByOwner(UUID ownerId) {
-        List<Host> hosts = hostRepository.findByOwnerId(ownerId);
+        List<Host> hosts = hostRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId);
         return hosts.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());

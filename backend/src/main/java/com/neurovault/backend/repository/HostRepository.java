@@ -12,5 +12,6 @@ import java.util.UUID;
 @Repository
 public interface HostRepository extends JpaRepository<Host, UUID> {
     List<Host> findByOwnerId(UUID ownerId);
+    List<Host> findByOwnerIdOrderByCreatedAtDesc(UUID ownerId);
     List<Host> findByStatus(Host.Status status);
 }

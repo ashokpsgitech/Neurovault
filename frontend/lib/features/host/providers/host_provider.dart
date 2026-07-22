@@ -73,7 +73,7 @@ class HostNotifier extends StateNotifier<HostState> {
 
       // Step 2: Create the pre-allocated disk container file at the user-specified path
       try {
-        await _repository.createStorageContainer(reservedGb, containerPath);
+        await _repository.createStorageContainer(info.id, reservedGb, containerPath);
       } on Failure {
         // Surface the storage creation error but still mark host as online
         // since registration succeeded — the user can retry container creation

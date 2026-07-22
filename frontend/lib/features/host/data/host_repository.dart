@@ -51,7 +51,7 @@ class HostRepository extends BaseRepository {
   }
 
   /// Creates a pre-allocated disk container at the specified path with the chosen reservation size.
-  Future<void> createStorageContainer(int reservedGb, String containerPath) async {
+  Future<void> createStorageContainer(String hostId, int reservedGb, String containerPath) async {
     await safeApiCall(() async {
       String reservationEnum = 'MEDIUM_5GB';
       if (reservedGb <= 1) {
@@ -69,6 +69,7 @@ class HostRepository extends BaseRepository {
       }
 
       await _service.createStorageContainer(
+        hostId: hostId,
         containerPath: containerPath,
         reservationSize: reservationEnum,
       );
