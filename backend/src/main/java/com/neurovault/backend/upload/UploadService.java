@@ -156,7 +156,9 @@ public class UploadService {
 
         if (request.getUploadedChunks() != null) {
             for (UploadCompleteRequest.UploadedChunkSummary chunkSummary : request.getUploadedChunks()) {
+                UUID chunkId = chunkSummary.getChunkId() != null ? chunkSummary.getChunkId() : UUID.randomUUID();
                 Chunk chunkEntity = Chunk.builder()
+                        .id(chunkId)
                         .file(savedFile)
                         .chunkIndex(chunkSummary.getChunkIndex())
                         .sizeBytes(chunkSummary.getSizeBytes())
