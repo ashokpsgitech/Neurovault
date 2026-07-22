@@ -168,10 +168,16 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                           tooltip: 'Decrypt & Download',
                           onPressed: () async {
                             CustomSnackbar.showSuccess(context, 'Downloading & decrypting ${item.filename}...');
-                            final bytes = await ref.read(fileProvider.notifier).downloadFile(item);
-                            if (bytes != null && context.mounted) {
-                              final textPreview = utf8.decode(bytes, allowMalformed: true);
-                              _showFilePreviewModal(context, item.filename, textPreview);
+                            try {
+                              final bytes = await ref.read(fileProvider.notifier).downloadFile(item);
+                              if (bytes != null && context.mounted) {
+                                final textPreview = utf8.decode(bytes, allowMalformed: true);
+                                _showFilePreviewModal(context, item.filename, textPreview);
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                CustomSnackbar.showError(context, 'Download failed: $e');
+                              }
                             }
                           },
                         ),

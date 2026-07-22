@@ -79,12 +79,12 @@ class FileNotifier extends StateNotifier<FileState> {
       );
       state = FileLoaded(List.unmodifiable(_inMemoryFiles));
       return bytes;
-    } on Failure catch (f) {
-      state = FileError(f.message);
-      return null;
+    } on Failure {
+      state = FileLoaded(List.unmodifiable(_inMemoryFiles));
+      rethrow;
     } catch (e) {
-      state = FileError(e.toString());
-      return null;
+      state = FileLoaded(List.unmodifiable(_inMemoryFiles));
+      throw ServerFailure(e.toString());
     }
   }
 }
