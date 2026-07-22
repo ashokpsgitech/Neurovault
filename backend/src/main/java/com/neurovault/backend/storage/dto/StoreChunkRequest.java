@@ -21,7 +21,6 @@ public class StoreChunkRequest {
     @NotNull(message = "Chunk ID is required")
     private UUID chunkId;
 
-    @NotNull(message = "Owner ID is required")
     private UUID ownerId;
 
     @NotNull(message = "Chunk data is required")

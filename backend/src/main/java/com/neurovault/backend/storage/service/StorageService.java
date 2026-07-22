@@ -201,8 +201,12 @@ public class StorageService {
 
         ensureContainerOpen(containerEntity);
 
+        UUID ownerId = request.getOwnerId() != null
+                ? request.getOwnerId()
+                : (containerEntity.getHost().getOwner() != null ? containerEntity.getHost().getOwner().getId() : UUID.randomUUID());
+
         ChunkMetadata metadata = storageEngine.storeChunk(
-                request.getChunkId(), request.getOwnerId(), request.getData());
+                request.getChunkId(), ownerId, request.getData());
 
         // Update used capacity in the host entity
         Host host = containerEntity.getHost();

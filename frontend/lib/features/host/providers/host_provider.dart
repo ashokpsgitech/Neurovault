@@ -122,34 +122,40 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Starts periodic 30-second heartbeat daemon.
+  /// Starts periodic 30-second heartbeat daemon and fires an immediate heartbeat pulse.
   void _startHeartbeatDaemon(String hostId) {
     _heartbeatTimer?.cancel();
+    _sendHeartbeatPulse(hostId);
     _heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
-      if (state is HostEnabled) {
-        final current = (state as HostEnabled).info;
-        final randomCpu = 10.0 + Random().nextDouble() * 25.0;
-        final randomRam = 30.0 + Random().nextDouble() * 20.0;
-
-        try {
-          await _repository.sendHeartbeat(
-            hostId: hostId,
-            cpuUsagePercent: randomCpu,
-            ramUsagePercent: randomRam,
-            usedCapacityBytes: current.usedCapacityBytes,
-          );
-
-          if (mounted && state is HostEnabled) {
-            state = HostEnabled(
-              current.copyWith(
-                lastHeartbeat: DateTime.now(),
-                cpuUsagePercent: randomCpu,
-                ramUsagePercent: randomRam,
-              ),
-            );
-          }
-        } catch (_) {}
-      }
+      _sendHeartbeatPulse(hostId);
     });
+  }
+
+  Future<void> _sendHeartbeatPulse(String hostId) async {
+    if (state is HostEnabled) {
+      final current = (state as HostEnabled).info;
+      final randomCpu = 10.0 + Random().nextDouble() * 25.0;
+      final randomRam = 30.0 + Random().nextDouble() * 20.0;
+
+      try {
+        await _repository.sendHeartbeat(
+          hostId: hostId,
+          cpuUsagePercent: randomCpu,
+          ramUsagePercent: randomRam,
+          usedCapacityBytes: current.usedCapacityBytes,
+        );
+
+        if (mounted && state is HostEnabled) {
+          state = HostEnabled(
+            current.copyWith(
+              lastHeartbeat: DateTime.now(),
+              cpuUsagePercent: randomCpu,
+              ramUsagePercent: randomRam,
+              status: 'ONLINE',
+            ),
+          );
+        }
+      } catch (_) {}
+    }
   }
 }

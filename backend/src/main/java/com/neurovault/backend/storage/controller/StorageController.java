@@ -111,6 +111,17 @@ public class StorageController {
             @Valid @RequestBody StoreChunkRequest request,
             Principal principal) {
         UUID targetHostId = resolveHostId(hostId, principal);
+        if (request.getOwnerId() == null && principal != null) {
+            try {
+                String name = principal.getName();
+                try {
+                    request.setOwnerId(UUID.fromString(name));
+                } catch (IllegalArgumentException e) {
+                    User user = userRepository.findByEmail(name).orElse(null);
+                    if (user != null) request.setOwnerId(user.getId());
+                }
+            } catch (Exception ignored) {}
+        }
         log.info("POST /api/storage/chunks for host {} chunk {}", targetHostId, request.getChunkId());
         ChunkMetadataDto metadata = storageService.storeChunk(targetHostId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
