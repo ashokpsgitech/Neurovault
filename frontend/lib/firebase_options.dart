@@ -18,19 +18,20 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA_DEMO_KEY_NEUROVAULT_1234567890',
-    appId: '1:1234567890:web:abcdef1234567890',
-    messagingSenderId: '1234567890',
-    projectId: 'neurovault-demo-app',
-    authDomain: 'neurovault-demo-app.firebaseapp.com',
-    storageBucket: 'neurovault-demo-app.appspot.com',
+    apiKey: 'AIzaSyBDre4hKRpLByPcUV4ccAFbS9ccHM-1jLc',
+    appId: '1:633288899758:web:92046f916b830beaabc13f',
+    messagingSenderId: '633288899758',
+    projectId: 'neurovault-app',
+    authDomain: 'neurovault-app.firebaseapp.com',
+    storageBucket: 'neurovault-app.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA_DEMO_KEY_NEUROVAULT_1234567890',
-    appId: '1:1234567890:android:abcdef1234567890',
-    messagingSenderId: '1234567890',
-    projectId: 'neurovault-demo-app',
-    storageBucket: 'neurovault-demo-app.appspot.com',
+    apiKey: 'AIzaSyAIuocWjzIXbIijoR4ZsSPT_merBPjuy4A',
+    appId: '1:633288899758:android:77fc22add0eab590abc13f',
+    messagingSenderId: '633288899758',
+    projectId: 'neurovault-app',
+    storageBucket: 'neurovault-app.firebasestorage.app',
   );
+
 }

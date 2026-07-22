@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"neurovault-app","appId":"1:633288899758:android:77fc22add0eab590abc13f","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"neurovault-app","configurations":{"android":"1:633288899758:android:77fc22add0eab590abc13f","web":"1:633288899758:web:92046f916b830beaabc13f"}}}}}}
