@@ -60,11 +60,18 @@ public class ContainerManager {
         }
 
         try {
-            // Ensure parent directories exist
-            Files.createDirectories(path.getParent());
+            // Ensure parent directories exist (ignore if root drive like D:\)
+            if (path.getParent() != null && !Files.exists(path.getParent())) {
+                try {
+                    Files.createDirectories(path.getParent());
+                } catch (Exception ignored) {
+                    // Root drive directories like D:\ cannot be created, which is fine
+                }
+            }
 
+            // Open or create the binary container file
             fileChannel = FileChannel.open(path,
-                    EnumSet.of(StandardOpenOption.CREATE_NEW, StandardOpenOption.READ, StandardOpenOption.WRITE));
+                    EnumSet.of(StandardOpenOption.CREATE, StandardOpenOption.READ, StandardOpenOption.WRITE));
 
             // Build the header
             header = new ContainerHeader();
@@ -78,19 +85,19 @@ public class ContainerManager {
             // Write the header
             writeHeader();
 
-            // Pre-allocate the file to the total size by writing a zero byte at the end
-            fileChannel.position(totalSize - 1);
+            // Pre-allocate the file to the total size by setting size and writing a byte at the end
+            fileChannel.position(Math.max(0, totalSize - 1));
             fileChannel.write(ByteBuffer.wrap(new byte[]{0}));
             fileChannel.force(true);
 
             this.containerPath = path;
             this.open = true;
 
-            log.info("Container created successfully: {} ({} bytes)", path, totalSize);
+            log.info("Container created successfully: {} ({} bytes locked on disk)", path, totalSize);
 
         } catch (IOException e) {
             close();
-            throw new ContainerException("Failed to create container at: " + path, e);
+            throw new ContainerException("Failed to create container at: " + path + " (" + e.getMessage() + ")", e);
         }
     }
 

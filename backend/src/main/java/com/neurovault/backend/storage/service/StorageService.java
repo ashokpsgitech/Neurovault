@@ -77,15 +77,6 @@ public class StorageService {
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
 
-        // If container already exists for this host, return active status idempotently
-        java.util.Optional<com.neurovault.backend.entity.StorageContainer> existingContainer = containerRepository.findByHostId(hostId);
-        if (existingContainer.isPresent()) {
-            StorageContainer containerEntity = existingContainer.get();
-            log.info("Storage container already exists for host {}, returning active status", hostId);
-            ensureContainerOpen(containerEntity);
-            return buildStatusResponse(host, containerEntity);
-        }
-
         // Use client-specified path if provided, otherwise use default server-side path
         Path resolvedPath;
         if (containerPath != null && !containerPath.isBlank()) {
@@ -99,19 +90,32 @@ public class StorageService {
             resolvedPath = resolveContainerPath(hostId);
         }
 
-        // Create the binary container file — this pre-allocates the full size on disk
-        containerManager.createContainer(resolvedPath, size.getBytes());
-
-        // Initialize the storage engine
-        storageEngine.initialize();
+        // Create the binary container file on disk if it does not exist
+        if (!java.nio.file.Files.exists(resolvedPath)) {
+            log.info("Creating disk container file at: {}", resolvedPath);
+            containerManager.createContainer(resolvedPath, size.getBytes());
+            storageEngine.initialize();
+        } else {
+            log.info("Disk container file already exists at: {}, opening container", resolvedPath);
+            ensureContainerOpen(resolvedPath);
+        }
 
         // Persist container metadata to the database
-        StorageContainer containerEntity = StorageContainer.builder()
-                .host(host)
-                .filePath(resolvedPath.toString())
-                .totalSize(size.getBytes())
-                .status(StorageContainer.Status.ACTIVE)
-                .build();
+        StorageContainer containerEntity;
+        java.util.Optional<StorageContainer> existingContainer = containerRepository.findByHostId(hostId);
+        if (existingContainer.isPresent()) {
+            containerEntity = existingContainer.get();
+            containerEntity.setFilePath(resolvedPath.toString());
+            containerEntity.setTotalSize(size.getBytes());
+            containerEntity.setStatus(StorageContainer.Status.ACTIVE);
+        } else {
+            containerEntity = StorageContainer.builder()
+                    .host(host)
+                    .filePath(resolvedPath.toString())
+                    .totalSize(size.getBytes())
+                    .status(StorageContainer.Status.ACTIVE)
+                    .build();
+        }
 
         containerRepository.save(containerEntity);
 
@@ -275,14 +279,16 @@ public class StorageService {
      * Ensures the container file is open. If not, opens it and re-initializes the engine.
      */
     private void ensureContainerOpen(StorageContainer containerEntity) {
+        ensureContainerOpen(Paths.get(containerEntity.getFilePath()));
+    }
+
+    private void ensureContainerOpen(Path path) {
         if (!containerManager.isOpen()) {
-            Path path = Paths.get(containerEntity.getFilePath());
             try {
                 containerManager.openContainer(path);
                 storageEngine.initialize();
             } catch (ContainerException e) {
-                throw new ContainerException(
-                        "Failed to open container for host " + containerEntity.getHost().getId(), e);
+                throw new ContainerException("Failed to open container at " + path, e);
             }
         }
     }
