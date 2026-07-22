@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/utils/file_download_helper.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../models/file_metadata_model.dart';
 import '../models/progress_model.dart';
@@ -37,19 +38,9 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
   }
 
   Future<void> _saveDecryptedFileToDisk(String filename, Uint8List bytes) async {
-    try {
-      final path = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Decrypted File',
-        fileName: filename,
-        bytes: bytes,
-      );
-      if (path != null && mounted) {
-        CustomSnackbar.showSuccess(context, 'Saved decrypted file to: $path');
-      }
-    } catch (_) {
-      if (mounted) {
-        CustomSnackbar.showSuccess(context, 'Decrypted file downloaded successfully');
-      }
+    final result = await saveDecryptedFileToDisk(filename, bytes);
+    if (result != null && mounted) {
+      CustomSnackbar.showSuccess(context, 'Decrypted file downloaded: $result');
     }
   }
 
