@@ -120,7 +120,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           children: [
             Icon(Icons.folder_open_outlined),
             SizedBox(width: 12),
-            Text('Set Storage Location'),
+            Text('Set Container Storage Location'),
           ],
         ),
         content: Column(
@@ -447,14 +447,18 @@ class _HostScreenState extends ConsumerState<HostScreen> {
             const SizedBox(height: 16),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.folder_special_outlined),
-              title: const Text('Container Location'),
-              subtitle: Text(_containerPath),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit_location_alt_outlined),
-                tooltip: 'Select Storage Location Path',
-                onPressed: isEnabled ? null : _selectStorageLocation,
+              leading: const Icon(Icons.folder_special_outlined, color: Colors.amber),
+              title: const Text('Container Location', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(_containerPath, style: const TextStyle(fontSize: 12)),
+              trailing: ElevatedButton.icon(
+                icon: const Icon(Icons.edit_location_alt_outlined, size: 16),
+                label: const Text('Change Location', style: TextStyle(fontSize: 12)),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                onPressed: _showCustomLocationDialog,
               ),
+              onTap: _showCustomLocationDialog,
             ),
             const Divider(height: 1),
             ListTile(
