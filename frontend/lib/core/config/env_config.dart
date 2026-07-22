@@ -7,12 +7,15 @@ class EnvConfig {
     if (fromEnv.isNotEmpty) return fromEnv;
 
     if (kIsWeb) {
-      return 'http://localhost:8080';
+      final host = Uri.base.host;
+      if (host.isNotEmpty && host != 'localhost' && host != '127.0.0.1') {
+        return 'http://$host:8080';
+      }
+      return 'http://10.42.96.100:8080';
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      // Your PC's local Wi-Fi IPv4 address for physical Android testing
-      return 'http://10.10.193.106:8080';
+      return 'http://10.42.96.100:8080';
     }
 
     return 'http://localhost:8080';
