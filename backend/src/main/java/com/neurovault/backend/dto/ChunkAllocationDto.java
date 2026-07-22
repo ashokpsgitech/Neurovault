@@ -16,6 +16,7 @@ import java.util.UUID;
 @Builder
 public class ChunkAllocationDto {
 
+    private UUID chunkId;
     private Integer chunkIndex;
     private UUID hostId;
     private String hostName;

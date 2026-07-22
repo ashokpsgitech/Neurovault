@@ -95,6 +95,7 @@ public class UploadService {
             String chunkToken = coordinatorService.generateChunkToken(session.getId(), hostId, i);
 
             allocations.add(ChunkAllocationDto.builder()
+                    .chunkId(UUID.randomUUID())
                     .chunkIndex(i)
                     .hostId(hostId)
                     .hostName(hostName)

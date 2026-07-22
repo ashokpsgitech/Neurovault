@@ -55,7 +55,7 @@ class FileRepository extends BaseRepository {
         final chunkHash = CryptoEngine.calculateSha256(encryptedChunk);
 
         String hostUrl = 'http://localhost:8080/api/storage/chunks';
-        String chunkId = '${plan.fileId}-chunk-$i';
+        String chunkId = '';
         String hostId = '';
 
         if (i < plan.chunkAllocations.length) {
@@ -65,6 +65,11 @@ class FileRepository extends BaseRepository {
             chunkId = alloc.chunkId;
           }
           hostId = alloc.hostId;
+        }
+
+        if (chunkId.isEmpty) {
+          final hex = CryptoEngine.calculateSha256(utf8.encode('${plan.fileId}-$i'));
+          chunkId = '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
         }
 
         await _service.uploadChunkPayload(
