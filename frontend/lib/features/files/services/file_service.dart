@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
@@ -30,40 +31,45 @@ class FileService {
     return UploadPlanResponse.fromJson(response.data);
   }
 
-  /// Directly streams encrypted chunk bytes to host node at /api/storage/chunks.
+  /// Directly posts encrypted chunk bytes JSON to host node at /api/storage/chunks.
   Future<void> uploadChunkPayload({
     required String hostUrl,
     required String chunkId,
     required Uint8List encryptedPayload,
   }) async {
-    final targetUrl = '$hostUrl/api/storage/chunks';
-    final formData = FormData.fromMap({
+    final String targetUrl = hostUrl.startsWith('http') ? hostUrl : 'http://localhost:8080$hostUrl';
+    final payload = {
       'chunkId': chunkId,
-      'file': MultipartFile.fromBytes(encryptedPayload, filename: '$chunkId.bin'),
-    });
+      'data': base64Encode(encryptedPayload),
+    };
 
     try {
-      await _dioClient.dio.post(targetUrl, data: formData);
+      await _dioClient.dio.post(targetUrl, data: payload);
     } catch (_) {
       // Fallback to local storage endpoint if direct host URL fails
-      await _dioClient.dio.post(ApiConstants.storeChunk, data: formData);
+      await _dioClient.dio.post(ApiConstants.storeChunk, data: payload);
     }
   }
 
-  /// Notifies Coordinator that upload has completed.
-  Future<void> completeUpload(String sessionId) async {
+  /// Notifies Coordinator that upload has completed with chunk metadata summary.
+  Future<void> completeUpload({
+    required String uploadSessionId,
+    required String encryptedAesKey,
+    required List<Map<String, dynamic>> uploadedChunks,
+  }) async {
     await _dioClient.dio.post(
       ApiConstants.uploadComplete,
       data: {
-        'sessionId': sessionId,
-        'successful': true,
+        'uploadSessionId': uploadSessionId,
+        'encryptedAesKey': encryptedAesKey,
+        'uploadedChunks': uploadedChunks,
       },
     );
   }
 
-  /// Requests download plan from Coordinator.
+  /// Requests download plan from Coordinator (POST /api/files/download-plan/{fileId}).
   Future<DownloadPlanResponse> requestDownloadPlan(String fileId) async {
-    final response = await _dioClient.dio.get('${ApiConstants.downloadPlan}$fileId');
+    final response = await _dioClient.dio.post('${ApiConstants.downloadPlan}$fileId');
     return DownloadPlanResponse.fromJson(response.data);
   }
 
@@ -72,7 +78,10 @@ class FileService {
     required String hostUrl,
     required String chunkId,
   }) async {
-    final targetUrl = '$hostUrl/api/storage/chunks/$chunkId';
+    final String targetUrl = hostUrl.startsWith('http')
+        ? hostUrl
+        : 'http://localhost:8080/api/storage/chunks/$chunkId';
+
     try {
       final response = await _dioClient.dio.get<List<int>>(
         targetUrl,

@@ -42,16 +42,21 @@ class HostInfoModel {
   }
 
   factory HostInfoModel.fromJson(Map<String, dynamic> json) {
+    // Handle HostRegistrationResponse ({hostId, registrationStatus, heartbeatIntervalSeconds})
+    final hostId = json['hostId']?.toString() ?? json['id']?.toString() ?? '';
+    final rawStatus = json['status']?.toString() ?? json['registrationStatus']?.toString();
+    final statusStr = (rawStatus == 'REGISTERED' || rawStatus == 'ONLINE') ? 'ONLINE' : (rawStatus ?? 'OFFLINE');
+
     return HostInfoModel(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ?? 'Micro Server Node',
-      deviceType: json['deviceType']?.toString() ?? 'Desktop',
+      id: hostId,
+      name: json['name']?.toString() ?? json['hostname']?.toString() ?? 'Micro Server Node',
+      deviceType: json['deviceType']?.toString() ?? json['deviceName']?.toString() ?? 'Desktop',
       operatingSystem: json['operatingSystem']?.toString() ?? 'Windows',
       publicIp: json['publicIp']?.toString() ?? '127.0.0.1',
-      status: json['status']?.toString() ?? 'OFFLINE',
-      totalCapacityBytes: json['totalCapacityBytes'] ?? 50 * 1024 * 1024 * 1024,
-      reservedCapacityBytes: json['reservedCapacityBytes'] ?? 10 * 1024 * 1024 * 1024,
-      usedCapacityBytes: json['usedCapacityBytes'] ?? 0,
+      status: statusStr,
+      totalCapacityBytes: json['totalCapacityBytes'] ?? json['availableStorageBytes'] ?? 50 * 1024 * 1024 * 1024,
+      reservedCapacityBytes: json['reservedCapacityBytes'] ?? json['reservedStorageBytes'] ?? 10 * 1024 * 1024 * 1024,
+      usedCapacityBytes: json['usedCapacityBytes'] ?? json['usedStorageBytes'] ?? 0,
       heartbeatIntervalSeconds: json['heartbeatIntervalSeconds'] ?? 30,
       lastHeartbeat: json['lastHeartbeat'] != null ? DateTime.tryParse(json['lastHeartbeat'].toString()) : null,
       cpuUsagePercent: (json['cpuUsagePercent'] as num?)?.toDouble() ?? 12.5,

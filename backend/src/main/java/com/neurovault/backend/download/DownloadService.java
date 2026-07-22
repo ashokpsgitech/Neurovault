@@ -87,7 +87,7 @@ public class DownloadService {
             String hostName = targetHost != null ? targetHost.getName() : "Host-Node";
 
             String downloadToken = coordinatorService.generateChunkToken(session.getId(), hostId, chunk.getChunkIndex());
-            String downloadUrl = String.format("http://%s:8080/api/storage/chunk/%s", publicIp, chunk.getId());
+            String downloadUrl = String.format("http://%s:8080/api/storage/chunks/%s", publicIp, chunk.getId());
 
             chunkLocations.add(ChunkLocationDto.builder()
                     .chunkId(chunk.getId())

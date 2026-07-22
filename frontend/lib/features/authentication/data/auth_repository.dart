@@ -26,15 +26,19 @@ class AuthRepository extends BaseRepository {
     });
   }
 
-  /// Registers user and saves JWT token to secure storage.
-  Future<RegisterResponse> register(String username, String email, String password) async {
+  /// Registers user and logs in to save JWT token to secure storage.
+  Future<LoginResponse> register(String username, String email, String password) async {
     return safeApiCall(() async {
-      final response = await _authService.register(
+      await _authService.register(
         RegisterRequest(username: username, email: email, password: password),
       );
-      await _storageService.saveToken(response.token);
-      await _storageService.saveUserEmail(response.user.email);
-      return response;
+      // Auto-login to obtain JWT token
+      final loginResponse = await _authService.login(
+        LoginRequest(email: email, password: password),
+      );
+      await _storageService.saveToken(loginResponse.token);
+      await _storageService.saveUserEmail(loginResponse.user.email);
+      return loginResponse;
     });
   }
 

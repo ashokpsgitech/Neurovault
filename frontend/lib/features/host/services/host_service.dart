@@ -20,12 +20,12 @@ class HostService {
     final response = await _dioClient.dio.post(
       ApiConstants.registerHost,
       data: {
-        'name': name,
-        'deviceType': deviceType,
+        'hostname': name,
+        'deviceName': deviceType,
         'operatingSystem': operatingSystem,
         'publicIp': publicIp,
-        'totalCapacityBytes': totalCapacityBytes,
-        'reservedCapacityBytes': reservedCapacityBytes,
+        'availableStorageBytes': totalCapacityBytes,
+        'reservedStorageBytes': reservedCapacityBytes,
       },
     );
     return HostInfoModel.fromJson(response.data);
@@ -44,7 +44,7 @@ class HostService {
         'hostId': hostId,
         'cpuUsagePercent': cpuUsagePercent,
         'ramUsagePercent': ramUsagePercent,
-        'usedCapacityBytes': usedCapacityBytes,
+        'usedStorageBytes': usedCapacityBytes,
       },
     );
     return response.data;

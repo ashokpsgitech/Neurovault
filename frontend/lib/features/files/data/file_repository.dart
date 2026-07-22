@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
@@ -46,16 +47,24 @@ class FileRepository extends BaseRepository {
         checksum: checksum,
       );
 
+      final List<Map<String, dynamic>> uploadedChunks = [];
+
       for (int i = 0; i < totalChunks; i++) {
         final plainChunk = rawChunks[i];
         final encryptedChunk = CryptoEngine.encryptChunk(plainChunk, symmetricKey, i);
+        final chunkHash = CryptoEngine.calculateSha256(encryptedChunk);
 
-        String hostUrl = 'http://localhost:8080';
+        String hostUrl = 'http://localhost:8080/api/storage/chunks';
         String chunkId = '${plan.fileId}-chunk-$i';
+        String hostId = '';
 
         if (i < plan.chunkAllocations.length) {
-          hostUrl = plan.chunkAllocations[i].primaryHostUrl;
-          chunkId = plan.chunkAllocations[i].chunkId;
+          final alloc = plan.chunkAllocations[i];
+          hostUrl = alloc.primaryHostUrl;
+          if (alloc.chunkId.isNotEmpty) {
+            chunkId = alloc.chunkId;
+          }
+          hostId = alloc.hostId;
         }
 
         await _service.uploadChunkPayload(
@@ -63,6 +72,14 @@ class FileRepository extends BaseRepository {
           chunkId: chunkId,
           encryptedPayload: encryptedChunk,
         );
+
+        uploadedChunks.add({
+          'chunkIndex': i,
+          'chunkId': chunkId,
+          'chunkHash': chunkHash,
+          'sizeBytes': encryptedChunk.length,
+          if (hostId.isNotEmpty) 'hostId': hostId,
+        });
 
         final percent = 0.1 + (0.85 * ((i + 1) / totalChunks));
         onProgress(PipelineProgress(
@@ -74,7 +91,13 @@ class FileRepository extends BaseRepository {
         ));
       }
 
-      await _service.completeUpload(plan.sessionId);
+      final String encodedKey = base64Encode(symmetricKey);
+
+      await _service.completeUpload(
+        uploadSessionId: plan.sessionId,
+        encryptedAesKey: encodedKey,
+        uploadedChunks: uploadedChunks,
+      );
 
       onProgress(PipelineProgress(
         filename: filename,
@@ -100,8 +123,18 @@ class FileRepository extends BaseRepository {
     required void Function(PipelineProgress progress) onProgress,
   }) async {
     return safeApiCall(() async {
-      final symmetricKey = CryptoEngine.generateSymmetricKey();
       final plan = await _service.requestDownloadPlan(fileItem.id);
+      Uint8List symmetricKey;
+      if (plan.encryptedAesKey.isNotEmpty) {
+        try {
+          symmetricKey = base64Decode(plan.encryptedAesKey);
+        } catch (_) {
+          symmetricKey = CryptoEngine.generateSymmetricKey();
+        }
+      } else {
+        symmetricKey = CryptoEngine.generateSymmetricKey();
+      }
+
       final totalChunks = plan.chunkLocations.isNotEmpty ? plan.chunkLocations.length : 1;
       final List<Uint8List> downloadedChunks = [];
 
@@ -114,7 +147,7 @@ class FileRepository extends BaseRepository {
           status: 'DOWNLOADING',
         ));
 
-        String hostUrl = 'http://localhost:8080';
+        String hostUrl = 'http://localhost:8080/api/storage/chunks';
         String chunkId = '${fileItem.id}-chunk-$i';
 
         if (i < plan.chunkLocations.length) {
