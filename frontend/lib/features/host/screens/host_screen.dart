@@ -38,6 +38,79 @@ class _HostScreenState extends ConsumerState<HostScreen> {
     }
   }
 
+  void _showActivationDialog() {
+    final controller = TextEditingController(text: _containerPath);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.storage_outlined, color: Colors.green),
+            SizedBox(width: 12),
+            Text('Activate Host Node'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select local disk storage folder and confirm capacity reservation before activating your Micro-Server node.',
+            ),
+            const SizedBox(height: 16),
+            Card(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Reserved Capacity:'),
+                    Text('${_reservedGb.round()} GB', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                labelText: 'Storage Container Directory',
+                hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.folder_open),
+                  tooltip: 'Browse Directory',
+                  onPressed: _selectStorageLocation,
+                ),
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.check_circle_outline),
+            label: const Text('Activate Node & Allocate Storage'),
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() {
+                  _containerPath = controller.text.trim();
+                });
+              }
+              Navigator.pop(ctx);
+              ref.read(hostProvider.notifier).enableHost(_reservedGb.round());
+              CustomSnackbar.showSuccess(context, 'Host Node Activated: Online');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showCustomLocationDialog() {
     final controller = TextEditingController(text: _containerPath);
     showDialog(
@@ -218,8 +291,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                   ? null
                   : (value) {
                       if (value) {
-                        ref.read(hostProvider.notifier).enableHost(_reservedGb.round());
-                        CustomSnackbar.showSuccess(context, 'Host Mode Enabled: Online');
+                        _showActivationDialog();
                       } else {
                         ref.read(hostProvider.notifier).disableHost();
                         CustomSnackbar.showSuccess(context, 'Host Mode Disabled: Offline');

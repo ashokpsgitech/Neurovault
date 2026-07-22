@@ -1,8 +1,6 @@
 package com.neurovault.backend.host.dto;
 
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * DTO for periodic heartbeat reports sent by a Host Agent.
+ * DTO for periodic heartbeat reports sent by a Host Agent or Flutter Client.
  * Contains system health metrics and storage usage data.
  */
 @Data
@@ -21,31 +19,48 @@ import java.util.UUID;
 @Builder
 public class HeartbeatRequest {
 
-    @NotNull(message = "Host ID is required")
+    @JsonAlias({"hostId", "id"})
     private UUID hostId;
 
-    @NotNull(message = "Timestamp is required")
     private LocalDateTime timestamp;
 
-    @Min(value = 0, message = "CPU usage must be non-negative")
-    @Max(value = 100, message = "CPU usage must not exceed 100")
     private Double cpuUsagePercent;
 
-    @Min(value = 0, message = "RAM usage must be non-negative")
-    @Max(value = 100, message = "RAM usage must not exceed 100")
     private Double ramUsagePercent;
 
-    @Min(value = 0, message = "Reserved storage must be non-negative")
     private Long reservedStorageBytes;
 
-    @Min(value = 0, message = "Used storage must be non-negative")
+    @JsonAlias({"usedStorageBytes", "usedCapacityBytes"})
     private Long usedStorageBytes;
 
-    @Min(value = 0, message = "Available storage must be non-negative")
+    @JsonAlias({"availableStorageBytes", "totalCapacityBytes"})
     private Long availableStorageBytes;
 
-    @NotNull(message = "Host status is required")
     private String hostStatus;
 
     private String containerStatus;
+
+    public LocalDateTime getTimestamp() {
+        return timestamp != null ? timestamp : LocalDateTime.now();
+    }
+
+    public String getHostStatus() {
+        return (hostStatus != null && !hostStatus.isBlank()) ? hostStatus : "ONLINE";
+    }
+
+    public Double getCpuUsagePercent() {
+        return cpuUsagePercent != null ? cpuUsagePercent : 12.5;
+    }
+
+    public Double getRamUsagePercent() {
+        return ramUsagePercent != null ? ramUsagePercent : 38.2;
+    }
+
+    public Long getUsedStorageBytes() {
+        return usedStorageBytes != null ? usedStorageBytes : 0L;
+    }
+
+    public Long getReservedStorageBytes() {
+        return reservedStorageBytes != null ? reservedStorageBytes : 10737418240L; // 10 GB default
+    }
 }

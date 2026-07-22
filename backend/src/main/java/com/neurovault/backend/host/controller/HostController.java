@@ -10,7 +10,6 @@ import com.neurovault.backend.host.dto.HostStatusDto;
 import com.neurovault.backend.host.service.HeartbeatService;
 import com.neurovault.backend.host.service.HostRegistrationService;
 import com.neurovault.backend.repository.UserRepository;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -60,17 +59,27 @@ public class HostController {
     }
 
     /**
-     * Sends a heartbeat for a host node.
+     * Sends a heartbeat for a host node. Resolves host ID automatically if missing.
      */
     @PostMapping({"/heartbeat", "/{hostId}/heartbeat"})
     public ResponseEntity<HeartbeatResponse> receiveHeartbeat(
             @PathVariable(required = false) UUID hostId,
-            @RequestBody HeartbeatRequest request) {
+            @RequestBody HeartbeatRequest request,
+            Principal principal) {
 
-        if (hostId != null) {
-            request.setHostId(hostId);
+        UUID targetHostId = hostId != null ? hostId : request.getHostId();
+        if (targetHostId == null && principal != null) {
+            UUID ownerId = extractUserId(principal);
+            List<HostStatusDto> hosts = registrationService.getHostsByOwner(ownerId);
+            if (!hosts.isEmpty()) {
+                targetHostId = hosts.get(0).getHostId();
+            }
+        }
+        if (targetHostId == null) {
+            throw new ResourceNotFoundException("Host ID is required to process heartbeat");
         }
 
+        request.setHostId(targetHostId);
         HeartbeatResponse response = heartbeatService.processHeartbeat(request);
         return ResponseEntity.ok(response);
     }

@@ -38,8 +38,13 @@ desktop.ini
 *.log
 **/logs/
 
-# Sensitive data / Local Configs
+# Sensitive data, Local Databases & Binary Container Allocations
 *.env
 .env.local
 application-local.yml
 application-local.properties
+*.container
+*.mv.db
+neurovault-db*
+neurovault-storage/
+**/neurovault-storage/**
