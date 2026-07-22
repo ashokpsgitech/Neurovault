@@ -39,15 +39,16 @@ public enum StorageReservationSize {
     }
 
     @JsonCreator
-    public static StorageReservationSize fromString(String value) {
-        if (value == null || value.isBlank()) return GB_5;
-        String val = value.toUpperCase().trim();
-        if (val.contains("1GB") || val.contains("SMALL") || val.equals("GB_1")) return GB_1;
-        if (val.contains("2GB") || val.equals("GB_2")) return GB_2;
-        if (val.contains("5GB") || val.contains("MEDIUM") || val.equals("GB_5")) return GB_5;
-        if (val.contains("10GB") || val.contains("LARGE") || val.equals("GB_10")) return GB_10;
-        if (val.contains("20GB") || val.equals("GB_20")) return GB_20;
+    public static StorageReservationSize fromString(Object input) {
+        if (input == null) return GB_5;
+        String val = input.toString().toUpperCase().trim();
+        if (val.isEmpty()) return GB_5;
         if (val.contains("500MB") || val.equals("MB_500")) return MB_500;
+        if (val.contains("10") || val.contains("LARGE")) return GB_10;
+        if (val.contains("20")) return GB_20;
+        if (val.contains("2") && !val.contains("20")) return GB_2;
+        if (val.contains("1") && !val.contains("10") || val.contains("SMALL")) return GB_1;
+        if (val.contains("5") && !val.contains("50") || val.contains("MEDIUM")) return GB_5;
         return GB_5;
     }
 }

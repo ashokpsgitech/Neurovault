@@ -77,9 +77,13 @@ public class StorageService {
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
 
-        // Check if a container already exists
-        if (containerRepository.findByHostId(hostId).isPresent()) {
-            throw new BadRequestException("Storage container already exists for host: " + hostId);
+        // If container already exists for this host, return active status idempotently
+        java.util.Optional<com.neurovault.backend.entity.StorageContainer> existingContainer = containerRepository.findByHostId(hostId);
+        if (existingContainer.isPresent()) {
+            StorageContainer containerEntity = existingContainer.get();
+            log.info("Storage container already exists for host {}, returning active status", hostId);
+            ensureContainerOpen(containerEntity);
+            return buildStatusResponse(host, containerEntity);
         }
 
         // Use client-specified path if provided, otherwise use default server-side path
