@@ -1,0 +1,3 @@
+- [x] Build Debug APK
+- [x] Build Release APK
+- [x] Verify APK existence
