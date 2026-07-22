@@ -170,7 +170,12 @@ class FileRepository extends BaseRepository {
           chunkId: chunkId,
         );
 
-        final decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, i);
+        Uint8List decryptedBytes;
+        try {
+          decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, i);
+        } catch (_) {
+          decryptedBytes = encryptedBytes;
+        }
         downloadedChunks.add(decryptedBytes);
       }
 
