@@ -14,6 +14,8 @@ class HostInfoModel {
   final double cpuUsagePercent;
   final double ramUsagePercent;
   final bool containerCreated;
+  final String containerPath;
+  final int containerSizeBytes;
   final int activeChunks;
 
   const HostInfoModel({
@@ -31,6 +33,8 @@ class HostInfoModel {
     this.cpuUsagePercent = 12.5,
     this.ramUsagePercent = 38.2,
     this.containerCreated = false,
+    this.containerPath = '',
+    this.containerSizeBytes = 0,
     this.activeChunks = 0,
   });
 
@@ -39,6 +43,26 @@ class HostInfoModel {
   double get usagePercent {
     if (reservedCapacityBytes <= 0) return 0.0;
     return (usedCapacityBytes / reservedCapacityBytes).clamp(0.0, 1.0);
+  }
+
+  /// Human-readable container size string.
+  String get containerSizeDisplay {
+    if (containerSizeBytes <= 0 && reservedCapacityBytes > 0 && containerCreated) {
+      return _formatBytes(reservedCapacityBytes);
+    }
+    if (containerSizeBytes <= 0) return '0 B';
+    return _formatBytes(containerSizeBytes);
+  }
+
+  static String _formatBytes(int bytes) {
+    if (bytes >= 1024 * 1024 * 1024) {
+      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+    } else if (bytes >= 1024 * 1024) {
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    } else if (bytes >= 1024) {
+      return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    }
+    return '$bytes B';
   }
 
   factory HostInfoModel.fromJson(Map<String, dynamic> json) {
@@ -61,7 +85,9 @@ class HostInfoModel {
       lastHeartbeat: json['lastHeartbeat'] != null ? DateTime.tryParse(json['lastHeartbeat'].toString()) : null,
       cpuUsagePercent: (json['cpuUsagePercent'] as num?)?.toDouble() ?? 12.5,
       ramUsagePercent: (json['ramUsagePercent'] as num?)?.toDouble() ?? 38.2,
-      containerCreated: json['containerCreated'] ?? true,
+      containerCreated: json['containerCreated'] ?? false,
+      containerPath: json['containerPath']?.toString() ?? '',
+      containerSizeBytes: json['containerSizeBytes'] ?? 0,
       activeChunks: json['activeChunks'] ?? 0,
     );
   }
@@ -81,6 +107,8 @@ class HostInfoModel {
     double? cpuUsagePercent,
     double? ramUsagePercent,
     bool? containerCreated,
+    String? containerPath,
+    int? containerSizeBytes,
     int? activeChunks,
   }) {
     return HostInfoModel(
@@ -98,6 +126,8 @@ class HostInfoModel {
       cpuUsagePercent: cpuUsagePercent ?? this.cpuUsagePercent,
       ramUsagePercent: ramUsagePercent ?? this.ramUsagePercent,
       containerCreated: containerCreated ?? this.containerCreated,
+      containerPath: containerPath ?? this.containerPath,
+      containerSizeBytes: containerSizeBytes ?? this.containerSizeBytes,
       activeChunks: activeChunks ?? this.activeChunks,
     );
   }

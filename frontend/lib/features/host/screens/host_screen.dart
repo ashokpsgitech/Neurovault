@@ -102,8 +102,8 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                 });
               }
               Navigator.pop(ctx);
-              ref.read(hostProvider.notifier).enableHost(_reservedGb.round());
-              CustomSnackbar.showSuccess(context, 'Host Node Activated: Online');
+              ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), _containerPath);
+              CustomSnackbar.showSuccess(context, 'Allocating ${_reservedGb.round()} GB disk container...');
             },
           ),
         ],
@@ -430,6 +430,11 @@ class _HostScreenState extends ConsumerState<HostScreen> {
 
   Widget _buildContainerStatusCard(BuildContext context, bool isEnabled, HostInfoModel? hostInfo) {
     final theme = Theme.of(context);
+    final containerCreated = hostInfo?.containerCreated ?? false;
+    final displayPath = hostInfo?.containerPath.isNotEmpty == true ? hostInfo!.containerPath : _containerPath;
+    final lockedSize = isEnabled && containerCreated
+        ? hostInfo?.containerSizeDisplay ?? '${_reservedGb.round()} GB'
+        : '0 GB';
 
     return Card(
       child: Padding(
@@ -440,41 +445,122 @@ class _HostScreenState extends ConsumerState<HostScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Binary Container', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                Icon(Icons.inventory_2_outlined, color: theme.colorScheme.primary),
+                Text('Disk Container File', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: containerCreated && isEnabled
+                        ? Colors.green.withOpacity(0.15)
+                        : Colors.grey.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        containerCreated && isEnabled ? Icons.lock_outlined : Icons.lock_open_outlined,
+                        size: 14,
+                        color: containerCreated && isEnabled ? Colors.green : Colors.grey,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        containerCreated && isEnabled ? 'LOCKED' : 'UNLOCKED',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: containerCreated && isEnabled ? Colors.green : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
+            // Container file path
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.folder_special_outlined, color: Colors.amber),
-              title: const Text('Container Location', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text(_containerPath, style: const TextStyle(fontSize: 12)),
-              trailing: ElevatedButton.icon(
-                icon: const Icon(Icons.edit_location_alt_outlined, size: 16),
-                label: const Text('Change Location', style: TextStyle(fontSize: 12)),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              leading: Icon(
+                Icons.folder_special_outlined,
+                color: containerCreated ? Colors.amber : Colors.grey,
+              ),
+              title: const Text('Container File Location', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(
+                displayPath,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                onPressed: _showCustomLocationDialog,
               ),
-              onTap: _showCustomLocationDialog,
+              trailing: isEnabled
+                  ? null
+                  : ElevatedButton.icon(
+                      icon: const Icon(Icons.edit_location_alt_outlined, size: 16),
+                      label: const Text('Change', style: TextStyle(fontSize: 12)),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      onPressed: _showCustomLocationDialog,
+                    ),
             ),
             const Divider(height: 1),
+            // Disk space locked
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.data_usage_outlined),
-              title: const Text('Allocated Capacity'),
+              leading: Icon(
+                Icons.disc_full_outlined,
+                color: containerCreated && isEnabled ? Colors.blue : Colors.grey,
+              ),
+              title: const Text('Disk Space Locked'),
+              subtitle: containerCreated && isEnabled
+                  ? Text(
+                      'Pre-allocated binary file on local disk',
+                      style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+                    )
+                  : null,
               trailing: Text(
-                isEnabled ? '${_reservedGb.round()} GB' : '0 GB',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                lockedSize,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: containerCreated && isEnabled ? Colors.blue : Colors.grey,
+                ),
               ),
             ),
+            if (containerCreated && isEnabled) ...[
+              const Divider(height: 1),
+              // Usage progress bar
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.storage_outlined, color: Colors.teal),
+                title: const Text('Usage'),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 6.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: hostInfo?.usagePercent ?? 0.0,
+                      minHeight: 8,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ),
+                trailing: Text(
+                  '${((hostInfo?.usagePercent ?? 0.0) * 100).toStringAsFixed(1)}%',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
             const Divider(height: 1),
+            // Active chunks count
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.grid_view_outlined),
-              title: const Text('Active Chunks Stored'),
+              leading: Icon(
+                Icons.grid_view_outlined,
+                color: (hostInfo?.activeChunks ?? 0) > 0 ? Colors.purple : Colors.grey,
+              ),
+              title: const Text('Active Encrypted Chunks'),
               trailing: Text(
                 '${hostInfo?.activeChunks ?? 0}',
                 style: const TextStyle(fontWeight: FontWeight.bold),

@@ -50,17 +50,26 @@ class HostRepository extends BaseRepository {
     });
   }
 
-  Future<void> createStorageContainer(int reservedGb) async {
+  /// Creates a pre-allocated disk container at the specified path with the chosen reservation size.
+  Future<void> createStorageContainer(int reservedGb, String containerPath) async {
     await safeApiCall(() async {
       String reservationEnum = 'MEDIUM_5GB';
       if (reservedGb <= 1) {
         reservationEnum = 'SMALL_1GB';
-      } else if (reservedGb >= 10) {
+      } else if (reservedGb <= 2) {
+        reservationEnum = 'GB_2';
+      } else if (reservedGb <= 5) {
+        reservationEnum = 'MEDIUM_5GB';
+      } else if (reservedGb <= 10) {
         reservationEnum = 'LARGE_10GB';
+      } else if (reservedGb <= 20) {
+        reservationEnum = 'GB_20';
+      } else {
+        reservationEnum = 'GB_20';
       }
 
       await _service.createStorageContainer(
-        containerPath: './neurovault-storage/storage.container',
+        containerPath: containerPath,
         reservationSize: reservationEnum,
       );
     });

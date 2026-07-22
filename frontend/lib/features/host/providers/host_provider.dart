@@ -54,13 +54,14 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Enables host node, creates container, and starts 30s heartbeat daemon.
-  Future<void> enableHost(int reservedGb) async {
+  /// Enables host node: registers with coordinator, creates disk container, and starts heartbeat.
+  Future<void> enableHost(int reservedGb, String containerPath) async {
     state = const HostLoading();
     try {
       final reservedBytes = reservedGb * 1024 * 1024 * 1024;
       const totalBytes = 100 * 1024 * 1024 * 1024;
 
+      // Step 1: Register this device as a host node with the coordinator
       final info = await _repository.registerHost(
         name: 'MicroServer-Node-${Random().nextInt(1000)}',
         deviceType: 'Desktop',
@@ -70,17 +71,40 @@ class HostNotifier extends StateNotifier<HostState> {
         reservedCapacityBytes: reservedBytes,
       );
 
+      // Step 2: Create the pre-allocated disk container file at the user-specified path
       try {
-        await _repository.createStorageContainer(reservedGb);
-      } catch (_) {}
+        await _repository.createStorageContainer(reservedGb, containerPath);
+      } on Failure {
+        // Surface the storage creation error but still mark host as online
+        // since registration succeeded — the user can retry container creation
+        final updatedInfo = info.copyWith(
+          status: 'ONLINE',
+          containerCreated: false,
+          containerPath: containerPath,
+        );
+        state = HostEnabled(updatedInfo);
+        _startHeartbeatDaemon(updatedInfo.id);
+        // Re-throw so UI can display the error
+        rethrow;
+      }
 
-      final updatedInfo = info.copyWith(status: 'ONLINE', containerCreated: true);
+      // Step 3: Both registration and container creation succeeded
+      final updatedInfo = info.copyWith(
+        status: 'ONLINE',
+        containerCreated: true,
+        containerPath: containerPath,
+        reservedCapacityBytes: reservedBytes,
+      );
       state = HostEnabled(updatedInfo);
       _startHeartbeatDaemon(updatedInfo.id);
     } on Failure catch (f) {
-      state = HostError(f.message);
+      if (state is! HostEnabled) {
+        state = HostError(f.message);
+      }
     } catch (e) {
-      state = HostError(e.toString());
+      if (state is! HostEnabled) {
+        state = HostError(e.toString());
+      }
     }
   }
 

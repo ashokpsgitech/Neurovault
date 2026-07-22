@@ -3,7 +3,6 @@ import '../../../repositories/base_repository.dart';
 import '../models/login_request.dart';
 import '../models/login_response.dart';
 import '../models/register_request.dart';
-import '../models/register_response.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 

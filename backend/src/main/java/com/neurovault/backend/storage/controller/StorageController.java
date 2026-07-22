@@ -71,7 +71,8 @@ public class StorageController {
                 : StorageReservationSize.GB_5;
 
         log.info("POST /api/storage/create for host {} with size {}", targetHostId, size);
-        StorageStatusResponse status = storageService.createStorage(targetHostId, size);
+        String containerPath = (request != null) ? request.getContainerPath() : null;
+        StorageStatusResponse status = storageService.createStorage(targetHostId, size, containerPath);
         return ResponseEntity.status(HttpStatus.CREATED).body(status);
     }
 

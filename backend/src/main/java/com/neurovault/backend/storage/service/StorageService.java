@@ -64,13 +64,15 @@ public class StorageService {
     /**
      * Creates a new storage container for a host.
      *
-     * @param hostId the UUID of the host
-     * @param size   the reservation size
+     * @param hostId        the UUID of the host
+     * @param size          the reservation size
+     * @param containerPath optional client-specified path for the container file;
+     *                      if null or blank, uses the default server-side path
      * @return storage status after creation
      */
     @Transactional
-    public StorageStatusResponse createStorage(UUID hostId, StorageReservationSize size) {
-        log.info("Creating storage container for host {} with size {}", hostId, size.getDisplayName());
+    public StorageStatusResponse createStorage(UUID hostId, StorageReservationSize size, String containerPath) {
+        log.info("Creating storage container for host {} with size {} (path={})", hostId, size.getDisplayName(), containerPath);
 
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
@@ -80,11 +82,20 @@ public class StorageService {
             throw new BadRequestException("Storage container already exists for host: " + hostId);
         }
 
-        // Build the container file path
-        Path containerPath = resolveContainerPath(hostId);
+        // Use client-specified path if provided, otherwise use default server-side path
+        Path resolvedPath;
+        if (containerPath != null && !containerPath.isBlank()) {
+            resolvedPath = Paths.get(containerPath);
+            // Ensure the path ends with storage.container filename
+            if (!resolvedPath.getFileName().toString().endsWith(".container")) {
+                resolvedPath = resolvedPath.resolve(CONTAINER_FILENAME);
+            }
+        } else {
+            resolvedPath = resolveContainerPath(hostId);
+        }
 
-        // Create the binary container file
-        containerManager.createContainer(containerPath, size.getBytes());
+        // Create the binary container file — this pre-allocates the full size on disk
+        containerManager.createContainer(resolvedPath, size.getBytes());
 
         // Initialize the storage engine
         storageEngine.initialize();
@@ -92,7 +103,7 @@ public class StorageService {
         // Persist container metadata to the database
         StorageContainer containerEntity = StorageContainer.builder()
                 .host(host)
-                .filePath(containerPath.toString())
+                .filePath(resolvedPath.toString())
                 .totalSize(size.getBytes())
                 .status(StorageContainer.Status.ACTIVE)
                 .build();
@@ -103,7 +114,8 @@ public class StorageService {
         host.setReservedCapacityBytes(size.getBytes());
         hostRepository.save(host);
 
-        log.info("Storage container created for host {} at {}", hostId, containerPath);
+        log.info("Storage container created for host {} at {} ({} bytes locked on disk)",
+                hostId, resolvedPath, size.getBytes());
 
         return buildStatusResponse(host, containerEntity);
     }
