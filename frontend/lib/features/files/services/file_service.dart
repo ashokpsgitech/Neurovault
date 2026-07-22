@@ -52,12 +52,12 @@ class FileService {
   }
 
   /// Notifies Coordinator that upload has completed with chunk metadata summary.
-  Future<void> completeUpload({
+  Future<Map<String, dynamic>> completeUpload({
     required String uploadSessionId,
     required String encryptedAesKey,
     required List<Map<String, dynamic>> uploadedChunks,
   }) async {
-    await _dioClient.dio.post(
+    final response = await _dioClient.dio.post(
       ApiConstants.uploadComplete,
       data: {
         'uploadSessionId': uploadSessionId,
@@ -65,6 +65,7 @@ class FileService {
         'uploadedChunks': uploadedChunks,
       },
     );
+    return response.data;
   }
 
   /// Requests download plan from Coordinator (POST /api/files/download-plan/{fileId}).

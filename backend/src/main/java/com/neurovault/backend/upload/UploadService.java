@@ -76,6 +76,8 @@ public class UploadService {
                 user, request.getFilename(), request.getFileSize(), request.getTotalChunks());
 
         UUID fileId = UUID.randomUUID();
+        session.setFileId(fileId);
+
         List<ChunkAllocationDto> allocations = new ArrayList<>();
 
         for (int i = 0; i < request.getTotalChunks(); i++) {
@@ -138,7 +140,10 @@ public class UploadService {
 
         log.info("Finalizing upload session {} for user {}", session.getId(), user.getId());
 
+        UUID targetFileId = session.getFileId() != null ? session.getFileId() : UUID.randomUUID();
+
         FileMetadata fileMetadata = FileMetadata.builder()
+                .id(targetFileId)
                 .owner(user)
                 .name(session.getFileName())
                 .path("/" + session.getFileName())

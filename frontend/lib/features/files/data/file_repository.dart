@@ -98,11 +98,16 @@ class FileRepository extends BaseRepository {
 
       final String encodedKey = base64Encode(symmetricKey);
 
-      await _service.completeUpload(
+      final uploadResponse = await _service.completeUpload(
         uploadSessionId: plan.sessionId,
         encryptedAesKey: encodedKey,
         uploadedChunks: uploadedChunks,
       );
+
+      final returnedFileId = uploadResponse['fileId']?.toString();
+      final String finalFileId = (returnedFileId != null && returnedFileId.isNotEmpty)
+          ? returnedFileId
+          : plan.fileId;
 
       onProgress(PipelineProgress(
         filename: filename,
@@ -113,7 +118,7 @@ class FileRepository extends BaseRepository {
       ));
 
       return FileItem(
-        id: plan.fileId,
+        id: finalFileId,
         filename: filename,
         sizeBytes: fileBytes.length,
         createdAt: DateTime.now(),

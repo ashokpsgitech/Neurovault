@@ -24,6 +24,9 @@ public class UploadSession {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "file_id")
+    private UUID fileId;
+
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
