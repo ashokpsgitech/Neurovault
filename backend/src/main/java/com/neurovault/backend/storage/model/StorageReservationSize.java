@@ -1,5 +1,7 @@
 package com.neurovault.backend.storage.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 /**
  * Enumeration of allowed storage reservation sizes.
  * Host owners select one of these predefined sizes when reserving disk space
@@ -34,5 +36,18 @@ public enum StorageReservationSize {
      */
     public String getDisplayName() {
         return displayName;
+    }
+
+    @JsonCreator
+    public static StorageReservationSize fromString(String value) {
+        if (value == null || value.isBlank()) return GB_5;
+        String val = value.toUpperCase().trim();
+        if (val.contains("1GB") || val.contains("SMALL") || val.equals("GB_1")) return GB_1;
+        if (val.contains("2GB") || val.equals("GB_2")) return GB_2;
+        if (val.contains("5GB") || val.contains("MEDIUM") || val.equals("GB_5")) return GB_5;
+        if (val.contains("10GB") || val.contains("LARGE") || val.equals("GB_10")) return GB_10;
+        if (val.contains("20GB") || val.equals("GB_20")) return GB_20;
+        if (val.contains("500MB") || val.equals("MB_500")) return MB_500;
+        return GB_5;
     }
 }

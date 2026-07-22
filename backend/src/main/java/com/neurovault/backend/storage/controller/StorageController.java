@@ -1,24 +1,24 @@
 package com.neurovault.backend.storage.controller;
 
+import com.neurovault.backend.entity.User;
+import com.neurovault.backend.exception.ResourceNotFoundException;
+import com.neurovault.backend.host.dto.HostStatusDto;
+import com.neurovault.backend.host.service.HostRegistrationService;
+import com.neurovault.backend.repository.UserRepository;
 import com.neurovault.backend.storage.dto.ChunkMetadataDto;
 import com.neurovault.backend.storage.dto.CreateContainerRequest;
 import com.neurovault.backend.storage.dto.StorageStatusResponse;
 import com.neurovault.backend.storage.dto.StoreChunkRequest;
+import com.neurovault.backend.storage.model.StorageReservationSize;
 import com.neurovault.backend.storage.service.StorageService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,110 +33,138 @@ public class StorageController {
     private static final Logger log = LoggerFactory.getLogger(StorageController.class);
 
     private final StorageService storageService;
+    private final HostRegistrationService hostRegistrationService;
+    private final UserRepository userRepository;
 
-    public StorageController(StorageService storageService) {
+    public StorageController(
+            StorageService storageService,
+            HostRegistrationService hostRegistrationService,
+            UserRepository userRepository) {
         this.storageService = storageService;
+        this.hostRegistrationService = hostRegistrationService;
+        this.userRepository = userRepository;
     }
 
     /**
      * Returns the storage status of a host's container.
-     *
-     * @param hostId the UUID of the host
-     * @return storage status including container size, used/free space, and chunk count
      */
     @GetMapping("/status")
-    public ResponseEntity<StorageStatusResponse> getStorageStatus(@RequestParam UUID hostId) {
-        log.debug("GET /api/storage/status for host {}", hostId);
-        StorageStatusResponse status = storageService.getStorageStatus(hostId);
+    public ResponseEntity<StorageStatusResponse> getStorageStatus(
+            @RequestParam(required = false) UUID hostId,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.debug("GET /api/storage/status for host {}", targetHostId);
+        StorageStatusResponse status = storageService.getStorageStatus(targetHostId);
         return ResponseEntity.ok(status);
     }
 
     /**
      * Creates a new storage container for a host.
-     *
-     * @param request the creation request with host ID and reservation size
-     * @return storage status after creation
      */
     @PostMapping("/create")
-    public ResponseEntity<StorageStatusResponse> createStorage(@Valid @RequestBody CreateContainerRequest request) {
-        log.info("POST /api/storage/create for host {} with size {}",
-                request.getHostId(), request.getReservationSize());
-        StorageStatusResponse status = storageService.createStorage(
-                request.getHostId(), request.getReservationSize());
+    public ResponseEntity<StorageStatusResponse> createStorage(
+            @RequestBody CreateContainerRequest request,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(request != null ? request.getHostId() : null, principal);
+        StorageReservationSize size = (request != null && request.getReservationSize() != null)
+                ? request.getReservationSize()
+                : StorageReservationSize.GB_5;
+
+        log.info("POST /api/storage/create for host {} with size {}", targetHostId, size);
+        StorageStatusResponse status = storageService.createStorage(targetHostId, size);
         return ResponseEntity.status(HttpStatus.CREATED).body(status);
     }
 
     /**
      * Deletes a host's storage container.
-     *
-     * @param hostId the UUID of the host
-     * @return 204 No Content on success
      */
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> deleteStorage(@RequestParam UUID hostId) {
-        log.info("DELETE /api/storage/delete for host {}", hostId);
-        storageService.deleteStorage(hostId);
+    public ResponseEntity<Void> deleteStorage(
+            @RequestParam(required = false) UUID hostId,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.info("DELETE /api/storage/delete for host {}", targetHostId);
+        storageService.deleteStorage(targetHostId);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Lists all stored chunk metadata in a host's container.
-     *
-     * @param hostId the UUID of the host
-     * @return list of chunk metadata
      */
     @GetMapping("/chunks")
-    public ResponseEntity<List<ChunkMetadataDto>> listChunks(@RequestParam UUID hostId) {
-        log.debug("GET /api/storage/chunks for host {}", hostId);
-        List<ChunkMetadataDto> chunks = storageService.listChunks(hostId);
+    public ResponseEntity<List<ChunkMetadataDto>> listChunks(
+            @RequestParam(required = false) UUID hostId,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.debug("GET /api/storage/chunks for host {}", targetHostId);
+        List<ChunkMetadataDto> chunks = storageService.listChunks(targetHostId);
         return ResponseEntity.ok(chunks);
     }
 
     /**
      * Stores an encrypted chunk in a host's container.
-     *
-     * @param hostId  the UUID of the host
-     * @param request the chunk data and metadata
-     * @return the stored chunk's metadata
      */
     @PostMapping("/chunks")
     public ResponseEntity<ChunkMetadataDto> storeChunk(
-            @RequestParam UUID hostId,
-            @Valid @RequestBody StoreChunkRequest request) {
-        log.info("POST /api/storage/chunks for host {} chunk {}", hostId, request.getChunkId());
-        ChunkMetadataDto metadata = storageService.storeChunk(hostId, request);
+            @RequestParam(required = false) UUID hostId,
+            @Valid @RequestBody StoreChunkRequest request,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.info("POST /api/storage/chunks for host {} chunk {}", targetHostId, request.getChunkId());
+        ChunkMetadataDto metadata = storageService.storeChunk(targetHostId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(metadata);
     }
 
     /**
      * Reads an encrypted chunk from a host's container.
-     *
-     * @param chunkId the UUID of the chunk
-     * @param hostId  the UUID of the host
-     * @return the raw encrypted bytes
      */
     @GetMapping("/chunks/{chunkId}")
     public ResponseEntity<byte[]> readChunk(
             @PathVariable UUID chunkId,
-            @RequestParam UUID hostId) {
-        log.debug("GET /api/storage/chunks/{} for host {}", chunkId, hostId);
-        byte[] data = storageService.readChunk(hostId, chunkId);
+            @RequestParam(required = false) UUID hostId,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.debug("GET /api/storage/chunks/{} for host {}", chunkId, targetHostId);
+        byte[] data = storageService.readChunk(targetHostId, chunkId);
         return ResponseEntity.ok(data);
     }
 
     /**
      * Deletes a chunk from a host's container.
-     *
-     * @param chunkId the UUID of the chunk
-     * @param hostId  the UUID of the host
-     * @return 204 No Content on success
      */
     @DeleteMapping("/chunks/{chunkId}")
     public ResponseEntity<Void> deleteChunk(
             @PathVariable UUID chunkId,
-            @RequestParam UUID hostId) {
-        log.info("DELETE /api/storage/chunks/{} for host {}", chunkId, hostId);
-        storageService.deleteChunk(hostId, chunkId);
+            @RequestParam(required = false) UUID hostId,
+            Principal principal) {
+        UUID targetHostId = resolveHostId(hostId, principal);
+        log.info("DELETE /api/storage/chunks/{} for host {}", chunkId, targetHostId);
+        storageService.deleteChunk(targetHostId, chunkId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Resolves host ID from request parameter or authenticated user's registered host.
+     */
+    private UUID resolveHostId(UUID explicitHostId, Principal principal) {
+        if (explicitHostId != null) {
+            return explicitHostId;
+        }
+        if (principal != null) {
+            String name = principal.getName();
+            UUID ownerId;
+            try {
+                ownerId = UUID.fromString(name);
+            } catch (IllegalArgumentException e) {
+                User user = userRepository.findByEmail(name)
+                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + name));
+                ownerId = user.getId();
+            }
+            List<HostStatusDto> hosts = hostRegistrationService.getHostsByOwner(ownerId);
+            if (!hosts.isEmpty()) {
+                return hosts.get(0).getHostId();
+            }
+        }
+        throw new ResourceNotFoundException("No host ID provided and no registered host found for user");
     }
 }

@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,6 +20,75 @@ class HostScreen extends ConsumerStatefulWidget {
 
 class _HostScreenState extends ConsumerState<HostScreen> {
   double _reservedGb = 10.0;
+  String _containerPath = './neurovault-storage/storage.container';
+
+  Future<void> _selectStorageLocation() async {
+    try {
+      final selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
+        setState(() {
+          _containerPath = '$selectedDirectory/storage.container';
+        });
+        if (mounted) {
+          CustomSnackbar.showSuccess(context, 'Container location set to: $_containerPath');
+        }
+      }
+    } catch (_) {
+      _showCustomLocationDialog();
+    }
+  }
+
+  void _showCustomLocationDialog() {
+    final controller = TextEditingController(text: _containerPath);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.folder_open_outlined),
+            SizedBox(width: 12),
+            Text('Set Storage Location'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Specify the local disk directory or container path for pre-allocated binary storage.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                labelText: 'Container Path',
+                hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                setState(() {
+                  _containerPath = controller.text.trim();
+                });
+                Navigator.pop(ctx);
+                CustomSnackbar.showSuccess(context, 'Storage location updated to: $_containerPath');
+              }
+            },
+            child: const Text('Save Location'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,11 +373,16 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            const ListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.insert_drive_file_outlined),
-              title: Text('Container File Path'),
-              subtitle: Text('./neurovault-storage/storage.container'),
+              leading: const Icon(Icons.folder_special_outlined),
+              title: const Text('Container Location'),
+              subtitle: Text(_containerPath),
+              trailing: IconButton(
+                icon: const Icon(Icons.edit_location_alt_outlined),
+                tooltip: 'Select Storage Location Path',
+                onPressed: isEnabled ? null : _selectStorageLocation,
+              ),
             ),
             const Divider(height: 1),
             ListTile(

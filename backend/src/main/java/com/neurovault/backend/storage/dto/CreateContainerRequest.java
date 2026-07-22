@@ -1,7 +1,7 @@
 package com.neurovault.backend.storage.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.neurovault.backend.storage.model.StorageReservationSize;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,9 +18,11 @@ import java.util.UUID;
 @Builder
 public class CreateContainerRequest {
 
-    @NotNull(message = "Host ID is required")
+    @JsonAlias({"hostId", "id"})
     private UUID hostId;
 
-    @NotNull(message = "Reservation size is required")
+    @JsonAlias({"reservationSize", "reservationGb", "size"})
     private StorageReservationSize reservationSize;
+
+    private String containerPath;
 }
