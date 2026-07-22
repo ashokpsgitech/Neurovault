@@ -20,21 +20,29 @@ class HostScreen extends ConsumerStatefulWidget {
 
 class _HostScreenState extends ConsumerState<HostScreen> {
   double _reservedGb = 10.0;
-  String _containerPath = './neurovault-storage/storage.container';
+  String _containerPath = 'D:\\NeuroVaultData\\storage.container';
 
-  Future<void> _selectStorageLocation() async {
+  Future<void> _selectStorageLocation(TextEditingController controller, StateSetter? dialogSetState) async {
     try {
       final selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
+        final formattedPath = selectedDirectory.replaceAll('/', '\\');
+        final fullContainerPath = '$formattedPath\\storage.container';
+        controller.text = fullContainerPath;
         setState(() {
-          _containerPath = '$selectedDirectory/storage.container';
+          _containerPath = fullContainerPath;
         });
+        if (dialogSetState != null) {
+          dialogSetState(() {});
+        }
         if (mounted) {
-          CustomSnackbar.showSuccess(context, 'Container location set to: $_containerPath');
+          CustomSnackbar.showSuccess(context, 'Container location set: $fullContainerPath');
         }
       }
     } catch (_) {
-      _showCustomLocationDialog();
+      if (mounted) {
+        _showCustomLocationDialog();
+      }
     }
   }
 
@@ -42,71 +50,75 @@ class _HostScreenState extends ConsumerState<HostScreen> {
     final controller = TextEditingController(text: _containerPath);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.storage_outlined, color: Colors.green),
-            SizedBox(width: 12),
-            Text('Activate Host Node'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Select local disk storage folder and confirm capacity reservation before activating your Micro-Server node.',
-            ),
-            const SizedBox(height: 16),
-            Card(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Reserved Capacity:'),
-                    Text('${_reservedGb.round()} GB', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: 'Storage Container Directory',
-                hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.folder_open),
-                  tooltip: 'Browse Directory',
-                  onPressed: _selectStorageLocation,
-                ),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.storage_outlined, color: Colors.green),
+              SizedBox(width: 12),
+              Text('Activate Host Node'),
+            ],
           ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.check_circle_outline),
-            label: const Text('Activate Node & Allocate Storage'),
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Select local disk storage folder and confirm capacity reservation before activating your Micro-Server node.',
+              ),
+              const SizedBox(height: 16),
+              Card(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Reserved Capacity:'),
+                      Text('${_reservedGb.round()} GB', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  labelText: 'Storage Container File Path',
+                  hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.folder_open),
+                    tooltip: 'Browse Directory',
+                    onPressed: () => _selectStorageLocation(controller, setDialogState),
+                  ),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.check_circle_outline),
+              label: const Text('Activate Node & Allocate Storage'),
+              onPressed: () {
+                final targetPath = controller.text.trim().isNotEmpty
+                    ? controller.text.trim()
+                    : _containerPath;
+
                 setState(() {
-                  _containerPath = controller.text.trim();
+                  _containerPath = targetPath;
                 });
-              }
-              Navigator.pop(ctx);
-              ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), _containerPath);
-              CustomSnackbar.showSuccess(context, 'Allocating ${_reservedGb.round()} GB disk container...');
-            },
-          ),
-        ],
+                Navigator.pop(ctx);
+                ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), targetPath);
+                CustomSnackbar.showSuccess(context, 'Allocating ${_reservedGb.round()} GB disk container at: $targetPath');
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -149,11 +161,12 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           ElevatedButton(
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
+                final selectedPath = controller.text.trim();
                 setState(() {
-                  _containerPath = controller.text.trim();
+                  _containerPath = selectedPath;
                 });
                 Navigator.pop(ctx);
-                CustomSnackbar.showSuccess(context, 'Storage location updated to: $_containerPath');
+                CustomSnackbar.showSuccess(context, 'Storage location updated: $selectedPath');
               }
             },
             child: const Text('Save Location'),
@@ -192,7 +205,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
       ),
       body: LoadingOverlay(
         isLoading: isLoading,
-        message: 'Configuring Micro-Server Node...',
+        message: 'Configuring Micro-Server Node & Disk Container...',
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Center(
