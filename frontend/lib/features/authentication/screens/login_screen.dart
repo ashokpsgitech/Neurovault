@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/config/env_config.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../providers/auth_provider.dart';
@@ -20,6 +21,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  void _showServerSettingsModal(BuildContext context) {
+    final urlController = TextEditingController(text: EnvConfig.coordinatorBaseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.settings_outlined, color: Colors.blue),
+            SizedBox(width: 8),
+            Text('Server IP Settings'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Specify your PC local Wi-Fi IP address (e.g. http://10.10.193.106:8080 or http://10.42.96.100:8080):',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                labelText: 'Coordinator Server URL',
+                prefixIcon: Icon(Icons.link),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              final newUrl = urlController.text.trim();
+              if (newUrl.isNotEmpty) {
+                setState(() {
+                  EnvConfig.customUrl = newUrl;
+                });
+                CustomSnackbar.showSuccess(context, 'Server URL updated to: $newUrl');
+              }
+              Navigator.pop(ctx);
+            },
+            child: const Text('Save & Apply'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -75,10 +127,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Icon(
-                            Icons.shield_outlined,
-                            size: 56,
-                            color: theme.colorScheme.primary,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const SizedBox(width: 48),
+                              Icon(
+                                Icons.shield_outlined,
+                                size: 56,
+                                color: theme.colorScheme.primary,
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.settings_outlined),
+                                tooltip: 'Server IP Settings',
+                                onPressed: () => _showServerSettingsModal(context),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           Text(

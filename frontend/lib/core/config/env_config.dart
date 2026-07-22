@@ -2,7 +2,10 @@ import 'package:flutter/foundation.dart';
 
 /// Environment configuration for NeuroVault Flutter Client.
 class EnvConfig {
+  static String customUrl = '';
+
   static String get coordinatorBaseUrl {
+    if (customUrl.isNotEmpty) return customUrl;
     const fromEnv = String.fromEnvironment('COORDINATOR_URL');
     if (fromEnv.isNotEmpty) return fromEnv;
 
