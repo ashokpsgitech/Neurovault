@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:file_picker/file_picker.dart';
 
 Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
   try {
@@ -10,21 +9,16 @@ Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
       downloadsDir.createSync(recursive: true);
     }
     final targetFile = File('${downloadsDir.path}\\$filename');
-    await targetFile.writeAsBytes(bytes);
-
-    try {
-      final pickerPath = await FilePicker.platform.saveFile(
-        dialogTitle: 'Save Decrypted File',
-        fileName: filename,
-        bytes: bytes,
-      );
-      if (pickerPath != null && pickerPath.isNotEmpty) {
-        return pickerPath;
-      }
-    } catch (_) {}
-
+    await targetFile.writeAsBytes(bytes, flush: true);
     return targetFile.path;
   } catch (e) {
-    return null;
+    try {
+      final currentDir = Directory.current;
+      final targetFile = File('${currentDir.path}\\$filename');
+      await targetFile.writeAsBytes(bytes, flush: true);
+      return targetFile.path;
+    } catch (_) {
+      return null;
+    }
   }
 }

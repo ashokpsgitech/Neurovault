@@ -38,9 +38,50 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
   }
 
   Future<void> _saveDecryptedFileToDisk(String filename, Uint8List bytes) async {
-    final result = await saveDecryptedFileToDisk(filename, bytes);
-    if (result != null && mounted) {
-      CustomSnackbar.showSuccess(context, 'Decrypted file downloaded: $result');
+    final path = await saveDecryptedFileToDisk(filename, bytes);
+    if (mounted) {
+      if (path != null) {
+        CustomSnackbar.showSuccess(context, 'SAVED TO DISK: $path');
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 12),
+                Text('File Downloaded Successfully'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('The decrypted file has been saved to your computer:'),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    path,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        CustomSnackbar.showError(context, 'Failed to write file to disk.');
+      }
     }
   }
 
