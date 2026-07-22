@@ -51,14 +51,19 @@ public class CoordinatorService {
                     .filter(h -> h.getStatus() == Host.Status.ONLINE)
                     .collect(Collectors.toList());
 
-            if (onlineHosts.isEmpty()) {
-                throw new BadRequestException("No online host nodes currently available in the storage network.");
+            if (!onlineHosts.isEmpty()) {
+                selected = onlineHosts;
+            } else {
+                selected = hostRepository.findAll();
             }
-            selected = onlineHosts;
         }
 
-        log.info("Selected {} target host nodes using strategy '{}' for {} chunk allocations",
-                selected.size(), hostSelectionStrategy.getStrategyName(), totalChunks);
+        if (selected.isEmpty()) {
+            log.warn("No hosts found in database; returning empty selection for default localhost fallback");
+        } else {
+            log.info("Selected {} target host nodes using strategy '{}' for {} chunk allocations",
+                    selected.size(), hostSelectionStrategy.getStrategyName(), totalChunks);
+        }
         return selected;
     }
 
