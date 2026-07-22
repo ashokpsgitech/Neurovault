@@ -260,12 +260,23 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
               children: [
-                const Icon(Icons.check_circle_outline, color: Colors.green, size: 18),
-                const SizedBox(width: 6),
-                const Text('AES-256-GCM Decrypted & SHA-256 Verified', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                const Spacer(),
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_outline, color: Colors.green, size: 18),
+                    SizedBox(width: 6),
+                    Text(
+                      'AES-256-GCM Decrypted & SHA-256 Verified',
+                      style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ],
+                ),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.download_for_offline_outlined, size: 16),
                   label: const Text('Save File to Computer'),
