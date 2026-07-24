@@ -56,9 +56,13 @@ class FirebaseService {
     final username = user.displayName ?? googleUser.displayName ?? user.email?.split('@').first ?? 'Google User';
     final email = user.email ?? googleUser.email;
 
-    // Safely attempt Firestore user profile creation
+    // Safely attempt Firestore user profile creation with timeout
     try {
-      final docSnap = await _firestore.collection('users').doc(user.uid).get();
+      final docSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
       if (!docSnap.exists) {
         await _firestore.collection('users').doc(user.uid).set({
           'id': user.uid,
@@ -66,7 +70,7 @@ class FirebaseService {
           'email': email,
           'role': 'CLIENT',
           'createdAt': FieldValue.serverTimestamp(),
-        });
+        }).timeout(const Duration(seconds: 5));
       }
     } catch (_) {
       // Proceed gracefully if Firestore is unavailable or database is pending setup
@@ -84,7 +88,7 @@ class FirebaseService {
   Future<void> sendEmailVerification() async {
     final user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
-      await user.sendEmailVerification();
+      await user.sendEmailVerification().timeout(const Duration(seconds: 8));
     }
   }
 
@@ -92,16 +96,20 @@ class FirebaseService {
   Future<bool> checkEmailVerified() async {
     final user = _auth.currentUser;
     if (user == null) return false;
-    await user.reload();
-    final isVerified = _auth.currentUser?.emailVerified ?? false;
-    if (isVerified) {
-      try {
-        await _firestore.collection('users').doc(user.uid).update({
-          'emailVerified': true,
-        });
-      } catch (_) {}
+    try {
+      await user.reload().timeout(const Duration(seconds: 5));
+      final isVerified = _auth.currentUser?.emailVerified ?? false;
+      if (isVerified) {
+        try {
+          await _firestore.collection('users').doc(user.uid).update({
+            'emailVerified': true,
+          }).timeout(const Duration(seconds: 5));
+        } catch (_) {}
+      }
+      return isVerified;
+    } catch (_) {
+      return _auth.currentUser?.emailVerified ?? false;
     }
-    return isVerified;
   }
 
   /// Registers user with Email & Password on Firebase Auth and sends verification code/link.
@@ -120,9 +128,12 @@ class FirebaseService {
       throw Exception('Failed to create user account');
     }
 
-    await user.updateDisplayName(username);
     try {
-      await user.sendEmailVerification();
+      await user.updateDisplayName(username).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+
+    try {
+      await user.sendEmailVerification().timeout(const Duration(seconds: 8));
     } catch (_) {}
 
     final userDoc = {
@@ -135,7 +146,11 @@ class FirebaseService {
     };
 
     try {
-      await _firestore.collection('users').doc(user.uid).set(userDoc);
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(userDoc)
+          .timeout(const Duration(seconds: 5));
     } catch (_) {
       // Proceed gracefully if Firestore is unavailable
     }
@@ -167,7 +182,11 @@ class FirebaseService {
     String role = 'CLIENT';
 
     try {
-      final docSnap = await _firestore.collection('users').doc(user.uid).get();
+      final docSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
       if (docSnap.exists && docSnap.data() != null) {
         final data = docSnap.data()!;
         username = data['username']?.toString() ?? username;
@@ -179,7 +198,7 @@ class FirebaseService {
           'email': email,
           'role': role,
           'createdAt': FieldValue.serverTimestamp(),
-        });
+        }).timeout(const Duration(seconds: 5));
       }
     } catch (_) {
       // Proceed gracefully with FirebaseAuth fallback values
@@ -202,7 +221,11 @@ class FirebaseService {
     String role = 'CLIENT';
 
     try {
-      final docSnap = await _firestore.collection('users').doc(user.uid).get();
+      final docSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get()
+          .timeout(const Duration(seconds: 5));
       if (docSnap.exists && docSnap.data() != null) {
         final data = docSnap.data()!;
         username = data['username']?.toString() ?? username;
@@ -259,7 +282,8 @@ class FirebaseService {
           .doc(user.uid)
           .collection('files')
           .doc(fileId)
-          .set(fileDoc);
+          .set(fileDoc)
+          .timeout(const Duration(seconds: 10));
     } catch (e) {
       if (e.toString().contains('unavailable') || e.toString().contains('permission-denied')) {
         throw Exception('Cloud Firestore is not initialized yet. Go to Firebase Console > Firestore Database > Create Database.');
@@ -287,7 +311,8 @@ class FirebaseService {
           .doc(user.uid)
           .collection('files')
           .orderBy('createdAt', descending: true)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 8));
 
       return snapshot.docs.map((doc) {
         final data = doc.data();
@@ -318,7 +343,8 @@ class FirebaseService {
           .doc(user.uid)
           .collection('files')
           .doc(fileId)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 5));
     } catch (_) {}
 
     if (docSnap == null || !docSnap.exists || docSnap.data() == null) {

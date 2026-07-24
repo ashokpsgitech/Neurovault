@@ -33,6 +33,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return;
       }
       final user = await _repository.getCurrentUser();
+
+      // Enforce email verification check for email/password users
+      final isVerified = await _repository.checkEmailVerified();
+      final currentFbUser = FirebaseService().currentUser;
+      final isPasswordUser = currentFbUser?.providerData.any((p) => p.providerId == 'password') ?? false;
+
+      if (isPasswordUser && !isVerified) {
+        state = const Unauthenticated();
+        return;
+      }
+
       state = Authenticated(user);
     } catch (e) {
       await _repository.logout();
