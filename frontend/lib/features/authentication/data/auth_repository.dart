@@ -23,7 +23,13 @@ class AuthRepository extends BaseRepository {
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_mapFirebaseErrorMessage(e));
     } catch (e) {
-      throw AuthFailure('Network error: Unable to authenticate with Firebase ($e).');
+      final errStr = e.toString();
+      if (errStr.contains('Configuration not found') || errStr.contains('configuration-not-found')) {
+        throw const AuthFailure(
+          'Firebase Authentication is not enabled in Firebase Console yet. Please go to Firebase Console > Authentication > Get Started and enable Email/Password.',
+        );
+      }
+      throw AuthFailure('Authentication error: $e');
     }
   }
 
@@ -41,7 +47,13 @@ class AuthRepository extends BaseRepository {
     } on FirebaseAuthException catch (e) {
       throw AuthFailure(_mapFirebaseErrorMessage(e));
     } catch (e) {
-      throw AuthFailure('Network error: Unable to register account with Firebase ($e).');
+      final errStr = e.toString();
+      if (errStr.contains('Configuration not found') || errStr.contains('configuration-not-found')) {
+        throw const AuthFailure(
+          'Firebase Authentication is not enabled in Firebase Console yet. Please go to Firebase Console > Authentication > Get Started and enable Email/Password.',
+        );
+      }
+      throw AuthFailure('Registration error: $e');
     }
   }
 
@@ -72,7 +84,17 @@ class AuthRepository extends BaseRepository {
   }
 
   String _mapFirebaseErrorMessage(FirebaseAuthException e) {
-    switch (e.code) {
+    final msg = (e.message ?? '').toLowerCase();
+    final code = e.code.toLowerCase();
+
+    if (code.contains('configuration-not-found') ||
+        code.contains('configuration_not_found') ||
+        msg.contains('configuration not found') ||
+        msg.contains('configuration_not_found')) {
+      return 'Firebase Authentication is not enabled in Firebase Console yet.\n\nTo fix:\n1. Open Firebase Console (console.firebase.google.com)\n2. Go to project: neurovault-app\n3. Click Authentication -> Get Started -> Email/Password -> Enable.';
+    }
+
+    switch (code) {
       case 'user-not-found':
         return 'No user found with this email address.';
       case 'wrong-password':
@@ -86,8 +108,6 @@ class AuthRepository extends BaseRepository {
       case 'weak-password':
         return 'Password is too weak. Please use at least 6 characters.';
       case 'operation-not-allowed':
-      case 'configuration-not-found':
-      case 'CONFIGURATION_NOT_FOUND':
         return 'Email/Password authentication is disabled in Firebase Console. Enable it under Firebase Console > Authentication > Sign-in method.';
       case 'network-request-failed':
         return 'Network error: Check your internet connection.';
