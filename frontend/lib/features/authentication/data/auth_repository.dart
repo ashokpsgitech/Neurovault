@@ -122,6 +122,10 @@ class AuthRepository extends BaseRepository {
       return 'Firebase Authentication is not enabled in Firebase Console yet.\n\nTo fix:\n1. Open Firebase Console (console.firebase.google.com)\n2. Go to project: neurovault-app\n3. Click Authentication -> Get Started -> Email/Password -> Enable.';
     }
 
+    if (code.contains('unavailable') || msg.contains('unavailable')) {
+      return 'Cloud Firestore database is not created yet.\n\nTo fix:\n1. Open Firebase Console (console.firebase.google.com)\n2. Go to project: neurovault-app\n3. Click Firestore Database -> Create Database.';
+    }
+
     switch (code) {
       case 'user-not-found':
         return 'No user found with this email address.';

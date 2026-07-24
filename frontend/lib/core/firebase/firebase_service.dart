@@ -56,15 +56,20 @@ class FirebaseService {
     final username = user.displayName ?? googleUser.displayName ?? user.email?.split('@').first ?? 'Google User';
     final email = user.email ?? googleUser.email;
 
-    final docSnap = await _firestore.collection('users').doc(user.uid).get();
-    if (!docSnap.exists) {
-      await _firestore.collection('users').doc(user.uid).set({
-        'id': user.uid,
-        'username': username,
-        'email': email,
-        'role': 'CLIENT',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+    // Safely attempt Firestore user profile creation
+    try {
+      final docSnap = await _firestore.collection('users').doc(user.uid).get();
+      if (!docSnap.exists) {
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'username': username,
+          'email': email,
+          'role': 'CLIENT',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (_) {
+      // Proceed gracefully if Firestore is unavailable or database is pending setup
     }
 
     return UserModel(
@@ -129,7 +134,11 @@ class FirebaseService {
       'createdAt': FieldValue.serverTimestamp(),
     };
 
-    await _firestore.collection('users').doc(user.uid).set(userDoc);
+    try {
+      await _firestore.collection('users').doc(user.uid).set(userDoc);
+    } catch (_) {
+      // Proceed gracefully if Firestore is unavailable
+    }
 
     return UserModel(
       id: user.uid,
@@ -154,32 +163,34 @@ class FirebaseService {
       throw Exception('Authentication failed');
     }
 
-    final docSnap = await _firestore.collection('users').doc(user.uid).get();
+    String username = user.displayName ?? email.split('@').first;
+    String role = 'CLIENT';
 
-    if (docSnap.exists && docSnap.data() != null) {
-      final data = docSnap.data()!;
-      return UserModel(
-        id: user.uid,
-        username: data['username']?.toString() ?? user.displayName ?? email.split('@').first,
-        email: email,
-        role: data['role']?.toString() ?? 'CLIENT',
-      );
-    } else {
-      final fallbackUsername = user.displayName ?? email.split('@').first;
-      await _firestore.collection('users').doc(user.uid).set({
-        'id': user.uid,
-        'username': fallbackUsername,
-        'email': email,
-        'role': 'CLIENT',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      return UserModel(
-        id: user.uid,
-        username: fallbackUsername,
-        email: email,
-        role: 'CLIENT',
-      );
+    try {
+      final docSnap = await _firestore.collection('users').doc(user.uid).get();
+      if (docSnap.exists && docSnap.data() != null) {
+        final data = docSnap.data()!;
+        username = data['username']?.toString() ?? username;
+        role = data['role']?.toString() ?? role;
+      } else {
+        await _firestore.collection('users').doc(user.uid).set({
+          'id': user.uid,
+          'username': username,
+          'email': email,
+          'role': role,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (_) {
+      // Proceed gracefully with FirebaseAuth fallback values
     }
+
+    return UserModel(
+      id: user.uid,
+      username: username,
+      email: email,
+      role: role,
+    );
   }
 
   /// Fetches current user profile from Firebase Auth & Firestore.
@@ -187,24 +198,23 @@ class FirebaseService {
     final user = _auth.currentUser;
     if (user == null) return null;
 
+    String username = user.displayName ?? user.email?.split('@').first ?? 'User';
+    String role = 'CLIENT';
+
     try {
       final docSnap = await _firestore.collection('users').doc(user.uid).get();
       if (docSnap.exists && docSnap.data() != null) {
         final data = docSnap.data()!;
-        return UserModel(
-          id: user.uid,
-          username: data['username']?.toString() ?? user.displayName ?? user.email?.split('@').first ?? 'User',
-          email: user.email ?? '',
-          role: data['role']?.toString() ?? 'CLIENT',
-        );
+        username = data['username']?.toString() ?? username;
+        role = data['role']?.toString() ?? role;
       }
     } catch (_) {}
 
     return UserModel(
       id: user.uid,
-      username: user.displayName ?? user.email?.split('@').first ?? 'User',
+      username: username,
       email: user.email ?? '',
-      role: 'CLIENT',
+      role: role,
     );
   }
 
@@ -243,12 +253,19 @@ class FirebaseService {
       'chunkCount': 1,
     };
 
-    await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('files')
-        .doc(fileId)
-        .set(fileDoc);
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .doc(fileId)
+          .set(fileDoc);
+    } catch (e) {
+      if (e.toString().contains('unavailable') || e.toString().contains('permission-denied')) {
+        throw Exception('Cloud Firestore is not initialized yet. Go to Firebase Console > Firestore Database > Create Database.');
+      }
+      rethrow;
+    }
 
     return FileItem(
       id: fileId,
@@ -264,25 +281,29 @@ class FirebaseService {
     final user = _auth.currentUser;
     if (user == null) return [];
 
-    final snapshot = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('files')
-        .orderBy('createdAt', descending: true)
-        .get();
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .orderBy('createdAt', descending: true)
+          .get();
 
-    return snapshot.docs.map((doc) {
-      final data = doc.data();
-      return FileItem(
-        id: data['id']?.toString() ?? doc.id,
-        filename: data['filename']?.toString() ?? 'vault_file.bin',
-        sizeBytes: data['sizeBytes'] ?? 0,
-        createdAt: data['createdAt'] != null && data['createdAt'] is Timestamp
-            ? (data['createdAt'] as Timestamp).toDate()
-            : DateTime.now(),
-        chunkCount: data['chunkCount'] ?? 1,
-      );
-    }).toList();
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return FileItem(
+          id: data['id']?.toString() ?? doc.id,
+          filename: data['filename']?.toString() ?? 'vault_file.bin',
+          sizeBytes: data['sizeBytes'] ?? 0,
+          createdAt: data['createdAt'] != null && data['createdAt'] is Timestamp
+              ? (data['createdAt'] as Timestamp).toDate()
+              : DateTime.now(),
+          chunkCount: data['chunkCount'] ?? 1,
+        );
+      }).toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Downloads encrypted bytes and AES key for a given file ID.
@@ -290,14 +311,17 @@ class FirebaseService {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated with Firebase');
 
-    final docSnap = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .collection('files')
-        .doc(fileId)
-        .get();
+    DocumentSnapshot<Map<String, dynamic>>? docSnap;
+    try {
+      docSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .doc(fileId)
+          .get();
+    } catch (_) {}
 
-    if (!docSnap.exists || docSnap.data() == null) {
+    if (docSnap == null || !docSnap.exists || docSnap.data() == null) {
       throw Exception('File metadata not found in cloud vault.');
     }
 
