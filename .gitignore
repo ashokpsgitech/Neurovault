@@ -6,16 +6,18 @@ gradle-bin/
 .gradle-dist/
 jdk-21.0.2/
 
-# Gradle Build directories
+# Gradle & Flutter Build directories
 .gradle/
-**/build/
 **/out/
 **/bin/
 .gradletasknamecache
 
-# Track compiled release APK for GitHub distribution
-!/apk/
-!/apk/*.apk
+# Ignore all build output except the release APK
+frontend/build/*
+!frontend/build/app/
+!frontend/build/app/outputs/
+!frontend/build/app/outputs/flutter-apk/
+!frontend/build/app/outputs/flutter-apk/app-release.apk
 
 # Compiled class files
 *.class
