@@ -75,7 +75,31 @@ class FirebaseService {
     );
   }
 
-  /// Registers user with Email & Password on Firebase Auth.
+  /// Sends Email Verification code / link to the registered user.
+  Future<void> sendEmailVerification() async {
+    final user = _auth.currentUser;
+    if (user != null && !user.emailVerified) {
+      await user.sendEmailVerification();
+    }
+  }
+
+  /// Checks if current user's email has been verified via Firebase.
+  Future<bool> checkEmailVerified() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    await user.reload();
+    final isVerified = _auth.currentUser?.emailVerified ?? false;
+    if (isVerified) {
+      try {
+        await _firestore.collection('users').doc(user.uid).update({
+          'emailVerified': true,
+        });
+      } catch (_) {}
+    }
+    return isVerified;
+  }
+
+  /// Registers user with Email & Password on Firebase Auth and sends verification code/link.
   Future<UserModel> register({
     required String username,
     required String email,
@@ -92,12 +116,16 @@ class FirebaseService {
     }
 
     await user.updateDisplayName(username);
+    try {
+      await user.sendEmailVerification();
+    } catch (_) {}
 
     final userDoc = {
       'id': user.uid,
       'username': username,
       'email': email,
       'role': 'CLIENT',
+      'emailVerified': false,
       'createdAt': FieldValue.serverTimestamp(),
     };
 

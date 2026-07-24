@@ -75,6 +75,16 @@ class AuthRepository extends BaseRepository {
     }
   }
 
+  /// Checks if current user's email has been verified.
+  Future<bool> checkEmailVerified() async {
+    return await _firebaseService.checkEmailVerified();
+  }
+
+  /// Resends email verification code/link.
+  Future<void> resendEmailVerification() async {
+    await _firebaseService.sendEmailVerification();
+  }
+
   /// Restores session from Firebase Auth / Firestore.
   Future<UserModel> getCurrentUser() async {
     try {

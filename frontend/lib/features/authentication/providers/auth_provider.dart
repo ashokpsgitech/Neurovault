@@ -79,6 +79,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Checks if current user's email has been verified.
+  Future<bool> checkEmailVerified() async {
+    return await _repository.checkEmailVerified();
+  }
+
+  /// Resends email verification code/link.
+  Future<void> resendEmailVerification() async {
+    await _repository.resendEmailVerification();
+  }
+
   /// Logs out user and clears token.
   Future<void> logout() async {
     await _repository.logout();
