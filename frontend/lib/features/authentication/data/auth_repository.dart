@@ -57,6 +57,24 @@ class AuthRepository extends BaseRepository {
     }
   }
 
+  /// Authenticates user via Google Sign-In provider.
+  Future<LoginResponse> signInWithGoogle() async {
+    try {
+      final user = await _firebaseService.signInWithGoogle();
+      await _storageService.saveToken(user.id);
+      await _storageService.saveUserEmail(user.email);
+      return LoginResponse(token: user.id, type: 'Bearer', user: user);
+    } on FirebaseAuthException catch (e) {
+      throw AuthFailure(_mapFirebaseErrorMessage(e));
+    } catch (e) {
+      final errStr = e.toString();
+      if (errStr.contains('cancelled')) {
+        throw const AuthFailure('Google Sign-In was cancelled.');
+      }
+      throw AuthFailure('Google Sign-In failed: $e');
+    }
+  }
+
   /// Restores session from Firebase Auth / Firestore.
   Future<UserModel> getCurrentUser() async {
     try {

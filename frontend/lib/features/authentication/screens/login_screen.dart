@@ -244,6 +244,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          const Row(
+                            children: [
+                              Expanded(child: Divider()),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 12),
+                                child: Text('OR', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                              ),
+                              Expanded(child: Divider()),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.g_mobiledata, size: 28, color: Colors.red),
+                            label: const Text('Continue with Google'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    ref.read(authStateProvider.notifier).signInWithGoogle();
+                                  },
+                          ),
                           const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,

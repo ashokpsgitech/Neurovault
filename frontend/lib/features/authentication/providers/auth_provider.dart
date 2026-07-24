@@ -66,6 +66,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Authenticates user using Google Sign-In.
+  Future<void> signInWithGoogle() async {
+    state = const AuthLoading();
+    try {
+      final response = await _repository.signInWithGoogle();
+      state = Authenticated(response.user);
+    } on Failure catch (f) {
+      state = AuthError(f.message);
+    } catch (e) {
+      state = AuthError(e.toString());
+    }
+  }
+
   /// Logs out user and clears token.
   Future<void> logout() async {
     await _repository.logout();

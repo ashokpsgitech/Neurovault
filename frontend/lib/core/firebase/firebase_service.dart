@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../firebase_options.dart';
 import '../../features/authentication/models/user_model.dart';
@@ -30,6 +31,48 @@ class FirebaseService {
         );
       }
     } catch (_) {}
+  }
+
+  /// Authenticates or registers user using Google Sign-In provider.
+  Future<UserModel> signInWithGoogle() async {
+    final GoogleSignIn googleSignIn = GoogleSignIn();
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser == null) {
+      throw Exception('Google sign-in cancelled by user');
+    }
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final OAuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final userCredential = await _auth.signInWithCredential(credential);
+    final user = userCredential.user;
+    if (user == null) {
+      throw Exception('Google sign-in failed');
+    }
+
+    final username = user.displayName ?? googleUser.displayName ?? user.email?.split('@').first ?? 'Google User';
+    final email = user.email ?? googleUser.email;
+
+    final docSnap = await _firestore.collection('users').doc(user.uid).get();
+    if (!docSnap.exists) {
+      await _firestore.collection('users').doc(user.uid).set({
+        'id': user.uid,
+        'username': username,
+        'email': email,
+        'role': 'CLIENT',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+
+    return UserModel(
+      id: user.uid,
+      username: username,
+      email: email,
+      role: 'CLIENT',
+    );
   }
 
   /// Registers user with Email & Password on Firebase Auth.
