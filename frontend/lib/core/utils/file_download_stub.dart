@@ -3,18 +3,31 @@ import 'dart:typed_data';
 
 Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
   try {
-    final userHeader = Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'] ?? '.';
-    final downloadsDir = Directory('$userHeader\\Downloads');
-    if (!downloadsDir.existsSync()) {
-      downloadsDir.createSync(recursive: true);
+    Directory? targetDir;
+    if (Platform.isAndroid) {
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      if (downloadDir.existsSync()) {
+        targetDir = downloadDir;
+      } else {
+        targetDir = Directory.systemTemp;
+      }
+    } else if (Platform.isWindows) {
+      final userHeader = Platform.environment['USERPROFILE'] ?? '.';
+      targetDir = Directory('$userHeader\\Downloads');
+    } else {
+      final home = Platform.environment['HOME'] ?? '.';
+      targetDir = Directory('$home/Downloads');
     }
-    final targetFile = File('${downloadsDir.path}\\$filename');
+
+    if (!targetDir.existsSync()) {
+      targetDir.createSync(recursive: true);
+    }
+    final targetFile = File('${targetDir.path}/$filename');
     await targetFile.writeAsBytes(bytes, flush: true);
     return targetFile.path;
   } catch (e) {
     try {
-      final currentDir = Directory.current;
-      final targetFile = File('${currentDir.path}\\$filename');
+      final targetFile = File('${Directory.systemTemp.path}/$filename');
       await targetFile.writeAsBytes(bytes, flush: true);
       return targetFile.path;
     } catch (_) {

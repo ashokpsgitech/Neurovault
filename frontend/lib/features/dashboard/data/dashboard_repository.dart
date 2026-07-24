@@ -1,49 +1,42 @@
+import '../../../core/firebase/firebase_service.dart';
 import '../../../repositories/base_repository.dart';
+import '../../authentication/models/user_model.dart';
 import '../models/dashboard_stats_model.dart';
-import '../services/dashboard_service.dart';
 
-/// Repository fetching and consolidating dashboard statistics.
+/// Repository fetching and consolidating dashboard statistics via Firebase.
 class DashboardRepository extends BaseRepository {
-  final DashboardService _service;
+  final FirebaseService _firebaseService;
 
-  DashboardRepository(this._service);
+  DashboardRepository(this._firebaseService);
 
   Future<DashboardStatsModel> fetchDashboardStats() async {
     return safeApiCall(() async {
-      final user = await _service.getProfile();
-      final hostData = await _service.getHostStatus();
-      final clusterData = await _service.getClusterStatus();
+      final user = await _firebaseService.getCurrentUser() ??
+          const UserModel(id: 'guest', username: 'Vault User', email: '', role: 'CLIENT');
 
-      String hostStatus = 'UNREGISTERED';
+      final files = await _firebaseService.listUserFiles();
       int storageUsed = 0;
-      int storageCapacity = 10 * 1024 * 1024 * 1024; // 10 GB default
-      int reservedCapacity = 5 * 1024 * 1024 * 1024; // 5 GB default
-
-      if (hostData != null) {
-        hostStatus = hostData['status']?.toString() ?? 'OFFLINE';
-        storageUsed = hostData['usedCapacityBytes'] ?? 0;
-        storageCapacity = hostData['totalCapacityBytes'] ?? storageCapacity;
-        reservedCapacity = hostData['reservedCapacityBytes'] ?? reservedCapacity;
+      for (final f in files) {
+        storageUsed += f.sizeBytes;
       }
 
-      int totalFiles = clusterData?['totalFiles'] ?? 0;
+      const int storageCapacity = 10 * 1024 * 1024 * 1024; // 10 GB default
+      const int reservedCapacity = 5 * 1024 * 1024 * 1024; // 5 GB default
 
       return DashboardStatsModel(
         user: user,
         storageUsedBytes: storageUsed,
         storageCapacityBytes: storageCapacity,
         reservedStorageBytes: reservedCapacity,
-        hostStatus: hostStatus,
-        totalFiles: totalFiles,
-        recentActivities: [
-          RecentActivityItem(
-            id: '1',
-            title: 'System Vault Initialized',
-            subtitle: 'Secure AES-256 key envelope created',
-            type: 'UPLOAD',
-            timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-          ),
-        ],
+        hostStatus: 'FIREBASE CLOUD 24/7',
+        totalFiles: files.length,
+        recentActivities: files.map((f) => RecentActivityItem(
+          id: f.id,
+          title: f.filename,
+          subtitle: 'AES-256 Cloud Encrypted Sync',
+          type: 'UPLOAD',
+          timestamp: f.createdAt,
+        )).toList(),
       );
     });
   }

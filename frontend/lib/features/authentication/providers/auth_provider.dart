@@ -1,20 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/failures.dart';
+import '../../../core/firebase/firebase_service.dart';
 import '../../../providers/core_providers.dart';
 import '../data/auth_repository.dart';
-import '../services/auth_service.dart';
 import 'auth_state.dart';
 
-final authServiceProvider = Provider<AuthService>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return AuthService(dioClient);
-});
-
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final authService = ref.watch(authServiceProvider);
+  final firebaseService = FirebaseService();
   final storageService = ref.watch(secureStorageProvider);
-  return AuthRepository(authService, storageService);
+  return AuthRepository(firebaseService, storageService);
 });
 
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {

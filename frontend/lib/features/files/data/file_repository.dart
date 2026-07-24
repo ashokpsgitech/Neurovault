@@ -2,142 +2,101 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
-import '../../../core/crypto/file_chunker.dart';
+import '../../../core/firebase/firebase_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/file_metadata_model.dart';
 import '../models/progress_model.dart';
-import '../services/file_service.dart';
 
-/// Repository handling zero-trust encryption, 4MB chunking, and streaming metadata pipelines.
+/// Repository handling zero-trust AES-256 encryption, 24/7 Firebase storage, and metadata sync.
 class FileRepository extends BaseRepository {
-  final FileService _service;
+  final FirebaseService _firebaseService;
 
-  FileRepository(this._service);
+  FileRepository(this._firebaseService);
 
   Future<List<FileItem>> listFiles() async {
     return safeApiCall(() async {
-      return await _service.listFiles();
+      return await _firebaseService.listUserFiles();
     });
   }
 
-  /// Zero-Trust Upload Pipeline (Client-Side Encryption, 4MB Chunking, Host Streaming)
+  /// Zero-Trust Upload Pipeline (Client-Side Encryption + Firebase Cloud Sync)
   Future<FileItem> uploadFile({
     required String filename,
     required Uint8List fileBytes,
     required void Function(PipelineProgress progress) onProgress,
   }) async {
     return safeApiCall(() async {
-      final checksum = CryptoEngine.calculateSha256(fileBytes);
-      final rawChunks = FileChunker.splitIntoChunks(fileBytes);
       final symmetricKey = CryptoEngine.generateSymmetricKey();
-      final totalChunks = rawChunks.length;
+      const totalChunks = 1;
 
       onProgress(PipelineProgress(
         filename: filename,
         currentChunk: 0,
         totalChunks: totalChunks,
-        progressPercent: 0.05,
-        status: 'ENCRYPTING',
+        progressPercent: 0.1,
+        status: 'ENCRYPTING (AES-256-GCM)',
       ));
 
-      final plan = await _service.requestUploadPlan(
-        filename: filename,
-        sizeBytes: fileBytes.length,
-        chunkCount: totalChunks,
-        checksum: checksum,
-      );
-
-      final List<Map<String, dynamic>> uploadedChunks = [];
-
-      for (int i = 0; i < totalChunks; i++) {
-        final plainChunk = rawChunks[i];
-        final encryptedChunk = CryptoEngine.encryptChunk(plainChunk, symmetricKey, i);
-        final chunkHash = CryptoEngine.calculateSha256(encryptedChunk);
-
-        String hostUrl = 'http://localhost:8080/api/storage/chunks';
-        String chunkId = '';
-        String hostId = '';
-
-        if (i < plan.chunkAllocations.length) {
-          final alloc = plan.chunkAllocations[i];
-          hostUrl = alloc.primaryHostUrl;
-          if (alloc.chunkId.isNotEmpty) {
-            chunkId = alloc.chunkId;
-          }
-          hostId = alloc.hostId;
-        }
-
-        if (chunkId.isEmpty) {
-          final hex = CryptoEngine.calculateSha256(utf8.encode('${plan.fileId}-$i'));
-          chunkId = '${hex.substring(0, 8)}-${hex.substring(8, 12)}-${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20, 32)}';
-        }
-
-        await _service.uploadChunkPayload(
-          hostUrl: hostUrl,
-          chunkId: chunkId,
-          encryptedPayload: encryptedChunk,
-        );
-
-        uploadedChunks.add({
-          'chunkIndex': i,
-          'chunkId': chunkId,
-          'chunkHash': chunkHash,
-          'sizeBytes': encryptedChunk.length,
-          if (hostId.isNotEmpty) 'hostId': hostId,
-        });
-
-        final percent = 0.1 + (0.85 * ((i + 1) / totalChunks));
-        onProgress(PipelineProgress(
-          filename: filename,
-          currentChunk: i + 1,
-          totalChunks: totalChunks,
-          progressPercent: percent,
-          status: 'UPLOADING',
-        ));
-      }
-
-      final String encodedKey = base64Encode(symmetricKey);
-
-      final uploadResponse = await _service.completeUpload(
-        uploadSessionId: plan.sessionId,
-        encryptedAesKey: encodedKey,
-        uploadedChunks: uploadedChunks,
-      );
-
-      final returnedFileId = uploadResponse['fileId']?.toString();
-      final String finalFileId = (returnedFileId != null && returnedFileId.isNotEmpty)
-          ? returnedFileId
-          : plan.fileId;
+      // Client-side zero-trust payload encryption
+      final encryptedBytes = CryptoEngine.encryptChunk(fileBytes, symmetricKey, 0);
+      final encodedKey = base64Encode(symmetricKey);
 
       onProgress(PipelineProgress(
         filename: filename,
-        currentChunk: totalChunks,
+        currentChunk: 1,
+        totalChunks: totalChunks,
+        progressPercent: 0.5,
+        status: 'UPLOADING TO CLOUD VAULT',
+      ));
+
+      final uploadedItem = await _firebaseService.uploadEncryptedFile(
+        filename: filename,
+        fileBytes: encryptedBytes,
+        aesKeyBase64: encodedKey,
+      );
+
+      onProgress(PipelineProgress(
+        filename: filename,
+        currentChunk: 1,
         totalChunks: totalChunks,
         progressPercent: 1.0,
         status: 'COMPLETE',
       ));
 
-      return FileItem(
-        id: finalFileId,
-        filename: filename,
-        sizeBytes: fileBytes.length,
-        createdAt: DateTime.now(),
-        chunkCount: totalChunks,
-      );
+      return uploadedItem;
     });
   }
 
-  /// Zero-Trust Download Pipeline (Chunk Retrieval, Checksum Verification, Client-Side Decryption)
+  /// Zero-Trust Download Pipeline (Firebase Retrieval + Client-Side Decryption)
   Future<Uint8List> downloadFile({
     required FileItem fileItem,
     required void Function(PipelineProgress progress) onProgress,
   }) async {
     return safeApiCall(() async {
-      final plan = await _service.requestDownloadPlan(fileItem.id);
+      onProgress(PipelineProgress(
+        filename: fileItem.filename,
+        currentChunk: 1,
+        totalChunks: 1,
+        progressPercent: 0.2,
+        status: 'DOWNLOADING FROM CLOUD VAULT',
+      ));
+
+      final cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
+      final Uint8List encryptedBytes = cloudPayload['encryptedBytes'];
+      final String encryptedAesKey = cloudPayload['encryptedAesKey'];
+
+      onProgress(PipelineProgress(
+        filename: fileItem.filename,
+        currentChunk: 1,
+        totalChunks: 1,
+        progressPercent: 0.8,
+        status: 'DECRYPTING (AES-256-GCM)',
+      ));
+
       Uint8List symmetricKey;
-      if (plan.encryptedAesKey.isNotEmpty) {
+      if (encryptedAesKey.isNotEmpty) {
         try {
-          symmetricKey = base64Decode(plan.encryptedAesKey);
+          symmetricKey = base64Decode(encryptedAesKey);
         } catch (_) {
           symmetricKey = CryptoEngine.generateSymmetricKey();
         }
@@ -145,59 +104,22 @@ class FileRepository extends BaseRepository {
         symmetricKey = CryptoEngine.generateSymmetricKey();
       }
 
-      final totalChunks = plan.chunkLocations.isNotEmpty ? plan.chunkLocations.length : 1;
-      final List<Uint8List> downloadedChunks = [];
-
-      for (int i = 0; i < totalChunks; i++) {
-        onProgress(PipelineProgress(
-          filename: fileItem.filename,
-          currentChunk: i + 1,
-          totalChunks: totalChunks,
-          progressPercent: 0.1 + (0.8 * (i / totalChunks)),
-          status: 'DOWNLOADING',
-        ));
-
-        String hostUrl = 'http://localhost:8080/api/storage/chunks';
-        String chunkId = '${fileItem.id}-chunk-$i';
-
-        if (i < plan.chunkLocations.length) {
-          hostUrl = plan.chunkLocations[i].hostUrl;
-          chunkId = plan.chunkLocations[i].chunkId;
-        }
-
-        final encryptedBytes = await _service.downloadChunkPayload(
-          hostUrl: hostUrl,
-          chunkId: chunkId,
-        );
-
-        Uint8List decryptedBytes;
-        try {
-          decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, i);
-        } catch (_) {
-          decryptedBytes = encryptedBytes;
-        }
-        downloadedChunks.add(decryptedBytes);
+      Uint8List decryptedBytes;
+      try {
+        decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, 0);
+      } catch (_) {
+        decryptedBytes = encryptedBytes;
       }
 
       onProgress(PipelineProgress(
         filename: fileItem.filename,
-        currentChunk: totalChunks,
-        totalChunks: totalChunks,
-        progressPercent: 0.95,
-        status: 'DECRYPTING',
-      ));
-
-      final assembledFile = FileChunker.reassembleChunks(downloadedChunks);
-
-      onProgress(PipelineProgress(
-        filename: fileItem.filename,
-        currentChunk: totalChunks,
-        totalChunks: totalChunks,
+        currentChunk: 1,
+        totalChunks: 1,
         progressPercent: 1.0,
         status: 'COMPLETE',
       ));
 
-      return assembledFile;
+      return decryptedBytes;
     });
   }
 }

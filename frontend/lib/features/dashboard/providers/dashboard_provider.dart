@@ -1,19 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/failures.dart';
-import '../../../providers/core_providers.dart';
+import '../../../core/firebase/firebase_service.dart';
 import '../data/dashboard_repository.dart';
-import '../services/dashboard_service.dart';
 import 'dashboard_state.dart';
 
-final dashboardServiceProvider = Provider<DashboardService>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return DashboardService(dioClient);
-});
-
 final dashboardRepositoryProvider = Provider<DashboardRepository>((ref) {
-  final service = ref.watch(dashboardServiceProvider);
-  return DashboardRepository(service);
+  final firebaseService = FirebaseService();
+  return DashboardRepository(firebaseService);
 });
 
 final dashboardProvider = StateNotifierProvider<DashboardNotifier, DashboardState>((ref) {

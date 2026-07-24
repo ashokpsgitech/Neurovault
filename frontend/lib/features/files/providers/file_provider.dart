@@ -2,20 +2,14 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/errors/failures.dart';
-import '../../../providers/core_providers.dart';
+import '../../../core/firebase/firebase_service.dart';
 import '../data/file_repository.dart';
 import '../models/file_metadata_model.dart';
-import '../services/file_service.dart';
 import 'file_state.dart';
 
-final fileServiceProvider = Provider<FileService>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return FileService(dioClient);
-});
-
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
-  final service = ref.watch(fileServiceProvider);
-  return FileRepository(service);
+  final firebaseService = FirebaseService();
+  return FileRepository(firebaseService);
 });
 
 final fileProvider = StateNotifierProvider<FileNotifier, FileState>((ref) {
@@ -36,11 +30,8 @@ class FileNotifier extends StateNotifier<FileState> {
     state = const FileLoading();
     try {
       final remoteFiles = await _repository.listFiles();
-      for (final item in remoteFiles) {
-        if (!_inMemoryFiles.any((f) => f.id == item.id)) {
-          _inMemoryFiles.add(item);
-        }
-      }
+      _inMemoryFiles.clear();
+      _inMemoryFiles.addAll(remoteFiles);
       state = FileLoaded(List.unmodifiable(_inMemoryFiles));
     } catch (_) {
       state = FileLoaded(List.unmodifiable(_inMemoryFiles));
@@ -60,6 +51,7 @@ class FileNotifier extends StateNotifier<FileState> {
         },
       );
 
+      _inMemoryFiles.removeWhere((f) => f.id == uploadedItem.id);
       _inMemoryFiles.insert(0, uploadedItem);
       state = FileLoaded(List.unmodifiable(_inMemoryFiles));
     } on Failure catch (f) {

@@ -8,7 +8,7 @@ class LoginResponse {
 
   const LoginResponse({
     required this.token,
-    required this.type,
+    this.type = 'Bearer',
     required this.user,
   });
 
