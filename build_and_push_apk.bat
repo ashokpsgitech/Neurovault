@@ -18,7 +18,7 @@ copy /Y "frontend\build\app\outputs\flutter-apk\app-release.apk" "apk\neurovault
 echo ========================================================
 echo Staging and Pushing to GitHub...
 echo ========================================================
-git add .
+git add -A
 git commit -m "build: update release APK binary and sync changes"
 git push origin main
 
