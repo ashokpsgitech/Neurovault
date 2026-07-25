@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.neurovault.backend.coordinator.CoordinatorServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:35:53" hostname="ASHOK" time="0.082">
+  <properties/>
+  <testcase name="generateChunkToken should return signed non-empty JWT token" classname="com.neurovault.backend.coordinator.CoordinatorServiceTest" time="0.049"/>
+  <testcase name="selectTargetHosts should return online hosts" classname="com.neurovault.backend.coordinator.CoordinatorServiceTest" time="0.032"/>
+  <system-out><![CDATA[2026-07-22T10:05:51.577+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.coordinator.CoordinatorServiceTest]: CoordinatorServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-22T10:05:51.601+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.coordinator.CoordinatorServiceTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2026-07-22T10:05:51.649+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.c.CoordinatorServiceTest           : Starting CoordinatorServiceTest using Java 21.0.11 with PID 11652 (started by ashok in D:\Project\micro server\backend)
+2026-07-22T10:05:51.650+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.c.CoordinatorServiceTest           : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-07-22T10:05:51.650+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.c.CoordinatorServiceTest           : The following 1 profile is active: "test"
+2026-07-22T10:05:52.153+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-22T10:05:52.205+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 52 ms. Found 10 JPA repository interfaces.
+2026-07-22T10:05:52.324+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-22T10:05:52.331+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-22T10:05:52.347+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-22T10:05:52.349+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-07-22T10:05:52.354+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection conn20: url=jdbc:h2:mem:coordinatortestdb user=SA
+2026-07-22T10:05:52.355+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-07-22T10:05:52.356+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-22T10:05:52.620+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-22T10:05:52.652+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-22T10:05:52.704+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-22T10:05:52.705+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-22T10:05:52.877+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-22T10:05:53.099+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.c.CoordinatorServiceTest           : Started CoordinatorServiceTest in 1.486 seconds (process running for 21.974)
+2026-07-22T10:05:53.099+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-07-22T10:05:53.107+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-07-22T10:05:53.108+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-22T10:05:53.108+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-22T10:05:53.112+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-22T10:05:53.114+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-07-22T10:05:53.115+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-22T10:05:53.115+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-22T10:05:53.119+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-22T10:05:53.120+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-22T10:05:53.123+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-22T10:05:53.123+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-22T10:05:53.126+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-22T10:05:53.136+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-22T10:05:53.136+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-22T10:05:53.169+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes, excluding []
+2026-07-22T10:05:53.178+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-07-22T10:05:53.182+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.coordinator.CoordinatorService     : Selected 1 target host nodes using strategy 'WeightedScore' for 1 chunk allocations
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

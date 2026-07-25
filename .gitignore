@@ -13,11 +13,19 @@ jdk-21.0.2/
 .gradletasknamecache
 
 # Ignore all build output except the release APK
-frontend/build/*
+frontend/build/
 !frontend/build/app/
 !frontend/build/app/outputs/
 !frontend/build/app/outputs/flutter-apk/
 !frontend/build/app/outputs/flutter-apk/app-release.apk
+frontend/build/app/intermediates/
+frontend/build/app/generated/
+frontend/build/app/kotlin/
+frontend/build/app/kotlinToolingMetadata/
+frontend/build/app/outputs/apk/
+frontend/build/app/outputs/mapping/
+frontend/build/app/outputs/sdk-dependencies/
+frontend/build/app/tmp/
 
 # Compiled class files
 *.class

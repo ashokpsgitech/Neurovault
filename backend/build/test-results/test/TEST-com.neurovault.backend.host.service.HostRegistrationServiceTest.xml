@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.neurovault.backend.host.service.HostRegistrationServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:36:12" hostname="ASHOK" time="0.193">
+  <properties/>
+  <testcase name="getHostById_shouldThrowWhenNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.141"/>
+  <testcase name="getHostById_shouldReturnHostStatus()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.008"/>
+  <testcase name="registerHost_shouldCreateAndReturnResponse()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.019"/>
+  <testcase name="getHostsByOwner_shouldReturnAllOwnerHosts()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.007"/>
+  <testcase name="registerHost_shouldThrowWhenUserNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.009"/>
+  <system-out><![CDATA[2026-07-22T10:06:12.385+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'my-laptop' for owner 73f2a861-7537-42c2-b08a-4f4fa4a883cc
+2026-07-22T10:06:12.387+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Host 'my-laptop' registered successfully with ID 9866ada6-ede0-439e-bef4-586abfc59d2f
+2026-07-22T10:06:12.411+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'test' for owner 87332165-b84b-4116-ac92-4d7157275fd6
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.neurovault.backend.replication.service.ReplicationServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:36:26" hostname="ASHOK" time="0.216">
+  <properties/>
+  <testcase name="testAssignReplicas_DuplicatePrevention()" classname="com.neurovault.backend.replication.service.ReplicationServiceTest" time="0.043"/>
+  <testcase name="testUpdateReplicaStatus()" classname="com.neurovault.backend.replication.service.ReplicationServiceTest" time="0.023"/>
+  <testcase name="testRemoveReplica_Success()" classname="com.neurovault.backend.replication.service.ReplicationServiceTest" time="0.024"/>
+  <testcase name="testVerifyReplicaCount_And_UnderReplicatedChunks()" classname="com.neurovault.backend.replication.service.ReplicationServiceTest" time="0.085"/>
+  <testcase name="testAssignReplicas_Success()" classname="com.neurovault.backend.replication.service.ReplicationServiceTest" time="0.033"/>
+  <system-out><![CDATA[2026-07-22T10:06:25.047+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.ReplicationServiceTest]: ReplicationServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-22T10:06:25.051+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.ReplicationServiceTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2026-07-22T10:06:25.092+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationServiceTest   : Starting ReplicationServiceTest using Java 21.0.11 with PID 11652 (started by ashok in D:\Project\micro server\backend)
+2026-07-22T10:06:25.092+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationServiceTest   : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-07-22T10:06:25.092+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationServiceTest   : The following 1 profile is active: "test"
+2026-07-22T10:06:25.688+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-22T10:06:25.776+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 87 ms. Found 10 JPA repository interfaces.
+2026-07-22T10:06:25.926+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-22T10:06:25.930+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-22T10:06:25.943+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-22T10:06:25.945+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-10 - Starting...
+2026-07-22T10:06:25.948+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-10 - Added connection conn90: url=jdbc:h2:mem:testdb_rep user=SA
+2026-07-22T10:06:25.948+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-10 - Start completed.
+2026-07-22T10:06:25.949+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-22T10:06:26.224+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-22T10:06:26.262+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-22T10:06:26.363+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-22T10:06:26.365+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-22T10:06:26.554+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-22T10:06:26.841+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-07-22T10:06:26.842+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationServiceTest   : Started ReplicationServiceTest in 1.786 seconds (process running for 55.717)
+2026-07-22T10:06:26.848+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-07-22T10:06:26.848+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-22T10:06:26.848+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-22T10:06:26.852+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-22T10:06:26.855+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-07-22T10:06:26.855+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-22T10:06:26.855+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-22T10:06:26.860+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-22T10:06:26.860+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-22T10:06:26.862+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-22T10:06:26.862+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-22T10:06:26.865+05:30 DEBUG 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-22T10:06:26.868+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 96a32e8e-3470-450d-bc30-96684f632cfd
+2026-07-22T10:06:26.874+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica fc819545-3cac-4e70-b8eb-c1ada2343e35 for chunk 96a32e8e-3470-450d-bc30-96684f632cfd on host 379ee363-2659-44dc-ac5d-b3f9e67fef67
+2026-07-22T10:06:26.874+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 96a32e8e-3470-450d-bc30-96684f632cfd
+2026-07-22T10:06:26.876+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-22T10:06:26.876+05:30  INFO 11652 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-22T10:06:26.883+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Replica already exists for chunk 96a32e8e-3470-450d-bc30-96684f632cfd on host 379ee363-2659-44dc-ac5d-b3f9e67fef67 — skipping
+2026-07-22T10:06:26.902+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 6eb56312-e0cc-4df5-a6f6-9f080b5a37e0
+2026-07-22T10:06:26.906+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 5b047e91-7c4c-45f1-872b-8d557d13f32f for chunk 6eb56312-e0cc-4df5-a6f6-9f080b5a37e0 on host 1cc20fd8-ef5d-4ccc-998c-7ba8df991965
+2026-07-22T10:06:26.910+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Updated replica 5b047e91-7c4c-45f1-872b-8d557d13f32f status: ACTIVE → CORRUPTED
+2026-07-22T10:06:26.932+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk d2da147d-ec84-43b5-93dc-e5c290b84515
+2026-07-22T10:06:26.935+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 85e38556-c189-485a-bc7a-8325d79ec4af for chunk d2da147d-ec84-43b5-93dc-e5c290b84515 on host ef829698-0775-45bc-a1ee-b756817af670
+2026-07-22T10:06:26.937+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Removing replica 85e38556-c189-485a-bc7a-8325d79ec4af for chunk d2da147d-ec84-43b5-93dc-e5c290b84515 from host ef829698-0775-45bc-a1ee-b756817af670
+2026-07-22T10:06:26.967+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Chunk 43437a72-a3e0-470a-9631-fdc55107e50d is under-replicated: active=0, target=3, deficit=3
+2026-07-22T10:06:26.978+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
+2026-07-22T10:06:26.979+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 2 replicas for chunk 43437a72-a3e0-470a-9631-fdc55107e50d
+2026-07-22T10:06:26.996+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica ddbb12bb-e89a-4dd5-9504-87c216232bdc for chunk 43437a72-a3e0-470a-9631-fdc55107e50d on host aa284a0e-f93b-484d-890d-ebcee616ea2c
+2026-07-22T10:06:27.001+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 02790669-1ecb-496d-bd5c-9ca90523b60e for chunk 43437a72-a3e0-470a-9631-fdc55107e50d on host 5e0402f1-97a3-4184-8b03-a865060ca0ae
+2026-07-22T10:06:27.005+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Chunk 43437a72-a3e0-470a-9631-fdc55107e50d is under-replicated: active=2, target=3, deficit=1
+2026-07-22T10:06:27.013+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
+2026-07-22T10:06:27.013+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 43437a72-a3e0-470a-9631-fdc55107e50d
+2026-07-22T10:06:27.016+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica b71b81d5-5994-48eb-ba4f-51efd0b54c13 for chunk 43437a72-a3e0-470a-9631-fdc55107e50d on host c08d4710-d0d5-4ca6-800f-91101208c378
+2026-07-22T10:06:27.024+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-22T10:06:27.044+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 2 replicas for chunk 91ec76fc-f1ec-4db6-9ce4-ea4b5028ce93
+2026-07-22T10:06:27.047+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 341c2347-c209-4b46-9a0d-6b9bb7bf6773 for chunk 91ec76fc-f1ec-4db6-9ce4-ea4b5028ce93 on host ee0917e1-cd7e-49c8-b68b-2a66f3d176d2
+2026-07-22T10:06:27.054+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica bba68a1e-7fad-474e-9691-d86a7683cf31 for chunk 91ec76fc-f1ec-4db6-9ce4-ea4b5028ce93 on host a34bfe32-a5bd-49d3-9791-08f51ce3b7ff
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,32 @@
+# Test profile configuration — H2 in-memory database
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+app:
+  jwt:
+    secret: 4035763074377938355668596D6235723D723930516D61365468576D5A713474
+    expiration-ms: 86400000
+
+neurovault:
+  engine:
+    temp-dir: ${java.io.tmpdir}/neurovault-test
+    chunk-size-bytes: 4194304
+    max-retry-count: 3
+    upload-session-ttl-hours: 1
+
+logging:
+  level:
+    com.neurovault.backend: DEBUG
+
+spring.servlet.multipart:
+  max-file-size: 100MB
+  max-request-size: 100MB

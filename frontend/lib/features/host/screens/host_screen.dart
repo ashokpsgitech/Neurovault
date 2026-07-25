@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/loading_overlay.dart';
@@ -21,6 +23,25 @@ class HostScreen extends ConsumerStatefulWidget {
 class _HostScreenState extends ConsumerState<HostScreen> {
   double _reservedGb = 10.0;
   String _containerPath = 'D:\\NeuroVaultData\\storage.container';
+
+  @override
+  void initState() {
+    super.initState();
+    _initContainerPath();
+  }
+
+  Future<void> _initContainerPath() async {
+    try {
+      if (Platform.isAndroid || Platform.isIOS) {
+        final docsDir = await getApplicationDocumentsDirectory();
+        if (mounted) {
+          setState(() {
+            _containerPath = '${docsDir.path}/storage.container';
+          });
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> _selectStorageLocation(TextEditingController controller, StateSetter? dialogSetState) async {
     try {

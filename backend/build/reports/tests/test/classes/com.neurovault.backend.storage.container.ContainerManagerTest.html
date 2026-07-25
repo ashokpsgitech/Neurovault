@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - ContainerManagerTest</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>ContainerManagerTest</h1>
+<div class="breadcrumbs">
+<a href="../index.html">all</a> &gt; 
+<a href="../packages/com.neurovault.backend.storage.container.html">com.neurovault.backend.storage.container</a> &gt; ContainerManagerTest</div>
+<div id="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox" id="tests">
+<div class="counter">14</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="failures">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="ignored">
+<div class="counter">0</div>
+<p>ignored</p>
+</div>
+</td>
+<td>
+<div class="infoBox" id="duration">
+<div class="counter">0.209s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Tests</a>
+</li>
+<li>
+<a href="#tab1">Standard output</a>
+</li>
+</ul>
+<div id="tab0" class="tab">
+<h2>Tests</h2>
+<table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td class="success">acquireAndReleaseLock_shouldWork()</td>
+<td class="success">0.026s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">closeContainer_shouldCloseFileChannel()</td>
+<td class="success">0.009s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">createContainer_shouldCreateFileWithCorrectSize()</td>
+<td class="success">0.009s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">createContainer_shouldFailIfAlreadyExists()</td>
+<td class="success">0.009s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">deleteContainer_shouldRemoveFile()</td>
+<td class="success">0.011s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">headerPersistence_shouldSurviveCloseAndReopen()</td>
+<td class="success">0.059s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">openContainer_shouldFailIfNotExists()</td>
+<td class="success">0.005s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">openContainer_shouldReadExistingHeader()</td>
+<td class="success">0.010s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">operations_shouldFailWhenNotOpen()</td>
+<td class="success">0.006s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">readWriteAtOffset_shouldHandleLargeData()</td>
+<td class="success">0.013s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">readWriteAtOffset_shouldRoundTrip()</td>
+<td class="success">0.011s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">resizeContainer_shouldExpandSize()</td>
+<td class="success">0.018s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">resizeContainer_shouldRejectShrinking()</td>
+<td class="success">0.014s</td>
+<td class="success">passed</td>
+</tr>
+<tr>
+<td class="success">verifyIntegrity_shouldPassForValidContainer()</td>
+<td class="success">0.009s</td>
+<td class="success">passed</td>
+</tr>
+</table>
+</div>
+<div id="tab1" class="tab">
+<h2>Standard output</h2>
+<span class="code">
+<pre>2026-07-22T10:06:31.986+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit7702182432929723563\test-host\storage.container with size 2097152 bytes
+2026-07-22T10:06:32.024+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit7702182432929723563\test-host\storage.container (2097152 bytes)
+2026-07-22T10:06:32.025+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.025+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ashok\AppData\Local\Temp\junit7702182432929723563\test-host\storage.container
+2026-07-22T10:06:32.027+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ashok\AppData\Local\Temp\junit7702182432929723563\test-host\storage.container (size=2097152, chunks=5, used=1024)
+2026-07-22T10:06:32.030+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.041+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit13804409325059971816\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.047+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit13804409325059971816\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.061+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container lock acquired
+2026-07-22T10:06:32.062+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container lock released
+2026-07-22T10:06:32.062+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.067+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit11975545258263479380\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.072+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit11975545258263479380\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.073+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Deleting container at C:\Users\ashok\AppData\Local\Temp\junit11975545258263479380\test-host\storage.container
+2026-07-22T10:06:32.074+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container deleted: C:\Users\ashok\AppData\Local\Temp\junit11975545258263479380\test-host\storage.container
+2026-07-22T10:06:32.084+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit20485850642839746\test-host\storage.container with size 2097152 bytes
+2026-07-22T10:06:32.090+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit20485850642839746\test-host\storage.container (2097152 bytes)
+2026-07-22T10:06:32.093+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.098+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit6201497732838013482\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.103+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit6201497732838013482\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.103+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.107+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit17803111188184894699\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.112+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit17803111188184894699\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.112+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.117+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit1497928435625025178\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.121+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit1497928435625025178\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.121+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.123+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit1497928435625025178\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.129+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit12890838002527169994\test-host\storage.container with size 5242880 bytes
+2026-07-22T10:06:32.132+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit12890838002527169994\test-host\storage.container (5242880 bytes)
+2026-07-22T10:06:32.132+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.133+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ashok\AppData\Local\Temp\junit12890838002527169994\test-host\storage.container
+2026-07-22T10:06:32.134+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ashok\AppData\Local\Temp\junit12890838002527169994\test-host\storage.container (size=5242880, chunks=0, used=0)
+2026-07-22T10:06:32.135+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.139+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit10069258789000313463\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.143+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit10069258789000313463\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.144+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.150+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit10122964318734111693\test-host\storage.container with size 1048576 bytes
+2026-07-22T10:06:32.155+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit10122964318734111693\test-host\storage.container (1048576 bytes)
+2026-07-22T10:06:32.155+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Resizing container from 1048576 to 5242880 bytes
+2026-07-22T10:06:32.162+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container resized to 5242880 bytes
+2026-07-22T10:06:32.163+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.168+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit4403008003599752242\test-host\storage.container with size 5242880 bytes
+2026-07-22T10:06:32.171+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit4403008003599752242\test-host\storage.container (5242880 bytes)
+2026-07-22T10:06:32.177+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-07-22T10:06:32.184+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ashok\AppData\Local\Temp\junit4626182958529424827\nonexistent.container
+2026-07-22T10:06:32.187+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ashok\AppData\Local\Temp\junit12567502174381412622\test-host\storage.container with size 10485760 bytes
+2026-07-22T10:06:32.191+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ashok\AppData\Local\Temp\junit12567502174381412622\test-host\storage.container (10485760 bytes)
+2026-07-22T10:06:32.191+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+</pre>
+</span>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.8</a> at 22-Jul-2026, 10:06:34 am</p>
+</div>
+</div>
+</body>
+</html>

@@ -24,11 +24,19 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/*
+/build/
 !/build/app/
 !/build/app/outputs/
 !/build/app/outputs/flutter-apk/
 !/build/app/outputs/flutter-apk/app-release.apk
+/build/app/intermediates/
+/build/app/generated/
+/build/app/kotlin/
+/build/app/kotlinToolingMetadata/
+/build/app/outputs/apk/
+/build/app/outputs/mapping/
+/build/app/outputs/sdk-dependencies/
+/build/app/tmp/
 
 # Symbolication related
 app.*.symbols

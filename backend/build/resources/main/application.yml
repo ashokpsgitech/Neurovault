@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: neurovault-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:file:./neurovault-db;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+app:
+  jwt:
+    # Base64-encoded or raw secret key (at least 256-bit for HS256)
+    secret: 4035763074377938355668596D6235723D723930516D61365468576D5A713474
+    expiration-ms: 86400000 # 24 hours
+
+neurovault:
+  storage:
+    base-dir: ./neurovault-storage
+  host:
+    heartbeat-check-interval-ms: 60000
+    heartbeat-miss-threshold: 3
+  engine:
+    temp-dir: ${java.io.tmpdir}/neurovault
+    chunk-size-bytes: 4194304
+    max-retry-count: 3
+    upload-session-ttl-hours: 1
+  replication:
+    factor: 3
+    heartbeat-timeout-seconds: 90
+    low-storage-threshold-percent: 10
+    max-concurrent-repairs: 5
+    scheduler-interval-ms: 30000
+
+logging:
+  level:
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    com.neurovault.backend: DEBUG

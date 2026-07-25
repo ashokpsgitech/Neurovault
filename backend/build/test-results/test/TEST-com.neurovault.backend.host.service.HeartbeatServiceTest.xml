@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.neurovault.backend.host.service.HeartbeatServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:36:11" hostname="ASHOK" time="0.896">
+  <properties/>
+  <testcase name="getHeartbeatHistory_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.797"/>
+  <testcase name="markHostOffline_shouldUpdateStatus()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.047"/>
+  <testcase name="processHeartbeat_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.015"/>
+  <testcase name="processHeartbeat_shouldUpdateHostAndPersist()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.012"/>
+  <testcase name="markHostOffline_shouldNotUpdateIfAlreadyOffline()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.009"/>
+  <testcase name="getHeartbeatHistory_shouldReturnOrderedList()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.006"/>
+  <system-out><![CDATA[2026-07-22T10:06:12.133+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Marking host 0ef90a26-5806-4ffa-9908-f562dbb9f9fb ('test-host') as OFFLINE due to missed heartbeats
+2026-07-22T10:06:12.178+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host b0357ada-662b-456b-a6fc-a3b5e6e93233
+2026-07-22T10:06:12.189+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host d9928025-0ba4-4500-a3e2-ad3a94291f8d
+2026-07-22T10:06:12.190+05:30 DEBUG 11652 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Heartbeat from host d9928025-0ba4-4500-a3e2-ad3a94291f8d processed successfully
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
