@@ -44,6 +44,21 @@ class _HostScreenState extends ConsumerState<HostScreen> {
   }
 
   Future<void> _selectStorageLocation(TextEditingController controller, StateSetter? dialogSetState) async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      // On Android/iOS, FilePicker directory selection is unreliable;
+      // use the app documents directory automatically
+      try {
+        final docsDir = await getApplicationDocumentsDirectory();
+        final path = '${docsDir.path}/storage.container';
+        controller.text = path;
+        setState(() => _containerPath = path);
+        if (dialogSetState != null) dialogSetState(() {});
+        if (mounted) {
+          CustomSnackbar.showSuccess(context, 'Using app storage directory: ${docsDir.path}');
+        }
+      } catch (_) {}
+      return;
+    }
     try {
       final selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
@@ -212,7 +227,18 @@ class _HostScreenState extends ConsumerState<HostScreen> {
 
     ref.listen<HostState>(hostProvider, (previous, next) {
       if (next is HostError) {
-        CustomSnackbar.showError(context, next.message);
+        CustomSnackbar.showError(
+          context,
+          next.message.length > 200 ? next.message.substring(0, 200) : next.message,
+        );
+      } else if (next is HostEnabled) {
+        final info = next.info;
+        if (info.containerCreated) {
+          CustomSnackbar.showSuccess(
+            context,
+            'Container created successfully at:\n${info.containerPath}',
+          );
+        }
       }
     });
 

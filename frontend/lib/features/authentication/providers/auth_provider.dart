@@ -35,13 +35,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await _repository.getCurrentUser();
 
       // Enforce email verification check for email/password users
-      final isVerified = await _repository.checkEmailVerified();
       final currentFbUser = FirebaseService().currentUser;
       final isPasswordUser = currentFbUser?.providerData.any((p) => p.providerId == 'password') ?? false;
 
-      if (isPasswordUser && !isVerified) {
-        state = const Unauthenticated();
-        return;
+      if (isPasswordUser) {
+        bool isVerified = false;
+        try {
+          isVerified = await _repository.checkEmailVerified();
+        } catch (_) {
+          // Network unavailable — use the cached value from the Firebase SDK
+          isVerified = currentFbUser?.emailVerified ?? false;
+        }
+        if (!isVerified) {
+          // Don't logout — just put them in Unauthenticated so they see the login screen
+          // The Firebase session stays alive so resend-verification still works
+          state = const Unauthenticated();
+          return;
+        }
       }
 
       state = Authenticated(user);

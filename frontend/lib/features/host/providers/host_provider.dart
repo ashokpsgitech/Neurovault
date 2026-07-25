@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/errors/failures.dart';
 import '../../../providers/core_providers.dart';
 import '../data/host_repository.dart';
 import '../services/host_service.dart';
@@ -64,31 +64,17 @@ class HostNotifier extends StateNotifier<HostState> {
       // Step 1: Register this device as a host node with the coordinator
       final info = await _repository.registerHost(
         name: 'MicroServer-Node-${Random().nextInt(1000)}',
-        deviceType: 'Desktop',
-        operatingSystem: 'Windows',
+        deviceType: 'Mobile',
+        operatingSystem: Platform.operatingSystem,
         publicIp: '127.0.0.1',
         totalCapacityBytes: totalBytes,
         reservedCapacityBytes: reservedBytes,
       );
 
-      // Step 2: Create the pre-allocated disk container file at the user-specified path
-      try {
-        await _repository.createStorageContainer(info.id, reservedGb, containerPath);
-      } on Failure {
-        // Surface the storage creation error but still mark host as online
-        // since registration succeeded — the user can retry container creation
-        final updatedInfo = info.copyWith(
-          status: 'ONLINE',
-          containerCreated: false,
-          containerPath: containerPath,
-        );
-        state = HostEnabled(updatedInfo);
-        _startHeartbeatDaemon(updatedInfo.id);
-        // Re-throw so UI can display the error
-        rethrow;
-      }
+      // Step 2: Create the pre-allocated disk container file (with permission requests & path resolution)
+      await _repository.createStorageContainer(info.id, reservedGb, containerPath);
 
-      // Step 3: Both registration and container creation succeeded
+      // Step 3: Succeed — update state with resolved path
       final updatedInfo = info.copyWith(
         status: 'ONLINE',
         containerCreated: true,
@@ -97,14 +83,8 @@ class HostNotifier extends StateNotifier<HostState> {
       );
       state = HostEnabled(updatedInfo);
       _startHeartbeatDaemon(updatedInfo.id);
-    } on Failure catch (f) {
-      if (state is! HostEnabled) {
-        state = HostError(f.message);
-      }
     } catch (e) {
-      if (state is! HostEnabled) {
-        state = HostError(e.toString());
-      }
+      state = HostError('Container creation failed: ${e.toString()}');
     }
   }
 

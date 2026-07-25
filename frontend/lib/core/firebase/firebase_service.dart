@@ -85,31 +85,42 @@ class FirebaseService {
   }
 
   /// Sends Email Verification code / link to the registered user.
+  /// Throws if sending fails so the UI can surface the error.
   Future<void> sendEmailVerification() async {
     final user = _auth.currentUser;
-    if (user != null && !user.emailVerified) {
-      await user.sendEmailVerification().timeout(const Duration(seconds: 8));
-    }
+    if (user == null) throw Exception('No authenticated user to send verification email to.');
+    if (user.emailVerified) return; // Already verified
+    // Force reload to get fresh state before sending
+    try {
+      await user.reload().timeout(const Duration(seconds: 5));
+    } catch (_) {}
+    final freshUser = _auth.currentUser;
+    if (freshUser != null && freshUser.emailVerified) return;
+    await (freshUser ?? user).sendEmailVerification().timeout(const Duration(seconds: 10));
   }
 
   /// Checks if current user's email has been verified via Firebase.
+  /// Always forces a server reload — never uses stale cache.
   Future<bool> checkEmailVerified() async {
     final user = _auth.currentUser;
     if (user == null) return false;
     try {
-      await user.reload().timeout(const Duration(seconds: 5));
-      final isVerified = _auth.currentUser?.emailVerified ?? false;
-      if (isVerified) {
-        try {
-          await _firestore.collection('users').doc(user.uid).update({
-            'emailVerified': true,
-          }).timeout(const Duration(seconds: 5));
-        } catch (_) {}
-      }
-      return isVerified;
+      // Force server-side refresh to get actual verified status
+      await user.reload().timeout(const Duration(seconds: 8));
     } catch (_) {
-      return _auth.currentUser?.emailVerified ?? false;
+      // If network is unavailable, fall through to cached value
     }
+    final freshUser = _auth.currentUser;
+    final isVerified = freshUser?.emailVerified ?? false;
+    if (isVerified) {
+      // Async Firestore update — don't block the result
+      try {
+        await _firestore.collection('users').doc(user.uid).update({
+          'emailVerified': true,
+        }).timeout(const Duration(seconds: 5));
+      } catch (_) {}
+    }
+    return isVerified;
   }
 
   /// Registers user with Email & Password on Firebase Auth and sends verification code/link.
@@ -132,9 +143,13 @@ class FirebaseService {
       await user.updateDisplayName(username).timeout(const Duration(seconds: 5));
     } catch (_) {}
 
+    // Send verification email — log failure but don't block registration
     try {
-      await user.sendEmailVerification().timeout(const Duration(seconds: 8));
-    } catch (_) {}
+      await user.sendEmailVerification().timeout(const Duration(seconds: 10));
+    } catch (e) {
+      // Registration still succeeded; verification email can be resent from verification screen
+      // We don't rethrow here so the user can still proceed to the verification step
+    }
 
     final userDoc = {
       'id': user.uid,

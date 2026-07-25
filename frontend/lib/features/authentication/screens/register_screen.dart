@@ -103,10 +103,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             _showVerificationStep = true;
           });
           _startVerificationCheckTimer();
-          CustomSnackbar.showSuccess(
-            context,
-            'Verification email sent to ${_emailController.text.trim()}',
-          );
+          // Try to send verification email \u2014 capture context-dependent objects before async gap
+          final messenger = ScaffoldMessenger.of(context);
+          final email = _emailController.text.trim();
+          Future.delayed(const Duration(milliseconds: 500), () async {
+            if (!mounted) return;
+            try {
+              await ref.read(authStateProvider.notifier).resendEmailVerification();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('Verification email sent to $email — check your inbox.'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            } catch (e) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text('Could not send verification email: $e\nTap "Resend Verification Email" to try again.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          });
         }
       } else if (next is AuthError) {
         CustomSnackbar.showError(context, next.message);
