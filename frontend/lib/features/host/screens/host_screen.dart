@@ -44,26 +44,16 @@ class _HostScreenState extends ConsumerState<HostScreen> {
   }
 
   Future<void> _selectStorageLocation(TextEditingController controller, StateSetter? dialogSetState) async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      // On Android/iOS, FilePicker directory selection is unreliable;
-      // use the app documents directory automatically
-      try {
-        final docsDir = await getApplicationDocumentsDirectory();
-        final path = '${docsDir.path}/storage.container';
-        controller.text = path;
-        setState(() => _containerPath = path);
-        if (dialogSetState != null) dialogSetState(() {});
-        if (mounted) {
-          CustomSnackbar.showSuccess(context, 'Using app storage directory: ${docsDir.path}');
-        }
-      } catch (_) {}
-      return;
-    }
     try {
       final selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
-        final formattedPath = selectedDirectory.replaceAll('/', '\\');
-        final fullContainerPath = '$formattedPath\\storage.container';
+        final isWindows = Platform.isWindows;
+        final sep = isWindows ? '\\' : '/';
+        final formattedDir = isWindows ? selectedDirectory.replaceAll('/', '\\') : selectedDirectory;
+        final fullContainerPath = formattedDir.endsWith(sep)
+            ? '${formattedDir}storage.container'
+            : '$formattedDir${sep}storage.container';
+
         controller.text = fullContainerPath;
         setState(() {
           _containerPath = fullContainerPath;
@@ -72,13 +62,15 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           dialogSetState(() {});
         }
         if (mounted) {
-          CustomSnackbar.showSuccess(context, 'Container location set: $fullContainerPath');
+          CustomSnackbar.showSuccess(context, 'Storage location set: $fullContainerPath');
         }
+        return;
       }
-    } catch (_) {
-      if (mounted) {
-        _showCustomLocationDialog();
-      }
+    } catch (_) {}
+
+    // Fallback: If FilePicker is not supported or cancelled, show custom location dialog
+    if (mounted) {
+      _showCustomLocationDialog(controller, dialogSetState);
     }
   }
 
@@ -121,7 +113,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                 controller: controller,
                 decoration: InputDecoration(
                   labelText: 'Storage Container File Path',
-                  hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
+                  hintText: Platform.isWindows ? 'e.g. D:\\NeuroVaultData\\storage.container' : '/storage/emulated/0/Download/storage.container',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.folder_open),
                     tooltip: 'Browse Directory',
@@ -159,8 +151,8 @@ class _HostScreenState extends ConsumerState<HostScreen> {
     );
   }
 
-  void _showCustomLocationDialog() {
-    final controller = TextEditingController(text: _containerPath);
+  void _showCustomLocationDialog([TextEditingController? externalController, StateSetter? dialogSetState]) {
+    final controller = TextEditingController(text: externalController?.text ?? _containerPath);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -176,16 +168,59 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Specify the local disk directory or container path for pre-allocated binary storage.',
+              'Specify the target directory or path for pre-allocated binary storage.',
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Container Path',
-                hintText: 'e.g. D:\\NeuroVaultData\\storage.container',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Container File Path',
+                hintText: Platform.isWindows ? 'e.g. D:\\NeuroVaultData\\storage.container' : '/storage/emulated/0/Download/storage.container',
+                border: const OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 12),
+            const Text('Quick Presets:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ActionChip(
+                  avatar: const Icon(Icons.folder_special_outlined, size: 16),
+                  label: const Text('App Private Storage', style: TextStyle(fontSize: 11)),
+                  onPressed: () async {
+                    try {
+                      final docs = await getApplicationDocumentsDirectory();
+                      controller.text = '${docs.path}/storage.container';
+                    } catch (_) {}
+                  },
+                ),
+                if (Platform.isAndroid)
+                  ActionChip(
+                    avatar: const Icon(Icons.download_outlined, size: 16),
+                    label: const Text('Downloads Folder', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      controller.text = '/storage/emulated/0/Download/storage.container';
+                    },
+                  ),
+                if (Platform.isWindows) ...[
+                  ActionChip(
+                    avatar: const Icon(Icons.sd_storage_outlined, size: 16),
+                    label: const Text('D:\\ Drive', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      controller.text = 'D:\\NeuroVaultData\\storage.container';
+                    },
+                  ),
+                  ActionChip(
+                    avatar: const Icon(Icons.computer_outlined, size: 16),
+                    label: const Text('C:\\ Drive', style: TextStyle(fontSize: 11)),
+                    onPressed: () {
+                      controller.text = 'C:\\NeuroVaultData\\storage.container';
+                    },
+                  ),
+                ],
+              ],
             ),
           ],
         ),
@@ -198,9 +233,15 @@ class _HostScreenState extends ConsumerState<HostScreen> {
             onPressed: () {
               if (controller.text.trim().isNotEmpty) {
                 final selectedPath = controller.text.trim();
+                if (externalController != null) {
+                  externalController.text = selectedPath;
+                }
                 setState(() {
                   _containerPath = selectedPath;
                 });
+                if (dialogSetState != null) {
+                  dialogSetState(() {});
+                }
                 Navigator.pop(ctx);
                 CustomSnackbar.showSuccess(context, 'Storage location updated: $selectedPath');
               }
