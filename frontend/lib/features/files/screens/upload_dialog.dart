@@ -1,9 +1,8 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-
-import '../../../widgets/custom_snackbar.dart';
 
 /// Modal dialog for picking files, previewing 4MB chunking, and streaming encrypted uploads.
 class UploadDialog extends StatefulWidget {
@@ -19,6 +18,8 @@ class _UploadDialogState extends State<UploadDialog> {
   String? _filename;
   Uint8List? _fileBytes;
   bool _isUploading = false;
+  String? _errorMessage;
+  String _progressStatus = '';
 
   Future<void> _pickFile() async {
     try {
@@ -28,9 +29,11 @@ class _UploadDialogState extends State<UploadDialog> {
         setState(() {
           _filename = file.name;
           _fileBytes = file.bytes;
+          _errorMessage = null;
         });
       }
-    } catch (_) {
+    } catch (e) {
+      dev.log('[UploadDialog] FilePicker error: $e');
       _createSampleFile();
     }
   }
@@ -40,6 +43,7 @@ class _UploadDialogState extends State<UploadDialog> {
     setState(() {
       _filename = 'neurovault_sample_${DateTime.now().millisecondsSinceEpoch}.txt';
       _fileBytes = Uint8List.fromList(sampleContent);
+      _errorMessage = null;
     });
   }
 
@@ -79,6 +83,84 @@ class _UploadDialogState extends State<UploadDialog> {
               style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
+
+            // Error Message Card (inline, always visible on failure)
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.colorScheme.error.withOpacity(0.5)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Upload Failed',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.error,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _errorMessage!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Check Logcat / Flutter DevTools Console for full stack trace.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onErrorContainer.withOpacity(0.7),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Progress status while uploading
+            if (_isUploading && _progressStatus.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        _progressStatus,
+                        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
             if (_filename == null) ...[
               OutlinedButton.icon(
                 icon: const Icon(Icons.folder_open_outlined),
@@ -145,6 +227,8 @@ class _UploadDialogState extends State<UploadDialog> {
                         setState(() {
                           _filename = null;
                           _fileBytes = null;
+                          _errorMessage = null;
+                          _progressStatus = '';
                         });
                       },
                 child: const Text('Choose Different File'),
@@ -172,21 +256,31 @@ class _UploadDialogState extends State<UploadDialog> {
               : () async {
                   setState(() {
                     _isUploading = true;
+                    _errorMessage = null;
+                    _progressStatus = 'Preparing...';
                   });
+                  dev.log('[UploadDialog] Starting upload: $_filename (${_fileBytes!.length} bytes)');
+                  final nav = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
                   try {
                     await widget.onUpload(_filename!, _fileBytes!);
+                    dev.log('[UploadDialog] Upload completed successfully');
                     if (!mounted) return;
-                    // ignore: use_build_context_synchronously
-                    Navigator.of(context).pop();
-                    // ignore: use_build_context_synchronously
-                    CustomSnackbar.showSuccess(context, 'File encrypted & uploaded to Vault!');
-                  } catch (e) {
+                    nav.pop();
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('File encrypted & uploaded to Vault!'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e, st) {
+                    dev.log('[UploadDialog] Upload FAILED: $e', error: e, stackTrace: st);
                     if (!mounted) return;
                     setState(() {
                       _isUploading = false;
+                      _progressStatus = '';
+                      _errorMessage = e.toString().replaceFirst('Exception: ', '');
                     });
-                    // ignore: use_build_context_synchronously
-                    CustomSnackbar.showError(context, 'Upload failed: $e');
                   }
                 },
         ),

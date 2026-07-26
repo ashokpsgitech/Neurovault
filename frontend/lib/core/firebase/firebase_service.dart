@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -350,16 +351,37 @@ class FirebaseService {
     required String aesKeyBase64,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('User not authenticated with Firebase');
+    if (user == null) throw Exception('Not authenticated — please sign in before uploading');
+
+    dev.log('[FirebaseService] uploadEncryptedFile: $filename (${fileBytes.length} bytes) for uid=${user.uid}');
 
     final fileId = DateTime.now().millisecondsSinceEpoch.toString();
-    final storageRef = _storage.ref().child('users/${user.uid}/vault/$fileId/$filename.enc');
+    final storagePath = 'users/${user.uid}/vault/$fileId/$filename.enc';
+    final storageRef = _storage.ref().child(storagePath);
 
-    final uploadTask = await storageRef.putData(
-      fileBytes,
-      SettableMetadata(contentType: 'application/octet-stream'),
-    );
-    final downloadUrl = await uploadTask.ref.getDownloadURL();
+    dev.log('[FirebaseService] Firebase Storage path: $storagePath');
+
+    String downloadUrl;
+    try {
+      final uploadTask = await storageRef.putData(
+        fileBytes,
+        SettableMetadata(contentType: 'application/octet-stream'),
+      );
+      downloadUrl = await uploadTask.ref.getDownloadURL();
+      dev.log('[FirebaseService] Storage upload OK. Download URL obtained.');
+    } catch (e) {
+      dev.log('[FirebaseService] STORAGE UPLOAD FAILED: $e');
+      if (e.toString().contains('unauthorized') || e.toString().contains('permission')) {
+        throw Exception('Firebase Storage permission denied.\n'
+            'Fix: Go to Firebase Console > Storage > Rules and set:\n'
+            'allow read, write: if request.auth != null;');
+      }
+      if (e.toString().contains('not-found') || e.toString().contains('bucket')) {
+        throw Exception('Firebase Storage bucket not configured.\n'
+            'Fix: Go to Firebase Console > Storage > Get Started');
+      }
+      rethrow;
+    }
 
     final fileDoc = {
       'id': fileId,
@@ -367,12 +389,13 @@ class FirebaseService {
       'sizeBytes': fileBytes.length,
       'encryptedAesKey': aesKeyBase64,
       'downloadUrl': downloadUrl,
-      'storagePath': storageRef.fullPath,
+      'storagePath': storagePath,
       'ownerId': user.uid,
       'createdAt': FieldValue.serverTimestamp(),
       'chunkCount': 1,
     };
 
+    dev.log('[FirebaseService] Writing Firestore metadata document for file: $fileId');
     try {
       await _firestore
           .collection('users')
@@ -381,9 +404,14 @@ class FirebaseService {
           .doc(fileId)
           .set(fileDoc)
           .timeout(const Duration(seconds: 10));
+      dev.log('[FirebaseService] Firestore write OK.');
     } catch (e) {
-      if (e.toString().contains('unavailable') || e.toString().contains('permission-denied')) {
-        throw Exception('Cloud Firestore is not initialized yet. Go to Firebase Console > Firestore Database > Create Database.');
+      dev.log('[FirebaseService] FIRESTORE WRITE FAILED: $e');
+      if (e.toString().contains('unavailable')) {
+        throw Exception('Firestore unavailable.\nFix: Go to Firebase Console > Firestore Database > Create Database.');
+      }
+      if (e.toString().contains('permission-denied')) {
+        throw Exception('Firestore permission denied.\nFix: Go to Firebase Console > Firestore > Rules and allow authenticated writes.');
       }
       rethrow;
     }
