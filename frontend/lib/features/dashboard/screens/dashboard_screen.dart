@@ -165,6 +165,8 @@ class DashboardScreen extends ConsumerWidget {
 
   Widget _buildUserGreetingHeader(BuildContext context, DashboardStatsModel stats) {
     final theme = Theme.of(context);
+    final isPublic = stats.user.mode == 'PUBLIC';
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -172,11 +174,11 @@ class DashboardScreen extends ConsumerWidget {
           children: [
             CircleAvatar(
               radius: 28,
-              backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+              backgroundColor: isPublic ? Colors.purple.withOpacity(0.15) : theme.colorScheme.primary.withOpacity(0.15),
               child: Text(
                 stats.user.username.isNotEmpty ? stats.user.username[0].toUpperCase() : 'U',
                 style: theme.textTheme.headlineMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                  color: isPublic ? Colors.purple : theme.colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -186,16 +188,42 @@ class DashboardScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Welcome back, ${stats.user.username}!',
-                    style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                  Row(
+                    children: [
+                      Text(
+                        'Welcome back, ${stats.user.username}!',
+                        style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (stats.user.isAnonymous) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text('Anonymous', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.purple)),
+                        ),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '${stats.user.email}  •  Role: ${stats.user.role}',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Chip(
+                        label: Text('Role: ${stats.user.role}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      const SizedBox(width: 8),
+                      Chip(
+                        avatar: Icon(isPublic ? Icons.public : Icons.lock_outline, size: 14),
+                        label: Text('${stats.user.mode} Mode', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        backgroundColor: isPublic ? Colors.purple.withOpacity(0.12) : theme.colorScheme.primary.withOpacity(0.12),
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ],
                   ),
                 ],
               ),

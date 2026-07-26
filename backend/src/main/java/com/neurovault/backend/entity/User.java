@@ -33,6 +33,15 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Mode mode = Mode.PRIVATE;
+
+    @Column(name = "is_anonymous")
+    @Builder.Default
+    private Boolean isAnonymous = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -43,6 +52,8 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (mode == null) mode = Mode.PRIVATE;
+        if (isAnonymous == null) isAnonymous = false;
     }
 
     @PreUpdate
@@ -53,6 +64,12 @@ public class User {
     public enum Role {
         CLIENT,
         HOST,
+        BOTH,
         ADMIN
+    }
+
+    public enum Mode {
+        PRIVATE,
+        PUBLIC
     }
 }

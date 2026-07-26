@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/services/host_background_service.dart';
 import '../../../providers/core_providers.dart';
 import '../data/host_repository.dart';
 import '../services/host_service.dart';
@@ -23,7 +24,7 @@ final hostProvider = StateNotifierProvider<HostNotifier, HostState>((ref) {
   return HostNotifier(repo);
 });
 
-/// Riverpod StateNotifier managing Host Mode lifecycle and 30-second telemetry timer daemon.
+/// Riverpod StateNotifier managing Host Mode lifecycle, 24/7 Foreground Service, and heartbeat daemon.
 class HostNotifier extends StateNotifier<HostState> {
   final HostRepository _repository;
   Timer? _heartbeatTimer;
@@ -54,7 +55,7 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Enables host node: registers with coordinator, creates disk container, and starts heartbeat.
+  /// Enables host node: registers with coordinator, creates disk container, starts foreground background service, and starts heartbeat.
   Future<void> enableHost(int reservedGb, String containerPath) async {
     state = const HostLoading();
     try {
@@ -64,17 +65,23 @@ class HostNotifier extends StateNotifier<HostState> {
       // Step 1: Register this device as a host node with the coordinator
       final info = await _repository.registerHost(
         name: 'MicroServer-Node-${Random().nextInt(1000)}',
-        deviceType: 'Mobile',
+        deviceType: Platform.isAndroid ? 'Mobile' : 'Desktop',
         operatingSystem: Platform.operatingSystem,
         publicIp: '127.0.0.1',
         totalCapacityBytes: totalBytes,
         reservedCapacityBytes: reservedBytes,
       );
 
-      // Step 2: Create the pre-allocated disk container file (with permission requests & path resolution)
+      // Step 2: Create pre-allocated binary storage container on disk
       await _repository.createStorageContainer(info.id, reservedGb, containerPath);
 
-      // Step 3: Succeed — update state with resolved path
+      // Step 3: Start 24/7 Android Foreground Service
+      await HostBackgroundService.startHostService(
+        reservedGb: reservedGb,
+        containerPath: containerPath,
+      );
+
+      // Step 4: Update state to HostEnabled
       final updatedInfo = info.copyWith(
         status: 'ONLINE',
         containerCreated: true,
@@ -88,10 +95,13 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Disables host mode and cancels heartbeat daemon.
+  /// Disables host mode, stops background service, and cancels heartbeat daemon.
   Future<void> disableHost() async {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+
+    // Stop 24/7 Android Foreground Service
+    await HostBackgroundService.stopHostService();
 
     if (state is HostEnabled) {
       final current = (state as HostEnabled).info;

@@ -74,12 +74,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Registers user with username, email, and password.
-  Future<void> register(String username, String email, String password) async {
+  /// Registers user with username, email, password, role, and mode.
+  Future<void> register(String username, String email, String password, {String role = 'CLIENT', String mode = 'PRIVATE'}) async {
     state = const AuthLoading();
     try {
       final response = await _repository.register(username, email, password);
-      state = Authenticated(response.user);
+      await _repository.updateUserPreferences(role: role, mode: mode);
+      state = Authenticated(response.user.copyWith(role: role, mode: mode));
     } on Failure catch (f) {
       state = AuthError(f.message);
     } catch (e) {
@@ -97,6 +98,29 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthError(f.message);
     } catch (e) {
       state = AuthError(e.toString());
+    }
+  }
+
+  /// Authenticates user anonymously for Public Mode.
+  Future<void> signInAnonymously() async {
+    state = const AuthLoading();
+    try {
+      final response = await _repository.signInAnonymously();
+      state = Authenticated(response.user);
+    } on Failure catch (f) {
+      state = AuthError(f.message);
+    } catch (e) {
+      state = AuthError(e.toString());
+    }
+  }
+
+  /// Updates user role and mode preferences.
+  Future<void> updateUserPreferences({required String role, required String mode}) async {
+    if (state is Authenticated) {
+      final currentUser = (state as Authenticated).user;
+      final updatedUser = currentUser.copyWith(role: role, mode: mode);
+      await _repository.updateUserPreferences(role: role, mode: mode);
+      state = Authenticated(updatedUser);
     }
   }
 

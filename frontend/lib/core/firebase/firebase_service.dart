@@ -123,11 +123,53 @@ class FirebaseService {
     return isVerified;
   }
 
+  /// Authenticates user anonymously for Public Mode.
+  Future<UserModel> signInAnonymously() async {
+    final credential = await _auth.signInAnonymously();
+    final user = credential.user;
+    if (user == null) {
+      throw Exception('Anonymous authentication failed');
+    }
+
+    final anonId = user.uid.substring(0, 8);
+    final username = 'Anon-$anonId';
+    const email = 'anonymous@neurovault.net';
+
+    final userDoc = {
+      'id': user.uid,
+      'username': username,
+      'email': email,
+      'role': 'CLIENT',
+      'mode': 'PUBLIC',
+      'isAnonymous': true,
+      'createdAt': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .set(userDoc)
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
+
+    return UserModel(
+      id: user.uid,
+      username: username,
+      email: email,
+      role: 'CLIENT',
+      mode: 'PUBLIC',
+      isAnonymous: true,
+    );
+  }
+
   /// Registers user with Email & Password on Firebase Auth and sends verification code/link.
   Future<UserModel> register({
     required String username,
     required String email,
     required String password,
+    String role = 'CLIENT',
+    String mode = 'PRIVATE',
   }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
@@ -148,14 +190,15 @@ class FirebaseService {
       await user.sendEmailVerification().timeout(const Duration(seconds: 10));
     } catch (e) {
       // Registration still succeeded; verification email can be resent from verification screen
-      // We don't rethrow here so the user can still proceed to the verification step
     }
 
     final userDoc = {
       'id': user.uid,
       'username': username,
       'email': email,
-      'role': 'CLIENT',
+      'role': role,
+      'mode': mode,
+      'isAnonymous': false,
       'emailVerified': false,
       'createdAt': FieldValue.serverTimestamp(),
     };
@@ -174,8 +217,25 @@ class FirebaseService {
       id: user.uid,
       username: username,
       email: email,
-      role: 'CLIENT',
+      role: role,
+      mode: mode,
+      isAnonymous: false,
     );
+  }
+
+  /// Updates user role and mode in Firestore user profile.
+  Future<void> updateUserPreferences({
+    required String role,
+    required String mode,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      await _firestore.collection('users').doc(user.uid).update({
+        'role': role,
+        'mode': mode,
+      }).timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   /// Logs in user with Email & Password on Firebase Auth.
@@ -195,6 +255,8 @@ class FirebaseService {
 
     String username = user.displayName ?? email.split('@').first;
     String role = 'CLIENT';
+    String mode = 'PRIVATE';
+    bool isAnon = user.isAnonymous;
 
     try {
       final docSnap = await _firestore
@@ -206,12 +268,16 @@ class FirebaseService {
         final data = docSnap.data()!;
         username = data['username']?.toString() ?? username;
         role = data['role']?.toString() ?? role;
+        mode = data['mode']?.toString() ?? mode;
+        isAnon = data['isAnonymous'] == true || isAnon;
       } else {
         await _firestore.collection('users').doc(user.uid).set({
           'id': user.uid,
           'username': username,
           'email': email,
           'role': role,
+          'mode': mode,
+          'isAnonymous': isAnon,
           'createdAt': FieldValue.serverTimestamp(),
         }).timeout(const Duration(seconds: 5));
       }
@@ -224,6 +290,8 @@ class FirebaseService {
       username: username,
       email: email,
       role: role,
+      mode: mode,
+      isAnonymous: isAnon,
     );
   }
 
@@ -232,8 +300,10 @@ class FirebaseService {
     final user = _auth.currentUser;
     if (user == null) return null;
 
-    String username = user.displayName ?? user.email?.split('@').first ?? 'User';
+    String username = user.displayName ?? (user.isAnonymous ? 'Anon-${user.uid.substring(0, 8)}' : user.email?.split('@').first ?? 'User');
     String role = 'CLIENT';
+    String mode = 'PRIVATE';
+    bool isAnon = user.isAnonymous;
 
     try {
       final docSnap = await _firestore
@@ -245,15 +315,27 @@ class FirebaseService {
         final data = docSnap.data()!;
         username = data['username']?.toString() ?? username;
         role = data['role']?.toString() ?? role;
+        mode = data['mode']?.toString() ?? mode;
+        isAnon = data['isAnonymous'] == true || isAnon;
       }
-    } catch (_) {}
-
-    return UserModel(
-      id: user.uid,
-      username: username,
-      email: user.email ?? '',
-      role: role,
-    );
+      return UserModel(
+        id: user.uid,
+        username: username,
+        email: user.email ?? (isAnon ? 'anonymous@neurovault.net' : ''),
+        role: role,
+        mode: mode,
+        isAnonymous: isAnon,
+      );
+    } catch (_) {
+      return UserModel(
+        id: user.uid,
+        username: username,
+        email: user.email ?? '',
+        role: role,
+        mode: mode,
+        isAnonymous: isAnon,
+      );
+    }
   }
 
   /// Logs out user from Firebase Auth.

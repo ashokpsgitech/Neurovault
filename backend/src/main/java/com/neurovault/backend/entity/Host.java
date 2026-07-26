@@ -49,6 +49,15 @@ public class Host {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private Mode mode = Mode.PRIVATE;
+
+    @Column(name = "is_anonymous")
+    @Builder.Default
+    private Boolean isAnonymous = false;
+
     @Column(name = "last_heartbeat")
     private LocalDateTime lastHeartbeat;
 
@@ -65,10 +74,17 @@ public class Host {
         if (heartbeatIntervalSeconds == null) {
             heartbeatIntervalSeconds = 30;
         }
+        if (mode == null) mode = Mode.PRIVATE;
+        if (isAnonymous == null) isAnonymous = false;
     }
 
     public enum Status {
         ONLINE,
         OFFLINE
+    }
+
+    public enum Mode {
+        PRIVATE,
+        PUBLIC
     }
 }

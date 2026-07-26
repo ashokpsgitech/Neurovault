@@ -57,6 +57,23 @@ class AuthRepository extends BaseRepository {
     }
   }
 
+  /// Authenticates user anonymously for Public Mode.
+  Future<LoginResponse> signInAnonymously() async {
+    try {
+      final user = await _firebaseService.signInAnonymously();
+      await _storageService.saveToken(user.id);
+      await _storageService.saveUserEmail(user.email);
+      return LoginResponse(token: user.id, type: 'Bearer', user: user);
+    } catch (e) {
+      throw AuthFailure('Anonymous Sign-In failed: $e');
+    }
+  }
+
+  /// Updates user role and mode preferences.
+  Future<void> updateUserPreferences({required String role, required String mode}) async {
+    await _firebaseService.updateUserPreferences(role: role, mode: mode);
+  }
+
   /// Authenticates user via Google Sign-In provider.
   Future<LoginResponse> signInWithGoogle() async {
     try {

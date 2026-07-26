@@ -255,6 +255,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final hostState = ref.watch(hostProvider);
     final isLoading = hostState is HostLoading;
     final isEnabled = hostState is HostEnabled;
@@ -302,6 +303,41 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Zero-Knowledge Security Notice Card
+                  Card(
+                    color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: theme.colorScheme.outlineVariant.withOpacity(0.5)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        children: [
+                          Icon(Icons.shield_moon_outlined, size: 32, color: theme.colorScheme.primary),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Zero-Knowledge Container Security',
+                                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Containers remain locked from allocation. Hosts only provide disk storage and can NEVER inspect file contents, keys, or filenames.',
+                                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
                   // Master Control Switch Card
                   _buildMasterToggleCard(context, isEnabled, isLoading),
                   const SizedBox(height: 24),

@@ -27,6 +27,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   bool _showVerificationStep = false;
   bool _isCheckingVerification = false;
+  String _selectedRole = 'CLIENT';
+  String _selectedMode = 'PRIVATE';
   Timer? _verificationTimer;
 
   @override
@@ -86,6 +88,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             _usernameController.text.trim(),
             _emailController.text.trim(),
             _passwordController.text,
+            role: _selectedRole,
+            mode: _selectedMode,
           );
     }
   }
@@ -308,7 +312,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             controller: _confirmPasswordController,
             obscureText: _obscureConfirmPassword,
             textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _submitRegister(),
             decoration: InputDecoration(
               labelText: 'Confirm Password',
               prefixIcon: const Icon(Icons.lock_clock_outlined),
@@ -334,6 +337,67 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 return 'Passwords do not match';
               }
               return null;
+            },
+          ),
+          const SizedBox(height: 20),
+
+          // User Role Selector
+          Text(
+            'Account Primary Role',
+            style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(
+                value: 'CLIENT',
+                label: Text('Client'),
+                icon: Icon(Icons.cloud_upload_outlined),
+              ),
+              ButtonSegment(
+                value: 'HOST',
+                label: Text('Host'),
+                icon: Icon(Icons.storage_outlined),
+              ),
+              ButtonSegment(
+                value: 'BOTH',
+                label: Text('Both'),
+                icon: Icon(Icons.hub_outlined),
+              ),
+            ],
+            selected: {_selectedRole},
+            onSelectionChanged: (newSelection) {
+              setState(() {
+                _selectedRole = newSelection.first;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+
+          // Operating Mode Selector
+          Text(
+            'Operating Network Mode',
+            style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(
+                value: 'PRIVATE',
+                label: Text('Private'),
+                icon: Icon(Icons.lock_outline),
+              ),
+              ButtonSegment(
+                value: 'PUBLIC',
+                label: Text('Public'),
+                icon: Icon(Icons.public_outlined),
+              ),
+            ],
+            selected: {_selectedMode},
+            onSelectionChanged: (newSelection) {
+              setState(() {
+                _selectedMode = newSelection.first;
+              });
             },
           ),
           const SizedBox(height: 28),

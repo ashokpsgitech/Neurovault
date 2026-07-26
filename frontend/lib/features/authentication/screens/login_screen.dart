@@ -271,6 +271,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ref.read(authStateProvider.notifier).signInWithGoogle();
                                   },
                           ),
+                          const SizedBox(height: 12),
+                          OutlinedButton.icon(
+                            icon: const Icon(Icons.no_accounts_outlined, size: 20, color: Colors.purple),
+                            label: const Text('Anonymous Guest (Public Mode)'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: isLoading
+                                ? null
+                                : () {
+                                    ref.read(authStateProvider.notifier).signInAnonymously();
+                                  },
+                          ),
                           const SizedBox(height: 24),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
