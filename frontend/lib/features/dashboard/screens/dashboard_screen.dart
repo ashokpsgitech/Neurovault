@@ -7,6 +7,8 @@ import '../../../providers/core_providers.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/debug_console_modal.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../host/providers/host_provider.dart';
+import '../../host/providers/host_state.dart';
 import '../models/dashboard_stats_model.dart';
 import '../providers/dashboard_provider.dart';
 import '../providers/dashboard_state.dart';
@@ -127,7 +129,7 @@ class DashboardScreen extends ConsumerWidget {
                             children: [
                               Expanded(child: _buildStorageCard(context, stats)),
                               const SizedBox(width: 16),
-                              Expanded(child: _buildHostStatusCard(context, stats)),
+                              Expanded(child: _buildHostStatusCard(context, ref, stats)),
                               const SizedBox(width: 16),
                               Expanded(child: _buildFilesCard(context, stats)),
                             ],
@@ -135,7 +137,7 @@ class DashboardScreen extends ConsumerWidget {
                         else ...[
                           _buildStorageCard(context, stats),
                           const SizedBox(height: 16),
-                          _buildHostStatusCard(context, stats),
+                          _buildHostStatusCard(context, ref, stats),
                           const SizedBox(height: 16),
                           _buildFilesCard(context, stats),
                         ],
@@ -147,7 +149,7 @@ class DashboardScreen extends ConsumerWidget {
                           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
-                        _buildQuickActionsGrid(context, isDesktop),
+                        _buildQuickActionsGrid(context, ref, isDesktop),
                         const SizedBox(height: 32),
 
                         // Recent Activity Section
@@ -282,9 +284,10 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHostStatusCard(BuildContext context, DashboardStatsModel stats) {
+  Widget _buildHostStatusCard(BuildContext context, WidgetRef ref, DashboardStatsModel stats) {
     final theme = Theme.of(context);
-    final isOnline = stats.hostStatus == 'ONLINE';
+    final hostState = ref.watch(hostProvider);
+    final isHostActive = hostState is HostEnabled;
 
     return Card(
       child: Padding(
@@ -295,38 +298,24 @@ class DashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Host Node Status', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                Icon(Icons.dns_outlined, color: isOnline ? Colors.green : theme.colorScheme.primary),
+                Text('Active Mesh Hosts', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Icon(Icons.dns_outlined, color: isHostActive ? Colors.green : theme.colorScheme.primary),
               ],
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: isOnline ? Colors.green.withOpacity(0.15) : Colors.orange.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    radius: 4,
-                    backgroundColor: isOnline ? Colors.green : Colors.orange,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    stats.hostStatus,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isOnline ? Colors.green.shade400 : Colors.orange.shade400,
-                    ),
-                  ),
-                ],
-              ),
+            Row(
+              children: [
+                Text(
+                  '${stats.activeHostsCount}',
+                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary),
+                ),
+                const SizedBox(width: 8),
+                Text('Active Node(s)', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
             ),
             const SizedBox(height: 12),
             Text(
-              isOnline ? 'Active Micro-Server node' : 'Not registered as storage host',
+              isHostActive ? 'This device is currently an active host node' : 'Active storage hosts available in mesh network',
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
@@ -366,21 +355,36 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActionsGrid(BuildContext context, bool isDesktop) {
-    final actions = [
-      _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
-        context.go('/files');
-      }),
-      _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
-        context.go('/files');
-      }),
-      _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
-        context.go('/host');
-      }),
-      _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
-        context.go('/settings');
-      }),
-    ];
+  Widget _buildQuickActionsGrid(BuildContext context, WidgetRef ref, bool isDesktop) {
+    final hostState = ref.watch(hostProvider);
+    final isHostActive = hostState is HostEnabled;
+
+    final actions = isHostActive
+        ? [
+            _ActionItem('Host Subsystem', 'Manage container & node telemetry', Icons.storage_outlined, Colors.green, () {
+              context.go('/host');
+            }),
+            _ActionItem('Vault Files Index', 'View encrypted file list', Icons.folder_outlined, Colors.indigo, () {
+              context.go('/files');
+            }),
+            _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+              context.go('/settings');
+            }),
+          ]
+        : [
+            _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
+              context.go('/files');
+            }),
+            _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
+              context.go('/files');
+            }),
+            _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
+              context.go('/host');
+            }),
+            _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+              context.go('/settings');
+            }),
+          ];
 
     return GridView.builder(
       shrinkWrap: true,

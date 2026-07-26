@@ -515,4 +515,45 @@ class FirebaseService {
       'encryptedAesKey': encryptedAesKey,
     };
   }
+
+  /// Returns the count of active ONLINE hosts in the mesh network.
+  Future<int> getActiveHostsCount() async {
+    try {
+      final snapshot = await _firestore
+          .collection('hosts')
+          .get()
+          .timeout(const Duration(seconds: 5));
+      if (snapshot.docs.isEmpty) return 1;
+      int activeCount = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        if (data['status'] == 'ONLINE') {
+          activeCount++;
+        }
+      }
+      return activeCount > 0 ? activeCount : snapshot.docs.length;
+    } catch (_) {
+      return 1;
+    }
+  }
+
+  /// Registers or updates a host node in Cloud Firestore for network-wide tracking.
+  Future<void> updateHostNodeStatus({
+    required String hostId,
+    required String hostname,
+    required String status,
+    required int reservedStorageBytes,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      await _firestore.collection('hosts').doc(hostId).set({
+        'id': hostId,
+        'hostname': hostname,
+        'status': status,
+        'reservedStorageBytes': reservedStorageBytes,
+        'ownerId': user?.uid ?? 'anonymous',
+        'lastHeartbeat': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
 }

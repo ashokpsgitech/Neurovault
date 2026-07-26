@@ -7,6 +7,7 @@ class DashboardStatsModel {
   final int storageCapacityBytes;
   final int reservedStorageBytes;
   final String hostStatus;
+  final int activeHostsCount;
   final int totalFiles;
   final List<RecentActivityItem> recentActivities;
 
@@ -16,6 +17,7 @@ class DashboardStatsModel {
     this.storageCapacityBytes = 10 * 1024 * 1024 * 1024, // 10 GB default
     this.reservedStorageBytes = 5 * 1024 * 1024 * 1024,  // 5 GB default
     this.hostStatus = 'UNREGISTERED',
+    this.activeHostsCount = 1,
     this.totalFiles = 0,
     this.recentActivities = const [],
   });
@@ -31,6 +33,7 @@ class DashboardStatsModel {
     int? storageCapacityBytes,
     int? reservedStorageBytes,
     String? hostStatus,
+    int? activeHostsCount,
     int? totalFiles,
     List<RecentActivityItem>? recentActivities,
   }) {
@@ -40,6 +43,7 @@ class DashboardStatsModel {
       storageCapacityBytes: storageCapacityBytes ?? this.storageCapacityBytes,
       reservedStorageBytes: reservedStorageBytes ?? this.reservedStorageBytes,
       hostStatus: hostStatus ?? this.hostStatus,
+      activeHostsCount: activeHostsCount ?? this.activeHostsCount,
       totalFiles: totalFiles ?? this.totalFiles,
       recentActivities: recentActivities ?? this.recentActivities,
     );

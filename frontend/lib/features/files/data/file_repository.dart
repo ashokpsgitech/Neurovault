@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
 import '../../../core/firebase/firebase_service.dart';
+import '../../../core/storage/local_file_cache_service.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/file_metadata_model.dart';
@@ -17,10 +18,11 @@ class FileRepository extends BaseRepository {
 
   Future<List<FileItem>> listFiles() async {
     try {
-      return await _firebaseService.listUserFiles();
+      final remoteFiles = await _firebaseService.listUserFiles();
+      return await LocalFileCacheService().mergeWithRemote(remoteFiles);
     } catch (e, st) {
-      _logger.error('[FileRepository] listFiles error: $e', e, st);
-      return [];
+      _logger.error('[FileRepository] listFiles remote error: $e', e, st);
+      return await LocalFileCacheService().loadCachedFiles();
     }
   }
 
@@ -82,6 +84,9 @@ class FileRepository extends BaseRepository {
         chunkCount: 1,
       );
     }
+
+    // Save uploaded item to persistent local cache
+    await LocalFileCacheService().saveFile(uploadedItem);
 
     onProgress(PipelineProgress(
       filename: filename,

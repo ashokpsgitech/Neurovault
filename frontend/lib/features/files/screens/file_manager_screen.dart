@@ -14,6 +14,9 @@ import '../models/progress_model.dart';
 import '../providers/file_provider.dart';
 import '../providers/file_state.dart';
 
+import '../../host/providers/host_provider.dart';
+import '../../host/providers/host_state.dart';
+
 /// Responsive Material 3 File Manager Screen for NeuroVault.
 class FileManagerScreen extends ConsumerStatefulWidget {
   const FileManagerScreen({super.key});
@@ -91,6 +94,8 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final fileState = ref.watch(fileProvider);
+    final hostState = ref.watch(hostProvider);
+    final isHostMode = hostState is HostEnabled;
 
     List<FileItem> files = [];
     PipelineProgress? activeProgress;
@@ -120,31 +125,52 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        icon: const Icon(Icons.cloud_upload_outlined),
-        label: const Text('Upload File'),
-        onPressed: () {
-          showDialog(
-            context: context,
-            builder: (_) => UploadDialog(
-              onUpload: (filename, bytes) async {
-                try {
-                  await ref.read(fileProvider.notifier).uploadFile(
-                        filename: filename,
-                        fileBytes: bytes,
-                      );
-                } catch (e) {
-                  if (context.mounted) {
-                    CustomSnackbar.showError(context, 'Upload error: $e');
-                  }
-                }
+      floatingActionButton: isHostMode
+          ? null
+          : FloatingActionButton.extended(
+              icon: const Icon(Icons.cloud_upload_outlined),
+              label: const Text('Upload File'),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => UploadDialog(
+                    onUpload: (filename, bytes) async {
+                      try {
+                        await ref.read(fileProvider.notifier).uploadFile(
+                              filename: filename,
+                              fileBytes: bytes,
+                            );
+                      } catch (e) {
+                        if (context.mounted) {
+                          CustomSnackbar.showError(context, 'Upload error: $e');
+                        }
+                      }
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
       body: Column(
         children: [
+          // Host Mode Restriction Notice Banner
+          if (isHostMode)
+            Container(
+              color: Colors.amber.withOpacity(0.15),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.amber),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Host Mode Active: Storage node is operating. Uploading is reserved for Client Mode.',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Active Streaming Progress Banner
           if (activeProgress != null) _buildProgressBanner(context, activeProgress),
 

@@ -23,10 +23,21 @@ class FileItem {
       sizeBytes: json['sizeBytes'] ?? json['size'] ?? 0,
       contentType: json['contentType']?.toString() ?? 'application/octet-stream',
       createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'].toString())
+          ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now())
           : DateTime.now(),
       chunkCount: json['chunkCount'] ?? 1,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'filename': filename,
+      'sizeBytes': sizeBytes,
+      'contentType': contentType,
+      'createdAt': createdAt.toIso8601String(),
+      'chunkCount': chunkCount,
+    };
   }
 }
 
