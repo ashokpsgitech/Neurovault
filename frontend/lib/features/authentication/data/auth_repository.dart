@@ -158,9 +158,15 @@ class AuthRepository extends BaseRepository {
         return 'Password is too weak. Please use at least 6 characters.';
       case 'operation-not-allowed':
         return 'Email/Password authentication is disabled in Firebase Console. Enable it under Firebase Console > Authentication > Sign-in method.';
+      case 'too-many-requests':
+      case 'quota-exceeded':
+        return 'Firebase Security Notice: Too many requests from this device due to anti-abuse protection.\n\nSolutions:\n1. Wait 5-10 minutes before resending.\n2. Disconnect VPN or switch Wi-Fi/Cellular.\n3. Login directly with your created email & password.';
       case 'network-request-failed':
         return 'Network error: Check your internet connection.';
       default:
+        if (msg.contains('unusual activity') || msg.contains('blocked all requests')) {
+          return 'Firebase Security Notice: We have temporarily blocked requests from this device due to unusual activity.\n\nPlease wait 5-10 minutes, turn off VPN, or log in directly.';
+        }
         return e.message ?? 'Authentication failed. Please try again.';
     }
   }

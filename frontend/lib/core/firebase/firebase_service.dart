@@ -97,7 +97,18 @@ class FirebaseService {
     } catch (_) {}
     final freshUser = _auth.currentUser;
     if (freshUser != null && freshUser.emailVerified) return;
-    await (freshUser ?? user).sendEmailVerification().timeout(const Duration(seconds: 10));
+
+    try {
+      await (freshUser ?? user).sendEmailVerification().timeout(const Duration(seconds: 10));
+    } on FirebaseAuthException catch (e) {
+      final code = e.code.toLowerCase();
+      final msg = (e.message ?? '').toLowerCase();
+      if (code.contains('too-many-requests') || code.contains('unusual-activity') || msg.contains('unusual activity') || msg.contains('blocked all requests')) {
+        DebugLogService().log('Firebase Rate Limit: $e', level: 'WARN');
+        throw Exception('Firebase rate limit: Too many verification attempts from this device/IP. Please wait 5-10 minutes or login directly.');
+      }
+      rethrow;
+    }
   }
 
   /// Checks if current user's email has been verified via Firebase.
