@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firebase/firebase_service.dart';
+import '../../../core/utils/debug_log_service.dart';
 import '../data/file_repository.dart';
 import '../models/file_metadata_model.dart';
 import 'file_state.dart';
@@ -37,7 +38,8 @@ class FileNotifier extends StateNotifier<FileState> {
       state = FileLoaded(List.unmodifiable(_inMemoryFiles));
     } catch (e, st) {
       dev.log('[FileNotifier] loadFiles() error: $e', error: e, stackTrace: st);
-      state = FileLoaded(List.unmodifiable(_inMemoryFiles));
+      DebugLogService().error('[FileNotifier] loadFiles failed: $e');
+      state = FileError('Failed to load files: ${e.toString()}');
     }
   }
 

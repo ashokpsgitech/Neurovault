@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/host_info_model.dart';
 import '../services/host_service.dart';
@@ -31,8 +32,8 @@ class HostRepository extends BaseRepository {
           reservedCapacityBytes: reservedCapacityBytes,
         );
       });
-    } catch (_) {
-      // Fallback local node registration when Coordinator REST server is unreachable
+    } catch (e) {
+      DebugLogService().warn('[HostRepository] Coordinator registration failed ($e). Operating in offline local fallback mode.');
       final hostId = 'local-node-${DateTime.now().millisecondsSinceEpoch}';
       final fallbackPath = await _getDefaultContainerPath();
       return HostInfoModel(
@@ -44,9 +45,9 @@ class HostRepository extends BaseRepository {
         totalCapacityBytes: totalCapacityBytes,
         reservedCapacityBytes: reservedCapacityBytes,
         usedCapacityBytes: 0,
-        status: 'ONLINE',
-        cpuUsagePercent: 14.2,
-        ramUsagePercent: 36.5,
+        status: 'OFFLINE_LOCAL',
+        cpuUsagePercent: 0.0,
+        ramUsagePercent: 0.0,
         containerPath: fallbackPath,
         containerCreated: true,
         activeChunks: 0,
@@ -68,13 +69,17 @@ class HostRepository extends BaseRepository {
         ramUsagePercent: ramUsagePercent,
         usedCapacityBytes: usedCapacityBytes,
       );
-    } catch (_) {}
+    } catch (e) {
+      DebugLogService().error('[HostRepository] sendHeartbeat failed for host $hostId: $e');
+      rethrow;
+    }
   }
 
   Future<HostInfoModel?> getHostStatus() async {
     try {
       return await _service.getHostStatus();
-    } catch (_) {
+    } catch (e) {
+      DebugLogService().error('[HostRepository] getHostStatus failed: $e');
       return null;
     }
   }
@@ -110,8 +115,8 @@ class HostRepository extends BaseRepository {
         containerPath: resolvedPath,
         reservationSize: reservationEnum,
       );
-    } catch (_) {
-      // Backend server offline — local container file creation on disk already completed above
+    } catch (e) {
+      DebugLogService().warn('[HostRepository] Backend container registration offline: $e');
     }
   }
 
@@ -119,24 +124,30 @@ class HostRepository extends BaseRepository {
   Future<void> _requestStoragePermissions() async {
     if (!Platform.isAndroid) return;
     try {
-      // Android 13+ uses granular media permissions
       final status = await Permission.storage.request();
       if (!status.isGranted) {
-        // Try manage external storage for full access
         await Permission.manageExternalStorage.request();
       }
-    } catch (_) {}
+    } catch (e) {
+      DebugLogService().error('[HostRepository] _requestStoragePermissions error: $e');
+    }
   }
 
   /// Returns the platform-appropriate default container path.
   Future<String> _getDefaultContainerPath() async {
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
-        final dir = await getApplicationDocumentsDirectory();
-        return '${dir.path}/storage.container';
-      }
+      final dir = await getApplicationDocumentsDirectory();
+      return '${dir.path}/storage.container';
     } catch (_) {}
-    return 'D:\\NeuroVaultData\\storage.container';
+
+    if (Platform.isWindows) {
+      final userProfile = Platform.environment['USERPROFILE'] ?? 'C:';
+      return '$userProfile\\NeuroVaultData\\storage.container';
+    } else if (Platform.isMacOS || Platform.isLinux) {
+      final home = Platform.environment['HOME'] ?? '.';
+      return '$home/NeuroVaultData/storage.container';
+    }
+    return 'storage.container';
   }
 
   /// Resolves the container path to a valid writable location on the current platform.

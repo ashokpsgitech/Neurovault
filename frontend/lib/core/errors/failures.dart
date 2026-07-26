@@ -18,5 +18,5 @@ class AuthFailure extends Failure {
 }
 
 class StorageFailure extends Failure {
-  const StorageFailure(super.message);
+  const StorageFailure([super.message = 'Storage container error occurred.']);
 }

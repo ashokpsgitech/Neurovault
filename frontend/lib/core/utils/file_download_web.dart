@@ -1,6 +1,7 @@
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
 import 'dart:typed_data';
+import 'debug_log_service.dart';
 
 Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
   try {
@@ -24,6 +25,7 @@ Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
 
     return 'Browser Downloads Folder ($filename)';
   } catch (e) {
-    return null;
+    DebugLogService().error('[WebDownload] Failed to save $filename: $e');
+    rethrow;
   }
 }

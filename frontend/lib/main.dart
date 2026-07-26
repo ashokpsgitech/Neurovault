@@ -1,9 +1,11 @@
+import 'dart:developer' as dev;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/debug_log_service.dart';
 import 'firebase_options.dart';
 import 'providers/core_providers.dart';
 
@@ -13,7 +15,11 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  } catch (_) {}
+    dev.log('[FirebaseInit] Firebase initialized successfully.');
+  } catch (e, st) {
+    dev.log('[FirebaseInit] Initialization failed: $e', error: e, stackTrace: st);
+    DebugLogService().error('[FirebaseInit] Failed to initialize Firebase: $e');
+  }
 
   runApp(
     const ProviderScope(

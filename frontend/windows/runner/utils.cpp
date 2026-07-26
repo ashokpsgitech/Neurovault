@@ -14,7 +14,7 @@ void CreateAndAttachConsole() {
       _dup2(_fileno(stdout), 1);
     }
     if (freopen_s(&unused, "CONOUT$", "w", stderr)) {
-      _dup2(_fileno(stdout), 2);
+      _dup2(_fileno(stderr), 2);
     }
     std::ios::sync_with_stdio();
     FlutterDesktopResyncOutputStreams();
@@ -45,10 +45,13 @@ std::string Utf8FromUtf16(const wchar_t* utf16_string) {
   if (utf16_string == nullptr) {
     return std::string();
   }
-  unsigned int target_length = ::WideCharToMultiByte(
+  int raw_length = ::WideCharToMultiByte(
       CP_UTF8, WC_ERR_INVALID_CHARS, utf16_string,
-      -1, nullptr, 0, nullptr, nullptr)
-    -1; // remove the trailing null character
+      -1, nullptr, 0, nullptr, nullptr);
+  if (raw_length <= 0) {
+    return std::string();
+  }
+  unsigned int target_length = static_cast<unsigned int>(raw_length - 1);
   int input_length = (int)wcslen(utf16_string);
   std::string utf8_string;
   if (target_length == 0 || target_length > utf8_string.max_size()) {

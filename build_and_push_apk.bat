@@ -15,11 +15,21 @@ cd /d "%~dp0"
 echo ========================================================
 echo Staging Release APK and Pushing to GitHub...
 echo ========================================================
+for /f "tokens=*" %%b in ('git rev-parse --abbrev-ref HEAD') do set CURRENT_BRANCH=%%b
+if "%CURRENT_BRANCH%"=="" set CURRENT_BRANCH=main
+
 git add -A
 git add -f frontend/build/app/outputs/flutter-apk/app-release.apk
-git commit -m "build: update release APK binary and sync changes"
-git push origin main
+
+git diff --cached --quiet
+if %ERRORLEVEL% NEQ 0 (
+    git commit -m "build: update release APK binary and sync changes"
+) else (
+    echo [INFO] No changes to commit.
+)
+
+git push origin %CURRENT_BRANCH%
 
 echo ========================================================
-echo SUCCESS: Release APK updated and pushed to GitHub!
+echo SUCCESS: Release APK updated and pushed to branch %CURRENT_BRANCH%!
 echo ========================================================
