@@ -65,7 +65,6 @@ class _UploadDialogState extends State<UploadDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final size = _fileBytes?.length ?? 0;
-    final chunkCount = size > 0 ? (size / (4 * 1024 * 1024)).ceil() : 0;
 
     return AlertDialog(
       title: Row(
@@ -86,7 +85,7 @@ class _UploadDialogState extends State<UploadDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Files are split into 4MB chunks and encrypted with AES-256-GCM before leaving your device.',
+              'Files are dynamically chunked and replicated across active host nodes with AES-256-GCM encryption before leaving your device.',
               style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
@@ -219,7 +218,7 @@ class _UploadDialogState extends State<UploadDialog> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('File Size: ${_formatBytes(size)}'),
-                          Text('4MB Chunks: $chunkCount block(s)'),
+                          const Text('Host Allocation: Dynamic Chunks'),
                         ],
                       ),
                       const SizedBox(height: 8),

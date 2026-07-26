@@ -11,6 +11,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../firebase_options.dart';
 import '../../features/authentication/models/user_model.dart';
 import '../../features/files/models/file_metadata_model.dart';
+import '../crypto/file_chunker.dart';
 
 /// 24/7 Firebase Cloud Backend Service for NeuroVault.
 /// Provides Zero-Trust Cloud Storage, Authentication, and Firestore Metadata sync.
@@ -394,6 +395,10 @@ class FirebaseService {
       );
     }
 
+    final activeHostCount = await getActiveHostsCount();
+    final dynamicChunks = FileChunker.splitIntoChunks(fileBytes, activeHostCount: activeHostCount);
+    final calculatedChunkCount = dynamicChunks.length;
+
     final fileDoc = <String, dynamic>{
       'id': fileId,
       'filename': filename,
@@ -404,7 +409,8 @@ class FirebaseService {
       'ownerId': user.uid,
       'createdAt': FieldValue.serverTimestamp(),
       'createdAtIso': DateTime.now().toIso8601String(),
-      'chunkCount': 1,
+      'chunkCount': calculatedChunkCount,
+      'activeHostReplicas': activeHostCount > 0 ? activeHostCount : 1,
     };
 
     // If file size is under 850 KB, embed encrypted bytes as Base64 directly in Cloud Firestore document
@@ -413,7 +419,7 @@ class FirebaseService {
       fileDoc['encryptedBytesBase64'] = base64Encode(fileBytes);
     }
 
-    DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId');
+    DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId ($calculatedChunkCount chunks across ${activeHostCount > 0 ? activeHostCount : 1} active host replicas)');
     try {
       await _firestore
           .collection('users')
@@ -439,7 +445,7 @@ class FirebaseService {
       filename: filename,
       sizeBytes: fileBytes.length,
       createdAt: DateTime.now(),
-      chunkCount: 1,
+      chunkCount: calculatedChunkCount,
     );
   }
 

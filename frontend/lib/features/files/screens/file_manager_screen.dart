@@ -266,7 +266,7 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                         ),
                         title: Text(item.filename, style: const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Text(
-                          '${_formatBytes(item.sizeBytes)}  •  ${item.chunkCount} x 4MB chunk(s)  •  ${DateFormat('MMM d, hh:mm a').format(item.createdAt)}',
+                          '${_formatBytes(item.sizeBytes)}  •  ${item.chunkCount} host chunk(s)  •  ${DateFormat('MMM d, hh:mm a').format(item.createdAt)}',
                         ),
                         trailing: IconButton(
                           icon: const Icon(Icons.cloud_download_outlined),

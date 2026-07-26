@@ -1,16 +1,29 @@
 import 'dart:typed_data';
 
-/// 4MB (4,194,304 bytes) Chunking Engine for splitting and reassembling files.
+/// Dynamic Chunking Engine for splitting and reassembling files based on active host nodes.
 class FileChunker {
-  static const int chunkSize = 4 * 1024 * 1024; // 4MB
+  static const int defaultChunkSize = 4 * 1024 * 1024; // 4MB default fallback
 
-  /// Splits raw file bytes into 4MB chunk payload blocks.
-  static List<Uint8List> splitIntoChunks(Uint8List fileBytes) {
+  /// Splits raw file bytes into dynamic chunk payload blocks based on the number of active host nodes.
+  /// If [activeHostCount] > 1, splits the payload into [activeHostCount] dynamic chunks
+  /// so chunks are dynamically distributed and replicated across available container nodes.
+  static List<Uint8List> splitIntoChunks(Uint8List fileBytes, {int? activeHostCount}) {
+    if (fileBytes.isEmpty) return [Uint8List(0)];
+
+    int targetChunkSize = defaultChunkSize;
+
+    if (activeHostCount != null && activeHostCount > 1) {
+      targetChunkSize = (fileBytes.length / activeHostCount).ceil();
+      if (targetChunkSize < 64 * 1024) {
+        targetChunkSize = 64 * 1024; // Minimum 64 KB per chunk block
+      }
+    }
+
     final List<Uint8List> chunks = [];
     int offset = 0;
 
     while (offset < fileBytes.length) {
-      int end = offset + chunkSize;
+      int end = offset + targetChunkSize;
       if (end > fileBytes.length) {
         end = fileBytes.length;
       }
