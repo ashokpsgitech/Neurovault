@@ -409,6 +409,7 @@ class FirebaseService {
       'storagePath': storagePath,
       'ownerId': user.uid,
       'createdAt': FieldValue.serverTimestamp(),
+      'createdAtIso': DateTime.now().toIso8601String(),
       'chunkCount': 1,
     };
 
@@ -442,32 +443,50 @@ class FirebaseService {
     );
   }
 
-  /// Fetches list of files stored in user's Cloud Firestore Vault.
+  /// Fetches list of files stored in user's Cloud Firestore Vault across all devices.
   Future<List<FileItem>> listUserFiles() async {
     final user = _auth.currentUser;
     if (user == null) return [];
 
     try {
-      final snapshot = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .collection('files')
-          .orderBy('createdAt', descending: true)
-          .get()
-          .timeout(const Duration(seconds: 8));
+      QuerySnapshot<Map<String, dynamic>> snapshot;
+      try {
+        snapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('files')
+            .orderBy('createdAt', descending: true)
+            .get()
+            .timeout(const Duration(seconds: 8));
+      } catch (e) {
+        DebugLogService().warn('[FirebaseService] listUserFiles orderBy failed ($e), falling back to unindexed fetch.');
+        snapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('files')
+            .get()
+            .timeout(const Duration(seconds: 8));
+      }
 
-      return snapshot.docs.map((doc) {
+      final files = snapshot.docs.map((doc) {
         final data = doc.data();
+        DateTime created = DateTime.now();
+        if (data['createdAt'] is Timestamp) {
+          created = (data['createdAt'] as Timestamp).toDate();
+        } else if (data['createdAtIso'] != null) {
+          created = DateTime.tryParse(data['createdAtIso'].toString()) ?? DateTime.now();
+        }
         return FileItem(
           id: data['id']?.toString() ?? doc.id,
           filename: data['filename']?.toString() ?? 'vault_file.bin',
           sizeBytes: data['sizeBytes'] ?? 0,
-          createdAt: data['createdAt'] != null && data['createdAt'] is Timestamp
-              ? (data['createdAt'] as Timestamp).toDate()
-              : DateTime.now(),
+          createdAt: created,
           chunkCount: data['chunkCount'] ?? 1,
         );
       }).toList();
+
+      files.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return files;
     } catch (e, st) {
       DebugLogService().error('[FirebaseService] listUserFiles error: $e', e, st);
       return [];
