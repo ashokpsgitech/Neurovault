@@ -128,10 +128,16 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
             context: context,
             builder: (_) => UploadDialog(
               onUpload: (filename, bytes) async {
-                await ref.read(fileProvider.notifier).uploadFile(
-                      filename: filename,
-                      fileBytes: bytes,
-                    );
+                try {
+                  await ref.read(fileProvider.notifier).uploadFile(
+                        filename: filename,
+                        fileBytes: bytes,
+                      );
+                } catch (e) {
+                  if (context.mounted) {
+                    CustomSnackbar.showError(context, 'Upload error: $e');
+                  }
+                }
               },
             ),
           );
