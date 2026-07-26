@@ -34,6 +34,14 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
   String _searchQuery = '';
 
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(fileProvider.notifier).loadFiles();
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();

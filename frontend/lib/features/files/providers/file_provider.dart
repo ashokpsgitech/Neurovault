@@ -8,6 +8,9 @@ import '../data/file_repository.dart';
 import '../models/file_metadata_model.dart';
 import 'file_state.dart';
 
+import '../../authentication/providers/auth_provider.dart';
+import '../../authentication/providers/auth_state.dart';
+
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
   ref.keepAlive();
   final firebaseService = FirebaseService();
@@ -16,7 +19,18 @@ final fileRepositoryProvider = Provider<FileRepository>((ref) {
 
 final fileProvider = StateNotifierProvider<FileNotifier, FileState>((ref) {
   final repo = ref.watch(fileRepositoryProvider);
-  return FileNotifier(repo);
+  final notifier = FileNotifier(repo);
+
+  // Automatically refresh cloud vault list when auth state transitions to Authenticated
+  ref.listen<AuthState>(authStateProvider, (previous, next) {
+    if (next is Authenticated) {
+      notifier.loadFiles();
+    } else if (next is Unauthenticated) {
+      notifier.clear();
+    }
+  });
+
+  return notifier;
 });
 
 /// Riverpod StateNotifier managing Vault files, streaming upload, and download pipelines.
