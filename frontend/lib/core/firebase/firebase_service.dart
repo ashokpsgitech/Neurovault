@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:dio/dio.dart';
 import '../utils/debug_log_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -492,7 +493,7 @@ class FirebaseService {
     }
   }
 
-  /// Downloads encrypted bytes and AES key for a given file ID.
+  /// Downloads encrypted bytes and AES key for a given file ID with multi-tiered cloud fallbacks.
   Future<Map<String, dynamic>> downloadEncryptedFile(String fileId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated with Firebase');
@@ -515,26 +516,56 @@ class FirebaseService {
     final data = docSnap.data()!;
     final String encryptedAesKey = data['encryptedAesKey']?.toString() ?? '';
     final String storagePath = data['storagePath']?.toString() ?? '';
+    final String downloadUrl = data['downloadUrl']?.toString() ?? '';
     final String? encryptedBytesBase64 = data['encryptedBytesBase64']?.toString();
 
     Uint8List? encryptedBytes;
 
-    // 1. Try Base64 payload stored in Cloud Firestore document
+    // Tier 1: Embedded Base64 payload in Cloud Firestore document
     if (encryptedBytesBase64 != null && encryptedBytesBase64.isNotEmpty) {
       try {
         encryptedBytes = base64Decode(encryptedBytesBase64);
-        DebugLogService().info('[FirebaseService] Retrieved payload directly from Cloud Firestore document.');
+        DebugLogService().info('[FirebaseService] Download Tier 1: Retrieved payload from Cloud Firestore document.');
       } catch (_) {}
     }
 
-    // 2. Fallback to Cloud Storage reference
+    // Tier 2: Direct HTTP download URL (Firebase Storage / Host Node endpoint)
+    if (encryptedBytes == null && downloadUrl.isNotEmpty && downloadUrl.startsWith('http')) {
+      try {
+        final dio = Dio();
+        final response = await dio.get<List<int>>(
+          downloadUrl,
+          options: Options(responseType: ResponseType.bytes),
+        ).timeout(const Duration(seconds: 15));
+        if (response.data != null && response.data!.isNotEmpty) {
+          encryptedBytes = Uint8List.fromList(response.data!);
+          DebugLogService().info('[FirebaseService] Download Tier 2: Retrieved payload via direct download URL.');
+        }
+      } catch (e) {
+        DebugLogService().error('[FirebaseService] Download Tier 2 failed: $e');
+      }
+    }
+
+    // Tier 3: Firebase Storage reference path
     if (encryptedBytes == null && storagePath.isNotEmpty) {
       try {
         final storageRef = _storage.ref(storagePath);
         encryptedBytes = await storageRef.getData(100 * 1024 * 1024);
+        DebugLogService().info('[FirebaseService] Download Tier 3: Retrieved payload from Firebase Storage.');
       } catch (e) {
-        DebugLogService().error('[FirebaseService] Cloud Storage getData failed: $e');
+        DebugLogService().error('[FirebaseService] Download Tier 3 failed: $e');
       }
+    }
+
+    // Tier 4: Storage path fallback search by filename
+    if (encryptedBytes == null) {
+      try {
+        final filename = data['filename']?.toString() ?? 'file.bin';
+        final fallbackPath = 'users/${user.uid}/vault/$fileId/$filename.enc';
+        final storageRef = _storage.ref(fallbackPath);
+        encryptedBytes = await storageRef.getData(100 * 1024 * 1024);
+        DebugLogService().info('[FirebaseService] Download Tier 4: Retrieved payload via fallback path search.');
+      } catch (_) {}
     }
 
     if (encryptedBytes == null) {
@@ -547,24 +578,38 @@ class FirebaseService {
     };
   }
 
-  /// Returns the count of active ONLINE hosts in the mesh network.
+  /// Returns the count of active container nodes connected to the internet and available for public client file uploads.
   Future<int> getActiveHostsCount() async {
     try {
+      final now = DateTime.now();
       final snapshot = await _firestore
           .collection('hosts')
           .get()
           .timeout(const Duration(seconds: 5));
-      if (snapshot.docs.isEmpty) return 1;
-      int activeCount = 0;
+
+      int activePublicContainerNodes = 0;
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        if (data['status'] == 'ONLINE') {
-          activeCount++;
+        final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
+        final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
+
+        DateTime? lastSeen;
+        if (data['lastSeen'] is Timestamp) {
+          lastSeen = (data['lastSeen'] as Timestamp).toDate();
+        } else if (data['lastSeenIso'] != null) {
+          lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
+        }
+
+        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 15;
+
+        if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
+          activePublicContainerNodes++;
         }
       }
-      return activeCount > 0 ? activeCount : snapshot.docs.length;
+
+      return activePublicContainerNodes;
     } catch (_) {
-      return 1;
+      return 0;
     }
   }
 
@@ -581,9 +626,11 @@ class FirebaseService {
         'id': hostId,
         'hostname': hostname,
         'status': status,
+        'isAvailableForPublic': true,
         'reservedStorageBytes': reservedStorageBytes,
         'ownerId': user?.uid ?? 'anonymous',
-        'lastHeartbeat': FieldValue.serverTimestamp(),
+        'lastSeen': FieldValue.serverTimestamp(),
+        'lastSeenIso': DateTime.now().toIso8601String(),
       }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
