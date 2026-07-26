@@ -28,6 +28,12 @@ class FileNotifier extends StateNotifier<FileState> {
     loadFiles();
   }
 
+  /// Clears in-memory file state when user logs out or switches accounts.
+  void clear() {
+    _inMemoryFiles.clear();
+    state = const FileLoaded([]);
+  }
+
   Future<void> loadFiles() async {
     dev.log('[FileNotifier] loadFiles() called');
     state = const FileLoading();

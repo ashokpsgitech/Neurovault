@@ -4,28 +4,38 @@ import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 
 import '../../features/files/models/file_metadata_model.dart';
+import '../firebase/firebase_service.dart';
 import '../utils/debug_log_service.dart';
 
-/// Local persistent cache service for Vault files metadata.
-/// Ensures uploaded files persist across app restarts, reloads, and screen navigations.
+/// Local persistent cache service for Vault files metadata and payloads.
+/// Strictly scoped per authenticated User Account ID to prevent cross-account file data leakage on shared devices.
 class LocalFileCacheService {
   static final LocalFileCacheService _instance = LocalFileCacheService._internal();
   factory LocalFileCacheService() => _instance;
   LocalFileCacheService._internal();
 
-  File? _cacheFile;
-
-  Future<File> _getFile() async {
-    if (_cacheFile != null) return _cacheFile!;
-    final dir = await getApplicationDocumentsDirectory();
-    _cacheFile = File('${dir.path}/vault_files_cache.json');
-    return _cacheFile!;
+  String _getUserId([String? explicitUserId]) {
+    if (explicitUserId != null && explicitUserId.isNotEmpty) {
+      return explicitUserId;
+    }
+    final user = FirebaseService().currentUser;
+    if (user != null && user.uid.isNotEmpty) {
+      return user.uid;
+    }
+    return 'guest';
   }
 
-  /// Loads cached files from local disk storage.
-  Future<List<FileItem>> loadCachedFiles() async {
+  Future<File> _getFile([String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
+    final dir = await getApplicationDocumentsDirectory();
+    return File('${dir.path}/vault_files_cache_$userId.json');
+  }
+
+  /// Loads cached files from local disk storage for the current authenticated user.
+  Future<List<FileItem>> loadCachedFiles([String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
-      final file = await _getFile();
+      final file = await _getFile(userId);
       if (!await file.exists()) return [];
 
       final content = await file.readAsString();
@@ -33,61 +43,65 @@ class LocalFileCacheService {
 
       final List<dynamic> jsonList = jsonDecode(content);
       final files = jsonList.map((i) => FileItem.fromJson(i as Map<String, dynamic>)).toList();
-      DebugLogService().info('[LocalFileCache] Loaded ${files.length} persistent files from disk.');
+      DebugLogService().info('[LocalFileCache] Loaded ${files.length} persistent files for user ($userId).');
       return files;
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] loadCachedFiles error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] loadCachedFiles error for user ($userId): $e', e, st);
       return [];
     }
   }
 
-  /// Persists a single uploaded file metadata item to disk.
-  Future<void> saveFile(FileItem item) async {
+  /// Persists a single uploaded file metadata item to disk for the current user.
+  Future<void> saveFile(FileItem item, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
-      final current = await loadCachedFiles();
+      final current = await loadCachedFiles(userId);
       current.removeWhere((f) => f.id == item.id);
       current.insert(0, item);
-      await saveAllFiles(current);
-      DebugLogService().info('[LocalFileCache] Saved file: ${item.filename} (id: ${item.id})');
+      await saveAllFiles(current, userId);
+      DebugLogService().info('[LocalFileCache] Saved file: ${item.filename} (id: ${item.id}) for user ($userId)');
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] saveFile error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] saveFile error for user ($userId): $e', e, st);
     }
   }
 
-  /// Persists a list of files to disk.
-  Future<void> saveAllFiles(List<FileItem> items) async {
+  /// Persists a list of files to disk for the current user.
+  Future<void> saveAllFiles(List<FileItem> items, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
-      final file = await _getFile();
+      final file = await _getFile(userId);
       final jsonList = items.map((f) => f.toJson()).toList();
       await file.writeAsString(jsonEncode(jsonList), flush: true);
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] saveAllFiles error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] saveAllFiles error for user ($userId): $e', e, st);
     }
   }
 
-  /// Removes a file metadata item from persistent disk cache.
-  Future<void> removeFile(String fileId) async {
+  /// Removes a file metadata item from persistent disk cache for the current user.
+  Future<void> removeFile(String fileId, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
-      final current = await loadCachedFiles();
+      final current = await loadCachedFiles(userId);
       current.removeWhere((f) => f.id == fileId);
-      await saveAllFiles(current);
+      await saveAllFiles(current, userId);
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] removeFile error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] removeFile error for user ($userId): $e', e, st);
     }
   }
 
-  /// Merges remote files with local persistent files (deduplicating by file ID or filename).
-  Future<List<FileItem>> mergeWithRemote(List<FileItem> remoteFiles) async {
-    final cached = await loadCachedFiles();
+  /// Merges remote files with local persistent files (deduplicating by file ID or filename) for the current user.
+  Future<List<FileItem>> mergeWithRemote(List<FileItem> remoteFiles, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
+    final cached = await loadCachedFiles(userId);
     final Map<String, FileItem> map = {};
 
-    // First add cached files
+    // First add cached files for this user
     for (final f in cached) {
       map[f.id] = f;
-      map[f.filename] = f; // Map by filename too for deduplication
+      map[f.filename] = f;
     }
 
-    // Then overwrite/add with remote files
+    // Then overwrite/add with remote files for this user
     for (final f in remoteFiles) {
       map[f.id] = f;
       map[f.filename] = f;
@@ -96,16 +110,17 @@ class LocalFileCacheService {
     final merged = map.values.toSet().toList();
     merged.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    // Save consolidated list back to cache
-    await saveAllFiles(merged);
+    // Save consolidated list back to this user's cache
+    await saveAllFiles(merged, userId);
     return merged;
   }
 
-  /// Saves encrypted payload bytes and base64 key to local storage directory.
-  Future<void> saveEncryptedPayload(String fileId, Uint8List encryptedBytes, String aesKeyBase64) async {
+  /// Saves encrypted payload bytes and base64 key to user-scoped local storage directory.
+  Future<void> saveEncryptedPayload(String fileId, Uint8List encryptedBytes, String aesKeyBase64, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final payloadDir = Directory('${dir.path}/vault_payloads');
+      final payloadDir = Directory('${dir.path}/vault_payloads_$userId');
       if (!await payloadDir.exists()) {
         await payloadDir.create(recursive: true);
       }
@@ -114,30 +129,32 @@ class LocalFileCacheService {
 
       final keyFile = File('${payloadDir.path}/$fileId.key');
       await keyFile.writeAsString(aesKeyBase64, flush: true);
-      DebugLogService().info('[LocalFileCache] Saved local encrypted payload for fileId: $fileId');
+      DebugLogService().info('[LocalFileCache] Saved local payload for fileId ($fileId) user ($userId)');
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] saveEncryptedPayload error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] saveEncryptedPayload error for user ($userId): $e', e, st);
     }
   }
 
-  /// Checks if encrypted payload exists locally on disk.
-  Future<bool> hasLocalPayload(String fileId) async {
+  /// Checks if encrypted payload exists locally on disk for current user.
+  Future<bool> hasLocalPayload(String fileId, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final payloadFile = File('${dir.path}/vault_payloads/$fileId.bin');
-      final keyFile = File('${dir.path}/vault_payloads/$fileId.key');
+      final payloadFile = File('${dir.path}/vault_payloads_$userId/$fileId.bin');
+      final keyFile = File('${dir.path}/vault_payloads_$userId/$fileId.key');
       return await payloadFile.exists() && await keyFile.exists();
     } catch (_) {
       return false;
     }
   }
 
-  /// Reads local encrypted payload bytes and base64 AES key.
-  Future<Map<String, dynamic>?> loadEncryptedPayload(String fileId) async {
+  /// Reads local encrypted payload bytes and base64 AES key for current user.
+  Future<Map<String, dynamic>?> loadEncryptedPayload(String fileId, [String? explicitUserId]) async {
+    final userId = _getUserId(explicitUserId);
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final payloadFile = File('${dir.path}/vault_payloads/$fileId.bin');
-      final keyFile = File('${dir.path}/vault_payloads/$fileId.key');
+      final payloadFile = File('${dir.path}/vault_payloads_$userId/$fileId.bin');
+      final keyFile = File('${dir.path}/vault_payloads_$userId/$fileId.key');
 
       if (await payloadFile.exists() && await keyFile.exists()) {
         final bytes = await payloadFile.readAsBytes();
@@ -148,7 +165,7 @@ class LocalFileCacheService {
         };
       }
     } catch (e, st) {
-      DebugLogService().error('[LocalFileCache] loadEncryptedPayload error: $e', e, st);
+      DebugLogService().error('[LocalFileCache] loadEncryptedPayload error for user ($userId): $e', e, st);
     }
     return null;
   }

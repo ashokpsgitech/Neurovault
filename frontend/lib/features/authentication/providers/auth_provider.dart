@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/failures.dart';
 import '../../../core/firebase/firebase_service.dart';
 import '../../../providers/core_providers.dart';
+import '../../files/providers/file_provider.dart';
 import '../data/auth_repository.dart';
 import 'auth_state.dart';
 
@@ -14,14 +15,15 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(authRepository);
+  return AuthNotifier(authRepository, ref);
 });
 
 /// Riverpod StateNotifier managing authentication lifecycle.
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final Ref _ref;
 
-  AuthNotifier(this._repository) : super(const AuthInitial());
+  AuthNotifier(this._repository, this._ref) : super(const AuthInitial());
 
   /// Checks secure storage and validates session on startup.
   Future<void> checkAuthStatus() async {
@@ -67,6 +69,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _repository.login(email, password);
       state = Authenticated(response.user);
+      _ref.read(fileProvider.notifier).loadFiles();
     } on Failure catch (f) {
       state = AuthError(f.message);
     } catch (e) {
@@ -81,6 +84,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _repository.register(username, email, password);
       await _repository.updateUserPreferences(role: role, mode: mode);
       state = Authenticated(response.user.copyWith(role: role, mode: mode));
+      _ref.read(fileProvider.notifier).loadFiles();
     } on Failure catch (f) {
       state = AuthError(f.message);
     } catch (e) {
@@ -94,6 +98,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _repository.signInWithGoogle();
       state = Authenticated(response.user);
+      _ref.read(fileProvider.notifier).loadFiles();
     } on Failure catch (f) {
       state = AuthError(f.message);
     } catch (e) {
@@ -107,6 +112,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final response = await _repository.signInAnonymously();
       state = Authenticated(response.user);
+      _ref.read(fileProvider.notifier).loadFiles();
     } on Failure catch (f) {
       state = AuthError(f.message);
     } catch (e) {
@@ -134,8 +140,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repository.resendEmailVerification();
   }
 
-  /// Logs out user and clears token.
+  /// Logs out user and clears token and in-memory file state.
   Future<void> logout() async {
+    _ref.read(fileProvider.notifier).clear();
     await _repository.logout();
     state = const Unauthenticated();
   }
