@@ -14,4 +14,5 @@ import java.util.UUID;
 public interface ChunkRepository extends JpaRepository<Chunk, UUID> {
     List<Chunk> findByFileId(UUID fileId);
     Optional<Chunk> findByFileIdAndChunkIndex(UUID fileId, Integer chunkIndex);
+    List<Chunk> findByStatus(Chunk.Status status);
 }

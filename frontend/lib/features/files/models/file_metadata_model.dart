@@ -114,12 +114,14 @@ class ChunkLocation {
   final int chunkIndex;
   final String hostUrl;
   final String hostId;
+  final bool available;
 
   const ChunkLocation({
     required this.chunkId,
     required this.chunkIndex,
     required this.hostUrl,
     this.hostId = '',
+    this.available = true,
   });
 
   factory ChunkLocation.fromJson(Map<String, dynamic> json) {
@@ -128,6 +130,7 @@ class ChunkLocation {
       chunkIndex: json['chunkIndex'] ?? 0,
       hostUrl: json['downloadUrl']?.toString() ?? json['hostUrl']?.toString() ?? 'http://localhost:8080/api/storage/chunks',
       hostId: json['hostId']?.toString() ?? '',
+      available: json['available'] as bool? ?? true,
     );
   }
 }

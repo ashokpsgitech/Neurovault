@@ -100,7 +100,9 @@ class FileService {
         options: Options(responseType: ResponseType.bytes),
       );
       return Uint8List.fromList(response.data ?? []);
-    } catch (_) {
+    } catch (e) {
+      DebugLogService().warn(
+        '[FileService] Direct chunk fetch failed for $chunkId ($targetUrl): $e. Falling back to coordinator endpoint.');
       final response = await _dioClient.dio.get<List<int>>(
         '${ApiConstants.readChunk}$chunkId',
         options: Options(responseType: ResponseType.bytes),

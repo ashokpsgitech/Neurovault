@@ -35,6 +35,9 @@ public class DownloadService {
     @Value("${neurovault.host.port:8080}")
     private int hostPort;
 
+    @Value("${neurovault.host.use-tls:false}")
+    private boolean useTls;
+
     private final CoordinatorService coordinatorService;
     private final DownloadSessionManager sessionManager;
     private final FileMetadataRepository fileMetadataRepository;
@@ -78,6 +81,7 @@ public class DownloadService {
         DownloadSession session = sessionManager.createSession(user, file, chunks.size());
 
         List<ChunkLocationDto> chunkLocations = new ArrayList<>();
+        String scheme = useTls ? "https" : "http";
 
         for (Chunk chunk : chunks) {
             List<ChunkReplica> replicas = chunkReplicaRepository.findByChunkId(chunk.getId());
@@ -86,18 +90,24 @@ public class DownloadService {
                     .map(ChunkReplica::getHost)
                     .filter(h -> h != null && h.getStatus() == Host.Status.ONLINE)
                     .findFirst()
-                    .orElseGet(() -> replicas.isEmpty() ? null : replicas.get(0).getHost());
+                    .orElse(null);
 
-            if (targetHost == null) {
-                log.warn("No ONLINE host replica found for chunk {}", chunk.getId());
+            boolean isAvailable = (targetHost != null);
+            UUID hostId = null;
+            String hostName = "Unavailable Host";
+            String publicIp = "0.0.0.0";
+            String downloadToken = null;
+            String downloadUrl = null;
+
+            if (isAvailable) {
+                hostId = targetHost.getId();
+                hostName = targetHost.getName() != null ? targetHost.getName() : "Host-Node";
+                publicIp = targetHost.getPublicIp() != null ? targetHost.getPublicIp() : "localhost";
+                downloadToken = coordinatorService.generateChunkToken(session.getId(), hostId, chunk.getChunkIndex());
+                downloadUrl = String.format("%s://%s:%d/api/storage/chunks/%s", scheme, publicIp, hostPort, chunk.getId());
+            } else {
+                log.warn("No ONLINE host replica found for chunk {} (fileId={})", chunk.getId(), fileId);
             }
-
-            UUID hostId = targetHost != null ? targetHost.getId() : UUID.randomUUID();
-            String publicIp = targetHost != null ? targetHost.getPublicIp() : "localhost";
-            String hostName = targetHost != null ? targetHost.getName() : "Host-Node";
-
-            String downloadToken = coordinatorService.generateChunkToken(session.getId(), hostId, chunk.getChunkIndex());
-            String downloadUrl = String.format("http://%s:%d/api/storage/chunks/%s", publicIp, hostPort, chunk.getId());
 
             chunkLocations.add(ChunkLocationDto.builder()
                     .chunkId(chunk.getId())
@@ -109,6 +119,7 @@ public class DownloadService {
                     .publicIp(publicIp)
                     .downloadUrl(downloadUrl)
                     .downloadToken(downloadToken)
+                    .available(isAvailable)
                     .build());
         }
 

@@ -77,7 +77,7 @@ class FileRepository extends BaseRepository {
       uploadedItem = FileItem(
         id: fileId,
         filename: filename,
-        sizeBytes: fileBytes.length,
+        sizeBytes: encryptedBytes.length,
         createdAt: DateTime.now(),
         chunkCount: 1,
       );

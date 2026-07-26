@@ -11,22 +11,6 @@ import com.neurovault.backend.repository.FileMetadataRepository;
 import com.neurovault.backend.repository.HostRepository;
 import com.neurovault.backend.repository.StorageContainerRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-/**
- * Control Plane service responsible for upload session coordination,
- * host chunk placement planning, and metadata persistence.
- *
- * <p>Following Metadata-Only Coordinator architecture rules:
- * The Coordinator NEVER receives, proxies, or stores raw or encrypted file byte streams.</p>
- */
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,7 +81,7 @@ public class UploadService {
                 user, request.getFilename(), request.getFileSize(), request.getTotalChunks());
 
         UUID fileId = UUID.randomUUID();
-        session.setFileId(fileId);
+        sessionManager.updateFileId(session.getId(), fileId);
 
         FileMetadata placeholderFile = FileMetadata.builder()
                 .id(fileId)
@@ -183,6 +167,35 @@ public class UploadService {
 
         log.info("Finalizing upload session {} for user {}", session.getId(), user.getId());
 
+        if (request.getEncryptedAesKey() == null || request.getEncryptedAesKey().isBlank()) {
+            throw new BadRequestException("Encrypted AES key is required");
+        }
+
+        String computedFileHash = request.getFileHash();
+        if (computedFileHash == null || computedFileHash.isBlank()) {
+            if (request.getUploadedChunks() != null && !request.getUploadedChunks().isEmpty()) {
+                StringBuilder sb = new StringBuilder();
+                for (UploadCompleteRequest.UploadedChunkSummary c : request.getUploadedChunks()) {
+                    if (c.getChunkHash() != null) {
+                        sb.append(c.getChunkHash());
+                    }
+                }
+                try {
+                    java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                    byte[] digestBytes = md.digest(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                    StringBuilder hex = new StringBuilder();
+                    for (byte b : digestBytes) {
+                        hex.append(String.format("%02x", b));
+                    }
+                    computedFileHash = hex.toString();
+                } catch (Exception e) {
+                    computedFileHash = "SHA256_" + UUID.randomUUID().toString().replace("-", "");
+                }
+            } else {
+                computedFileHash = "SHA256_" + UUID.randomUUID().toString().replace("-", "");
+            }
+        }
+
         UUID targetFileId = session.getFileId() != null ? session.getFileId() : UUID.randomUUID();
 
         FileMetadata fileMetadata = FileMetadata.builder()
@@ -191,8 +204,8 @@ public class UploadService {
                 .name(session.getFileName())
                 .path("/" + session.getFileName())
                 .sizeBytes(session.getFileSize())
-                .encryptedAesKey(request.getEncryptedAesKey() != null ? request.getEncryptedAesKey() : "CLIENT_AES_256_KEY")
-                .fileHash("SHA256_VERIFIED")
+                .encryptedAesKey(request.getEncryptedAesKey())
+                .fileHash(computedFileHash)
                 .build();
 
         FileMetadata savedFile = fileMetadataRepository.save(fileMetadata);

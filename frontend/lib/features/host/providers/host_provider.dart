@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/host_background_service.dart';
@@ -55,6 +54,23 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
+  /// Resolves the primary local LAN IPv4 address of this device.
+  Future<String> _getLocalIpAddress() async {
+    try {
+      final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
+      for (final interface in interfaces) {
+        final name = interface.name.toLowerCase();
+        if (name.contains('loopback') || name == 'lo') continue;
+        for (final addr in interface.addresses) {
+          if (!addr.isLoopback && addr.address.isNotEmpty && !addr.address.startsWith('127.')) {
+            return addr.address;
+          }
+        }
+      }
+    } catch (_) {}
+    return '127.0.0.1';
+  }
+
   /// Enables host node: registers with coordinator, creates disk container, starts foreground background service, and starts heartbeat.
   Future<void> enableHost(int reservedGb, String containerPath) async {
     state = const HostLoading();
@@ -62,12 +78,17 @@ class HostNotifier extends StateNotifier<HostState> {
       final reservedBytes = reservedGb * 1024 * 1024 * 1024;
       const totalBytes = 100 * 1024 * 1024 * 1024;
 
+      final ipAddress = await _getLocalIpAddress();
+      final nodeName = Platform.localHostname.isNotEmpty
+          ? 'Node-${Platform.localHostname}'
+          : 'MicroServer-Node';
+
       // Step 1: Register this device as a host node with the coordinator
       final info = await _repository.registerHost(
-        name: 'MicroServer-Node-${Random().nextInt(1000)}',
+        name: nodeName,
         deviceType: Platform.isAndroid ? 'Mobile' : 'Desktop',
         operatingSystem: Platform.operatingSystem,
-        publicIp: '127.0.0.1',
+        publicIp: ipAddress,
         totalCapacityBytes: totalBytes,
         reservedCapacityBytes: reservedBytes,
       );
@@ -87,6 +108,7 @@ class HostNotifier extends StateNotifier<HostState> {
         containerCreated: true,
         containerPath: containerPath,
         reservedCapacityBytes: reservedBytes,
+        publicIp: ipAddress,
       );
       state = HostEnabled(updatedInfo);
       _startHeartbeatDaemon(updatedInfo.id);
@@ -124,14 +146,17 @@ class HostNotifier extends StateNotifier<HostState> {
   Future<void> _sendHeartbeatPulse(String hostId) async {
     if (state is HostEnabled) {
       final current = (state as HostEnabled).info;
-      final randomCpu = 10.0 + Random().nextDouble() * 25.0;
-      final randomRam = 30.0 + Random().nextDouble() * 20.0;
+      final storageLoad = current.reservedCapacityBytes > 0
+          ? (current.usedCapacityBytes / current.reservedCapacityBytes * 100.0).clamp(5.0, 95.0)
+          : 10.0;
+      final cpuLoad = storageLoad;
+      final ramLoad = (storageLoad * 0.8 + 20.0).clamp(10.0, 90.0);
 
       try {
         await _repository.sendHeartbeat(
           hostId: hostId,
-          cpuUsagePercent: randomCpu,
-          ramUsagePercent: randomRam,
+          cpuUsagePercent: cpuLoad,
+          ramUsagePercent: ramLoad,
           usedCapacityBytes: current.usedCapacityBytes,
         );
 
@@ -139,8 +164,8 @@ class HostNotifier extends StateNotifier<HostState> {
           state = HostEnabled(
             current.copyWith(
               lastHeartbeat: DateTime.now(),
-              cpuUsagePercent: randomCpu,
-              ramUsagePercent: randomRam,
+              cpuUsagePercent: cpuLoad,
+              ramUsagePercent: ramLoad,
               status: 'ONLINE',
             ),
           );

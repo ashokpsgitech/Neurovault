@@ -224,14 +224,12 @@ public class StorageService {
      * @return the raw encrypted bytes
      */
     public byte[] readChunk(UUID hostId, UUID chunkId) {
-        StorageContainer containerEntity = (hostId != null)
-                ? containerRepository.findByHostId(hostId).orElse(null)
-                : null;
-
-        if (containerEntity == null) {
-            containerEntity = containerRepository.findAll().stream().findFirst()
-                    .orElseThrow(() -> new ResourceNotFoundException("No storage container found in network"));
+        if (hostId == null) {
+            throw new BadRequestException("hostId is required to read a chunk");
         }
+
+        StorageContainer containerEntity = containerRepository.findByHostId(hostId)
+                .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
         ensureContainerOpen(containerEntity);
 

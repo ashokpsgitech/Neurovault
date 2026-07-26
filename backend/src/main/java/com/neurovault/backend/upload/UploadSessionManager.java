@@ -73,6 +73,18 @@ public class UploadSessionManager {
     }
 
     /**
+     * Updates the fileId associated with an upload session.
+     */
+    @Transactional
+    public UploadSession updateFileId(UUID sessionId, UUID fileId) {
+        UploadSession session = getSession(sessionId);
+        session.setFileId(fileId);
+        UploadSession updated = uploadSessionRepository.save(session);
+        log.info("Upload session {} fileId set to {}", sessionId, fileId);
+        return updated;
+    }
+
+    /**
      * Retrieves an upload session by ID.
      *
      * @param sessionId the session ID

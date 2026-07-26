@@ -38,6 +38,9 @@ public class JwtUtils {
             byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
             localKey = Keys.hmacShaKeyFor(keyBytes);
         }
+        if (localKey.getEncoded().length < 32) {
+            throw new IllegalStateException("JWT secret key is too short: minimum 256 bits (32 bytes) required for HMAC-SHA256.");
+        }
         this.key = localKey;
     }
 

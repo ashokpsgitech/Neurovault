@@ -159,8 +159,8 @@ class HostRepository extends BaseRepository {
     // On Android: if path starts with Windows drive letter or is invalid, use app docs directory
     if (requestedPath.startsWith('D:\\') ||
         requestedPath.startsWith('C:\\') ||
-        requestedPath.startsWith('/storage/emulated') == false &&
-            !requestedPath.startsWith('/data/')) {
+        (!requestedPath.startsWith('/storage/emulated') &&
+            !requestedPath.startsWith('/data/'))) {
       try {
         final dir = await getApplicationDocumentsDirectory();
         return '${dir.path}/storage.container';
@@ -221,8 +221,12 @@ class HostRepository extends BaseRepository {
 
     // Write a zero byte at end to pre-allocate at least minimal size on disk
     if (totalBytes > 256) {
-      await raf.setPosition(255);
-      await raf.writeByte(0);
+      try {
+        await raf.setPosition(255);
+        await raf.writeByte(0);
+      } catch (e) {
+        DebugLogService().warn('[HostRepository] Tail byte allocation skipped: $e');
+      }
     }
     await raf.close();
   }

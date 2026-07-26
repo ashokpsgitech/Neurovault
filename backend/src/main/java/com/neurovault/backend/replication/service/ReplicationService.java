@@ -62,13 +62,14 @@ public class ReplicationService {
         Chunk chunk = chunkRepository.findById(chunkId)
                 .orElseThrow(() -> new ReplicationException("Chunk not found: " + chunkId));
 
+        List<ChunkReplica> existingReplicas = chunkReplicaRepository.findByChunkId(chunkId);
         List<ChunkReplica> replicas = new ArrayList<>();
         for (UUID hostId : hostIds) {
             Host host = hostRepository.findById(hostId)
                     .orElseThrow(() -> new ReplicationException("Host not found: " + hostId));
 
             // Prevent duplicate replicas on the same host for the same chunk
-            boolean alreadyExists = chunkReplicaRepository.findByChunkId(chunkId).stream()
+            boolean alreadyExists = existingReplicas.stream()
                     .anyMatch(r -> r.getHost().getId().equals(hostId)
                             && r.getStatus() == ChunkReplica.Status.ACTIVE);
             if (alreadyExists) {
@@ -84,7 +85,9 @@ public class ReplicationService {
                     .status(ChunkReplica.Status.ACTIVE)
                     .build();
 
-            replicas.add(chunkReplicaRepository.save(replica));
+            ChunkReplica saved = chunkReplicaRepository.save(replica);
+            replicas.add(saved);
+            existingReplicas.add(saved);
             log.debug("Created replica {} for chunk {} on host {}",
                     replica.getId(), chunkId, hostId);
         }
@@ -154,14 +157,10 @@ public class ReplicationService {
      * @return list of under-replicated chunk IDs with their deficit
      */
     public Map<UUID, Integer> getUnderReplicatedChunks() {
-        List<Chunk> allChunks = chunkRepository.findAll();
+        List<Chunk> activeChunks = chunkRepository.findByStatus(Chunk.Status.ACTIVE);
         Map<UUID, Integer> underReplicated = new LinkedHashMap<>();
 
-        for (Chunk chunk : allChunks) {
-            if (chunk.getStatus() != Chunk.Status.ACTIVE) {
-                continue;
-            }
-
+        for (Chunk chunk : activeChunks) {
             long activeCount = chunkReplicaRepository.findByChunkId(chunk.getId()).stream()
                     .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
                     .count();

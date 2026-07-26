@@ -51,8 +51,9 @@ public class HeartbeatService {
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
 
-        // Update host status and last heartbeat timestamp
-        host.setLastHeartbeat(request.getTimestamp());
+        LocalDateTime serverNow = LocalDateTime.now();
+        // Update host status and last heartbeat timestamp (always use server clock for timeout accuracy)
+        host.setLastHeartbeat(serverNow);
         host.setStatus(Host.Status.ONLINE);
 
         if (request.getUsedStorageBytes() != null) {
@@ -64,7 +65,7 @@ public class HeartbeatService {
         // Persist the heartbeat record
         HostHeartbeat heartbeat = HostHeartbeat.builder()
                 .host(host)
-                .timestamp(request.getTimestamp())
+                .timestamp(serverNow)
                 .cpuUsagePercent(request.getCpuUsagePercent())
                 .memoryUsagePercent(request.getRamUsagePercent())
                 .storageUsedBytes(request.getUsedStorageBytes())

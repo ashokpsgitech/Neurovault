@@ -26,6 +26,8 @@ public class UploadCompleteRequest {
     @NotBlank(message = "Encrypted AES key is required")
     private String encryptedAesKey;
 
+    private String fileHash;
+
     @NotEmpty(message = "Uploaded chunks list cannot be empty")
     private List<UploadedChunkSummary> uploadedChunks;
 

@@ -25,4 +25,6 @@ public class ChunkLocationDto {
     private String publicIp;
     private String downloadUrl;
     private String downloadToken;
+    @Builder.Default
+    private Boolean available = true;
 }
