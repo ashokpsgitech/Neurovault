@@ -43,6 +43,8 @@ class DashboardRepository extends BaseRepository {
         reservedStorageBytes: reservedCapacity,
         hostStatus: 'FIREBASE CLOUD 24/7',
         activeHostsCount: activeHosts,
+        activeUsersCount: 1,
+        hostStorageUsedBytes: storageUsed,
         totalFiles: files.length,
         recentActivities: files.map((f) => RecentActivityItem(
           id: f.id,

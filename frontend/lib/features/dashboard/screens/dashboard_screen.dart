@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../providers/core_providers.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/debug_console_modal.dart';
+import '../../authentication/models/user_model.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../../host/providers/host_provider.dart';
 import '../../host/providers/host_state.dart';
@@ -123,24 +124,7 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 24),
 
                         // Metric Stat Cards Grid
-                        if (isDesktop)
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(child: _buildStorageCard(context, stats)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildHostStatusCard(context, ref, stats)),
-                              const SizedBox(width: 16),
-                              Expanded(child: _buildFilesCard(context, stats)),
-                            ],
-                          )
-                        else ...[
-                          _buildStorageCard(context, stats),
-                          const SizedBox(height: 16),
-                          _buildHostStatusCard(context, ref, stats),
-                          const SizedBox(height: 16),
-                          _buildFilesCard(context, stats),
-                        ],
+                        _buildStatCards(context, ref, stats, isDesktop),
                         const SizedBox(height: 32),
 
                         // Quick Actions Section
@@ -149,7 +133,7 @@ class DashboardScreen extends ConsumerWidget {
                           style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
-                        _buildQuickActionsGrid(context, ref, isDesktop),
+                        _buildQuickActionsGrid(context, ref, isDesktop, stats.user),
                         const SizedBox(height: 32),
 
                         // Recent Activity Section
@@ -167,6 +151,126 @@ class DashboardScreen extends ConsumerWidget {
             },
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildStatCards(BuildContext context, WidgetRef ref, DashboardStatsModel stats, bool isDesktop) {
+    final user = stats.user;
+    final isPublicHost = user.mode == 'PUBLIC' && user.role == 'HOST';
+    final isPublicClient = user.mode == 'PUBLIC' && user.role == 'CLIENT';
+
+    List<Widget> cards = [];
+
+    if (isPublicHost) {
+      cards = [
+        _buildActiveUsersCard(context, stats),
+        _buildHostClientStorageCard(context, stats),
+        _buildHostStatusCard(context, ref, stats),
+      ];
+    } else if (isPublicClient) {
+      cards = [
+        _buildHostStatusCard(context, ref, stats),
+        _buildStorageCard(context, stats),
+        _buildFilesCard(context, stats),
+      ];
+    } else {
+      // Private User or Role: BOTH
+      cards = [
+        _buildStorageCard(context, stats),
+        _buildHostStatusCard(context, ref, stats),
+        _buildFilesCard(context, stats),
+        _buildActiveUsersCard(context, stats),
+      ];
+    }
+
+    if (isDesktop) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.only(right: 12), child: c))).toList(),
+      );
+    }
+
+    return Column(
+      children: cards.map((c) => Padding(padding: const EdgeInsets.only(bottom: 16), child: c)).toList(),
+    );
+  }
+
+  Widget _buildActiveUsersCard(BuildContext context, DashboardStatsModel stats) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Active Users Using Host', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const Icon(Icons.people_outline, color: Colors.green),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(
+                  '${stats.activeUsersCount}',
+                  style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, color: Colors.green),
+                ),
+                const SizedBox(width: 8),
+                Text('Connected Client(s)', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Clients currently storing chunk replicas on this host',
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHostClientStorageCard(BuildContext context, DashboardStatsModel stats) {
+    final theme = Theme.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Storage Used by Clients', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const Icon(Icons.sd_storage_outlined, color: Colors.orange),
+              ],
+            ),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              value: stats.reservedStorageBytes > 0 ? (stats.hostStorageUsedBytes / stats.reservedStorageBytes).clamp(0.0, 1.0) : 0.0,
+              minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+              backgroundColor: Colors.orange.withOpacity(0.15),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${_formatBytes(stats.hostStorageUsedBytes)} used by clients',
+                  style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${_formatBytes(stats.reservedStorageBytes)} container limit',
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -253,7 +357,7 @@ class DashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Storage Usage', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('Storage Used by Client', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 Icon(Icons.pie_chart_outline, color: theme.colorScheme.primary),
               ],
             ),
@@ -335,18 +439,18 @@ class DashboardScreen extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Vault Files', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                Text('Files Uploaded', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                 Icon(Icons.folder_outlined, color: theme.colorScheme.primary),
               ],
             ),
             const SizedBox(height: 16),
             Text(
-              '${stats.totalFiles}',
+              '${stats.totalFiles} File(s)',
               style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'AES-256 Encrypted & Replicated',
+              'Split into 4MB Chunk Replicas',
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
@@ -355,36 +459,72 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActionsGrid(BuildContext context, WidgetRef ref, bool isDesktop) {
+  Widget _buildQuickActionsGrid(BuildContext context, WidgetRef ref, bool isDesktop, UserModel user) {
     final hostState = ref.watch(hostProvider);
     final isHostActive = hostState is HostEnabled;
+    final isPublicHost = user.mode == 'PUBLIC' && user.role == 'HOST';
+    final isPublicClient = user.mode == 'PUBLIC' && user.role == 'CLIENT';
 
-    final actions = isHostActive
-        ? [
-            _ActionItem('Host Subsystem', 'Manage container & node telemetry', Icons.storage_outlined, Colors.green, () {
-              context.go('/host');
-            }),
-            _ActionItem('Vault Files Index', 'View encrypted file list', Icons.folder_outlined, Colors.indigo, () {
-              context.go('/files');
-            }),
-            _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
-              context.go('/settings');
-            }),
-          ]
-        : [
-            _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
-              context.go('/files');
-            }),
-            _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
-              context.go('/files');
-            }),
-            _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
-              context.go('/host');
-            }),
-            _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
-              context.go('/settings');
-            }),
-          ];
+    List<_ActionItem> actions = [];
+
+    if (isPublicHost) {
+      actions = [
+        _ActionItem('Host Subsystem', 'Manage container & node telemetry', Icons.storage_outlined, Colors.green, () {
+          context.go('/host');
+        }),
+        _ActionItem('Node Telemetry', 'Monitor CPU, RAM & Disks', Icons.analytics_outlined, Colors.teal, () {
+          context.go('/host');
+        }),
+        _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+          context.go('/settings');
+        }),
+      ];
+    } else if (isPublicClient) {
+      actions = [
+        _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
+          context.go('/files');
+        }),
+        _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
+          context.go('/files');
+        }),
+        _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+          context.go('/settings');
+        }),
+      ];
+    } else {
+      // Private User or Role: BOTH
+      if (isHostActive) {
+        actions = [
+          _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
+            context.go('/files');
+          }),
+          _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
+            context.go('/files');
+          }),
+          _ActionItem('Host Subsystem', 'Manage container & telemetry', Icons.storage_outlined, Colors.green, () {
+            context.go('/host');
+          }),
+          _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+            context.go('/settings');
+          }),
+        ];
+      } else {
+        actions = [
+          _ActionItem('Upload File', 'Encrypt & stream chunk blocks', Icons.cloud_upload_outlined, Colors.indigo, () {
+            context.go('/files');
+          }),
+          _ActionItem('Download Files', 'Fetch & decrypt chunks', Icons.cloud_download_outlined, Colors.teal, () {
+            context.go('/files');
+          }),
+          _ActionItem('Become Host', 'Share capacity as micro-server', Icons.storage_outlined, Colors.cyan, () {
+            context.go('/host');
+          }),
+          _ActionItem('Settings', 'Coordinator URL & interval', Icons.settings_outlined, Colors.purple, () {
+            context.go('/settings');
+          }),
+        ];
+      }
+    }
 
     return GridView.builder(
       shrinkWrap: true,

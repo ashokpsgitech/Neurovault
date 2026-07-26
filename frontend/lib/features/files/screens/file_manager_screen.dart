@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/utils/file_download_helper.dart';
@@ -14,6 +15,9 @@ import '../models/progress_model.dart';
 import '../providers/file_provider.dart';
 import '../providers/file_state.dart';
 
+import '../../authentication/models/user_model.dart';
+import '../../authentication/providers/auth_provider.dart';
+import '../../authentication/providers/auth_state.dart';
 import '../../host/providers/host_provider.dart';
 import '../../host/providers/host_state.dart';
 
@@ -95,7 +99,10 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
     final theme = Theme.of(context);
     final fileState = ref.watch(fileProvider);
     final hostState = ref.watch(hostProvider);
-    final isHostMode = hostState is HostEnabled;
+    final authState = ref.watch(authStateProvider);
+    final user = authState is Authenticated ? authState.user : const UserModel(id: '', username: '', email: '', role: 'CLIENT', mode: 'PRIVATE');
+    final isPublicHost = user.mode == 'PUBLIC' && user.role == 'HOST';
+    final isHostMode = (hostState is HostEnabled) || isPublicHost;
 
     List<FileItem> files = [];
     PipelineProgress? activeProgress;
@@ -111,6 +118,17 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back to Dashboard',
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              context.go('/dashboard');
+            }
+          },
+        ),
         title: const Text('Encrypted Vault Files', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
           IconButton(

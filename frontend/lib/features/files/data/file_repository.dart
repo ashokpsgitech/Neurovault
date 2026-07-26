@@ -85,7 +85,8 @@ class FileRepository extends BaseRepository {
       );
     }
 
-    // Save uploaded item to persistent local cache
+    // Save uploaded item & encrypted payload to persistent local cache
+    await LocalFileCacheService().saveEncryptedPayload(uploadedItem.id, encryptedBytes, encodedKey);
     await LocalFileCacheService().saveFile(uploadedItem);
 
     onProgress(PipelineProgress(
@@ -99,7 +100,7 @@ class FileRepository extends BaseRepository {
     return uploadedItem;
   }
 
-  /// Zero-Trust Download Pipeline (Firebase Retrieval + Client-Side Decryption)
+  /// Zero-Trust Download Pipeline (Firebase Retrieval / Local Cache + Client-Side Decryption)
   Future<Uint8List> downloadFile({
     required FileItem fileItem,
     required void Function(PipelineProgress progress) onProgress,
@@ -111,16 +112,21 @@ class FileRepository extends BaseRepository {
       currentChunk: 1,
       totalChunks: 1,
       progressPercent: 0.2,
-      status: 'DOWNLOADING FROM CLOUD VAULT',
+      status: 'DOWNLOADING FROM VAULT',
     ));
 
-    Map<String, dynamic> cloudPayload;
-    try {
-      cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
-      _logger.info('[FileRepository] Download from Firebase OK.');
-    } catch (e, st) {
-      _logger.error('[FileRepository] DOWNLOAD ERROR: $e', e, st);
-      rethrow;
+    Map<String, dynamic>? cloudPayload;
+    cloudPayload = await LocalFileCacheService().loadEncryptedPayload(fileItem.id);
+    if (cloudPayload == null) {
+      try {
+        cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
+        _logger.info('[FileRepository] Download from Firebase OK.');
+      } catch (e, st) {
+        _logger.error('[FileRepository] DOWNLOAD ERROR: $e', e, st);
+        rethrow;
+      }
+    } else {
+      _logger.info('[FileRepository] Loaded encrypted payload from local storage cache.');
     }
 
     final Uint8List encryptedBytes = cloudPayload['encryptedBytes'];
