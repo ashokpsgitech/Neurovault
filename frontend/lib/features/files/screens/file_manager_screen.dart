@@ -476,12 +476,15 @@ class _UploadDialogState extends State<UploadDialog> {
           child: const Text('Cancel'),
         ),
         ElevatedButton.icon(
-          icon: const Icon(Icons.lock_outline),
-          label: const Text('Encrypt & Upload'),
+          icon: _isUploading
+              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Icon(Icons.lock_outline),
+          label: Text(_isUploading ? 'Encrypting Payload...' : 'Encrypt & Upload'),
           onPressed: (_selectedBytes == null || _isUploading)
               ? null
               : () async {
                   setState(() => _isUploading = true);
+                  await Future.delayed(const Duration(milliseconds: 50));
                   await widget.onUpload(_selectedFilename!, _selectedBytes!);
                   if (context.mounted) {
                     Navigator.pop(context);

@@ -42,14 +42,15 @@ class FileRepository extends BaseRepository {
       progressPercent: 0.1,
       status: 'ENCRYPTING (AES-256-GCM)',
     ));
+    await Future.delayed(Duration.zero);
 
     Uint8List encryptedBytes;
     String encodedKey;
     try {
       final symmetricKey = CryptoEngine.generateSymmetricKey();
-      encryptedBytes = CryptoEngine.encryptChunk(fileBytes, symmetricKey, 0);
+      encryptedBytes = await CryptoEngine.encryptChunkAsync(fileBytes, symmetricKey, 0);
       encodedKey = base64Encode(symmetricKey);
-      _logger.info('[FileRepository] AES-256-GCM encryption done. Encrypted size: ${encryptedBytes.length} bytes');
+      _logger.info('[FileRepository] AES-256-GCM encryption done in isolate. Encrypted size: ${encryptedBytes.length} bytes');
     } catch (e, st) {
       _logger.error('[FileRepository] ENCRYPTION ERROR: $e', e, st);
       rethrow;
@@ -63,6 +64,7 @@ class FileRepository extends BaseRepository {
       progressPercent: 0.5,
       status: 'UPLOADING TO CLOUD VAULT',
     ));
+    await Future.delayed(Duration.zero);
 
     FileItem uploadedItem;
     try {
@@ -96,6 +98,7 @@ class FileRepository extends BaseRepository {
       progressPercent: 1.0,
       status: 'COMPLETE',
     ));
+    await Future.delayed(Duration.zero);
 
     return uploadedItem;
   }
@@ -114,6 +117,7 @@ class FileRepository extends BaseRepository {
       progressPercent: 0.2,
       status: 'DOWNLOADING FROM VAULT',
     ));
+    await Future.delayed(Duration.zero);
 
     Map<String, dynamic>? cloudPayload;
     cloudPayload = await LocalFileCacheService().loadEncryptedPayload(fileItem.id);
@@ -139,6 +143,7 @@ class FileRepository extends BaseRepository {
       progressPercent: 0.8,
       status: 'DECRYPTING (AES-256-GCM)',
     ));
+    await Future.delayed(Duration.zero);
 
     Uint8List symmetricKey;
     if (encryptedAesKey.isNotEmpty) {
@@ -156,8 +161,8 @@ class FileRepository extends BaseRepository {
 
     Uint8List decryptedBytes;
     try {
-      decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, 0);
-      _logger.info('[FileRepository] Decryption done. Decrypted size: ${decryptedBytes.length} bytes');
+      decryptedBytes = await CryptoEngine.decryptChunkAsync(encryptedBytes, symmetricKey, 0);
+      _logger.info('[FileRepository] Decryption done in isolate. Decrypted size: ${decryptedBytes.length} bytes');
     } catch (e, st) {
       _logger.error('[FileRepository] DECRYPTION FAILED: $e', e, st);
       throw Exception('Failed to decrypt file payload: $e');

@@ -1,7 +1,24 @@
 import 'dart:math';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:pointycastle/export.dart';
+
+/// Worker payload model for isolate computation.
+class _CryptoParams {
+  final Uint8List bytes;
+  final Uint8List key;
+  final int chunkIndex;
+
+  _CryptoParams(this.bytes, this.key, this.chunkIndex);
+}
+
+Uint8List _encryptWorker(_CryptoParams params) {
+  return CryptoEngine.encryptChunk(params.bytes, params.key, params.chunkIndex);
+}
+
+Uint8List _decryptWorker(_CryptoParams params) {
+  return CryptoEngine.decryptChunk(params.bytes, params.key, params.chunkIndex);
+}
 
 /// Client-Side Cryptographic Engine for NeuroVault.
 /// Implements Zero-Trust AES-256-GCM symmetric payload encryption,
@@ -49,5 +66,16 @@ class CryptoEngine {
 
     return cipher.process(cipherTextWithTag);
   }
-}
 
+  /// Asynchronously encrypts a chunk payload in a background worker isolate using compute.
+  /// Prevents main UI thread freezing / stuttering during payload encryption.
+  static Future<Uint8List> encryptChunkAsync(Uint8List plainBytes, Uint8List key, int chunkIndex) {
+    return compute(_encryptWorker, _CryptoParams(plainBytes, key, chunkIndex));
+  }
+
+  /// Asynchronously decrypts an encrypted chunk payload in a background worker isolate using compute.
+  /// Prevents main UI thread freezing / stuttering during payload decryption.
+  static Future<Uint8List> decryptChunkAsync(Uint8List encryptedBytes, Uint8List key, int chunkIndex) {
+    return compute(_decryptWorker, _CryptoParams(encryptedBytes, key, chunkIndex));
+  }
+}
