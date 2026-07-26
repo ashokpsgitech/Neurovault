@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.encryption.IntegrityServiceTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:35:55" hostname="ASHOK" time="0.014">
+<testsuite name="com.neurovault.backend.encryption.IntegrityServiceTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-07-26T08:22:03" hostname="ASHOK" time="0.011">
   <properties/>
-  <testcase name="verifyChecksum should return true for matching checksum" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.0"/>
-  <testcase name="computeSha256 should produce consistent hash for same input" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.0"/>
-  <testcase name="computeSha256 should produce different hashes for different inputs" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.002"/>
+  <testcase name="verifyChecksum should return true for matching checksum" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
+  <testcase name="computeSha256 should produce consistent hash for same input" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
+  <testcase name="computeSha256 should produce different hashes for different inputs" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.003"/>
   <testcase name="verifySha256 should return true for matching hash" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
-  <testcase name="verifySha256 should return false for corrupted data" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.002"/>
+  <testcase name="verifySha256 should return false for corrupted data" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
   <testcase name="verifyChecksum should return false for corrupted data" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
   <testcase name="computeChecksum should produce different values for different inputs" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
-  <testcase name="computeChecksum should produce valid CRC32 checksum" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
-  <testcase name="computeSha256 on empty data should produce known empty-hash" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.001"/>
-  <system-out><![CDATA[2026-07-22T10:05:55.121+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : SHA-256 verification failed: expected=539755a3d3100bc6565b75201f9ca5d7b70ca931690fed76bcd495143233464a, actual=4de66be0b3343d879ef08f5df50a898ee3103090b097c825891a548128f3573e
-2026-07-22T10:05:55.121+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : SHA-256 verification failed: expected=539755a3d3100bc6565b75201f9ca5d7b70ca931690fed76bcd495143233464a, actual=4de66be0b3343d879ef08f5df50a898ee3103090b097c825891a548128f3573e
-2026-07-22T10:05:55.123+05:30  WARN 11652 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : Checksum verification failed: expected=3590591187, actual=2786922234
+  <testcase name="computeChecksum should produce valid CRC32 checksum" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.0"/>
+  <testcase name="computeSha256 on empty data should produce known empty-hash" classname="com.neurovault.backend.encryption.IntegrityServiceTest" time="0.0"/>
+  <system-out><![CDATA[2026-07-26T13:52:03.075+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : SHA-256 verification failed: expected=539755a3d3100bc6565b75201f9ca5d7b70ca931690fed76bcd495143233464a, actual=4de66be0b3343d879ef08f5df50a898ee3103090b097c825891a548128f3573e
+2026-07-26T13:52:03.075+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : SHA-256 verification failed: expected=539755a3d3100bc6565b75201f9ca5d7b70ca931690fed76bcd495143233464a, actual=4de66be0b3343d879ef08f5df50a898ee3103090b097c825891a548128f3573e
+2026-07-26T13:52:03.076+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.IntegrityService  : Checksum verification failed: expected=3590591187, actual=2786922234
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

@@ -85,7 +85,7 @@ class StorageServiceTest {
         when(storageEngine.calculateFreeSpace()).thenReturn(StorageReservationSize.GB_1.getBytes());
         when(storageEngine.countActiveChunks()).thenReturn(0);
 
-        StorageStatusResponse response = storageService.createStorage(hostId, StorageReservationSize.GB_1);
+        StorageStatusResponse response = storageService.createStorage(hostId, StorageReservationSize.GB_1, null);
 
         assertNotNull(response);
         assertEquals(StorageReservationSize.GB_1.getBytes(), response.getContainerSizeBytes());
@@ -99,15 +99,21 @@ class StorageServiceTest {
     }
 
     @Test
-    void createStorage_shouldRejectDuplicateContainer() {
+    void createStorage_shouldUpdateExistingContainer() {
         when(hostRepository.findById(hostId)).thenReturn(Optional.of(host));
-        when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(
-                StorageContainer.builder().id(UUID.randomUUID()).build()));
+        when(storageProperties.getBaseDir()).thenReturn("./test-storage");
+        StorageContainer existing = StorageContainer.builder().id(UUID.randomUUID()).host(host).build();
+        when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(existing));
+        when(containerRepository.save(any(StorageContainer.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(hostRepository.save(any(Host.class))).thenReturn(host);
+        when(storageEngine.calculateUsedSpace()).thenReturn(0L);
+        when(storageEngine.calculateFreeSpace()).thenReturn(StorageReservationSize.GB_1.getBytes());
+        when(storageEngine.countActiveChunks()).thenReturn(0);
 
-        assertThrows(BadRequestException.class, () ->
-                storageService.createStorage(hostId, StorageReservationSize.GB_1));
-
-        verify(containerManager, never()).createContainer(any(), anyLong());
+        StorageStatusResponse response = storageService.createStorage(hostId, StorageReservationSize.GB_1, null);
+        assertNotNull(response);
+        assertEquals("ACTIVE", response.getContainerStatus());
+        verify(containerRepository).save(existing);
     }
 
     @Test
@@ -115,7 +121,7 @@ class StorageServiceTest {
         when(hostRepository.findById(hostId)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
-                storageService.createStorage(hostId, StorageReservationSize.GB_1));
+                storageService.createStorage(hostId, StorageReservationSize.GB_1, null));
     }
 
     @Test

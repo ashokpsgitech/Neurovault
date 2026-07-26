@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.host.service.HostRegistrationServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:36:12" hostname="ASHOK" time="0.193">
+<testsuite name="com.neurovault.backend.host.service.HostRegistrationServiceTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-07-26T08:22:10" hostname="ASHOK" time="0.084">
   <properties/>
-  <testcase name="getHostById_shouldThrowWhenNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.141"/>
-  <testcase name="getHostById_shouldReturnHostStatus()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.008"/>
-  <testcase name="registerHost_shouldCreateAndReturnResponse()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.019"/>
-  <testcase name="getHostsByOwner_shouldReturnAllOwnerHosts()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.007"/>
-  <testcase name="registerHost_shouldThrowWhenUserNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.009"/>
-  <system-out><![CDATA[2026-07-22T10:06:12.385+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'my-laptop' for owner 73f2a861-7537-42c2-b08a-4f4fa4a883cc
-2026-07-22T10:06:12.387+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Host 'my-laptop' registered successfully with ID 9866ada6-ede0-439e-bef4-586abfc59d2f
-2026-07-22T10:06:12.411+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'test' for owner 87332165-b84b-4116-ac92-4d7157275fd6
+  <testcase name="getHostById_shouldThrowWhenNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.066"/>
+  <testcase name="getHostById_shouldReturnHostStatus()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.005"/>
+  <testcase name="registerHost_shouldCreateAndReturnResponse()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.005"/>
+  <testcase name="getHostsByOwner_shouldReturnAllOwnerHosts()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.003"/>
+  <testcase name="registerHost_shouldThrowWhenUserNotFound()" classname="com.neurovault.backend.host.service.HostRegistrationServiceTest" time="0.003"/>
+  <system-out><![CDATA[2026-07-26T13:52:10.174+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'my-laptop' for owner 688906d8-6e4b-484e-b233-866e583291d8
+2026-07-26T13:52:10.175+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Host 'my-laptop' registered successfully with ID f9d23502-5830-43f4-b873-7aa2d8e59a8e
+2026-07-26T13:52:10.184+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.h.service.HostRegistrationService  : Registering new host 'test' for owner dd1f0d51-77c3-42f2-a925-a305bb64aafd
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

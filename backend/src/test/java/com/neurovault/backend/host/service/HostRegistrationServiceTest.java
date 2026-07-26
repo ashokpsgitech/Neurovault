@@ -185,7 +185,7 @@ class HostRegistrationServiceTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        when(hostRepository.findByOwnerId(ownerId)).thenReturn(List.of(host1, host2));
+        when(hostRepository.findByOwnerIdOrderByCreatedAtDesc(ownerId)).thenReturn(List.of(host1, host2));
 
         List<HostStatusDto> hosts = registrationService.getHostsByOwner(ownerId);
 

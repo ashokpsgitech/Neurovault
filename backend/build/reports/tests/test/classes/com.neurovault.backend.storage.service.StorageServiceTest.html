@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.407s</div>
+<div class="counter">2.092s</div>
 <p>duration</p>
 </div>
 </td>
@@ -66,6 +66,9 @@
 <li>
 <a href="#tab1">Standard output</a>
 </li>
+<li>
+<a href="#tab2">Standard error</a>
+</li>
 </ul>
 <div id="tab0" class="tab">
 <h2>Tests</h2>
@@ -83,38 +86,38 @@
 <td class="success">passed</td>
 </tr>
 <tr>
-<td class="success">createStorage_shouldRejectDuplicateContainer()</td>
-<td class="success">0.356s</td>
+<td class="success">createStorage_shouldThrowWhenHostNotFound()</td>
+<td class="success">0.008s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
-<td class="success">createStorage_shouldThrowWhenHostNotFound()</td>
-<td class="success">0.003s</td>
+<td class="success">createStorage_shouldUpdateExistingContainer()</td>
+<td class="success">2.018s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">deleteStorage_shouldDeleteContainerAndCleanup()</td>
-<td class="success">0.005s</td>
+<td class="success">0.009s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">getStorageStatus_shouldReturnLiveMetrics()</td>
-<td class="success">0.006s</td>
+<td class="success">0.009s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">listChunks_shouldReturnDtoList()</td>
-<td class="success">0.008s</td>
+<td class="success">0.012s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">readChunk_shouldReturnEncryptedBytes()</td>
-<td class="success">0.005s</td>
+<td class="success">0.007s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">storeChunk_shouldDelegateToEngine()</td>
-<td class="success">0.008s</td>
+<td class="success">0.013s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -122,12 +125,25 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-07-22T10:06:32.814+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host dd615df2-d59e-48f9-b47a-c026ef5da04e with size 1 GB
-2026-07-22T10:06:32.826+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host d28694b8-ca8f-40d7-8ed2-b2e9e16dad36 with size 1 GB
-2026-07-22T10:06:32.828+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host d28694b8-ca8f-40d7-8ed2-b2e9e16dad36 at .\test-storage\d28694b8-ca8f-40d7-8ed2-b2e9e16dad36\storage.container
-2026-07-22T10:06:32.861+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Deleting storage container for host f1980850-5b4b-4b3a-a843-3c31910eacb7
-2026-07-22T10:06:32.863+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container deleted for host f1980850-5b4b-4b3a-a843-3c31910eacb7
-2026-07-22T10:06:32.867+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host afe938dc-c287-4076-8c1b-5bf566651db5 with size 1 GB
+<pre>13:51:51.031 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host b4818a65-c59a-45d2-9ec8-08f0743ff6fb with size 1 GB (path=null)
+13:51:51.041 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating disk container file at: .\test-storage\b4818a65-c59a-45d2-9ec8-08f0743ff6fb\storage.container
+13:51:51.045 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container created for host b4818a65-c59a-45d2-9ec8-08f0743ff6fb at .\test-storage\b4818a65-c59a-45d2-9ec8-08f0743ff6fb\storage.container (1073741824 bytes locked on disk)
+13:51:51.112 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host b629a4e8-59c9-412e-addf-950db816169b with size 1 GB (path=null)
+13:51:51.113 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating disk container file at: .\test-storage\b629a4e8-59c9-412e-addf-950db816169b\storage.container
+13:51:51.114 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container created for host b629a4e8-59c9-412e-addf-950db816169b at .\test-storage\b629a4e8-59c9-412e-addf-950db816169b\storage.container (1073741824 bytes locked on disk)
+13:51:51.163 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Deleting storage container for host 69d2391c-44f7-45e6-acf2-6be6f0d14d47
+13:51:51.164 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container deleted for host 69d2391c-44f7-45e6-acf2-6be6f0d14d47
+13:51:51.173 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host 584507a9-522c-4884-b288-70b047a2e232 with size 1 GB (path=null)
+</pre>
+</span>
+</div>
+<div id="tab2" class="tab">
+<h2>Standard error</h2>
+<span class="code">
+<pre>WARNING: A Java agent has been loaded dynamically (C:\Users\ashok\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.17\e3c251a39dc90badaf71c83427ba46840f219d8d\byte-buddy-agent-1.14.17.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
 </pre>
 </span>
 </div>
@@ -139,7 +155,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 22-Jul-2026, 10:06:34 am</p>
+<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 1:52:19 pm</p>
 </div>
 </div>
 </body>

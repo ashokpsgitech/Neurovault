@@ -1,132 +1,135 @@
-# 🧠 Neurovault - Distributed Micro-Server File Vault System
+# 🧠 NeuroVault - Zero-Trust Distributed Storage & Micro-Server Fleet System
 
-**Neurovault** is a high-performance, fault-tolerant, distributed file storage and chunking system backend built with Java 21 and Spring Boot 3.
+**NeuroVault** is an enterprise-grade, zero-trust distributed file storage system. It features a high-performance **Java 21 / Spring Boot 3 Metadata-Only Coordinator**, a **Flutter Cross-Platform Client**, **Client-Side AES-256-GCM Encryption**, a 24/7 **Android Foreground Host Service**, and an **In-App Live Debug Console**.
 
 ---
 
-## 🚀 Key Features & Architecture
+## 🔒 Decoupled Metadata-Only Architecture
 
-Neurovault decouples file management into a high-availability micro-server topology:
+```mermaid
+graph TD
+    Client["Flutter Client (Android / Windows / Web)"] -->|1. Request Upload Plan| Coordinator["Spring Boot Coordinator (Metadata Only)"]
+    Coordinator -->|2. Return Target Hosts & Offsets| Client
+    Client -->|3. Client-Side AES-256-GCM Encrypt & Chunk| EncryptEngine["AES-256-GCM Engine"]
+    Client -->|4. Upload Encrypted Chunks Directly| HostA["Host Node A (storage.container)"]
+    Client -->|4. Upload Encrypted Chunks Directly| HostB["Host Node B (storage.container)"]
+    Coordinator -->|5. Background Replication & Self-Healing| HostC["Replica Host C"]
+```
 
-- **🔐 Stateless JWT Authentication**: Spring Security 6 integration with role-based access control (RBAC) and HMAC-SHA256 token verification.
-- **📦 Distributed File Chunking**: Large files are split into indexed chunks (`FileMetadata`, `Chunk`) with hash integrity verification.
-- **🔄 Chunk Replication & Fault Tolerance**: Chunks are replicated across multiple node targets (`ChunkReplica`) for resilience.
-- **🖥️ Host Node Fleet Management**: Real-time heartbeat tracking (`Host`, `HostHeartbeat`) for available storage capacities and node state monitoring.
-- **🗄️ Containerized Storage Units**: Physical/virtual storage abstraction layer (`StorageContainer`).
-- **⏳ Session Lifecycle Tracking**: Resumable multi-chunk upload (`UploadSession`) and tokenized secure download (`DownloadSession`) lifecycles.
-- **📜 System Audit Logging**: Event logging for user operations and storage node management (`AuditLog`).
+### Zero-Trust Guarantee
+* **Zero Host Invalidation**: Host storage nodes store opaque binary blocks (`storage.container`). The host owner can **never** inspect filenames, directory structures, or unencrypted contents.
+* **Client-Side Encryption**: Files are split into 4MB chunks and encrypted with AES-256-GCM using client-generated keys before leaving the user device.
+* **Metadata-Only Coordinator**: The central coordinator orchestrates storage reservation, host selection scoring, replication, and self-healing **without ever handling unencrypted file bytes**.
 
 ---
 
 ## 🛠️ Technology Stack
 
-| Component | Technology |
-| :--- | :--- |
-| **Language** | Java 21 (LTS) |
-| **Framework** | Spring Boot 3.3.1 |
-| **Security** | Spring Security 6, JJWT (io.jsonwebtoken 0.12.6) |
-| **Persistence** | Spring Data JPA (Hibernate 6) |
-| **Database** | PostgreSQL (Production) / H2 (Testing) |
-| **Build Tool** | Gradle |
-| **Utilities** | Lombok, Jakarta Validation |
+| Layer | Technology | Key Capabilities |
+| :--- | :--- | :--- |
+| **Backend Core** | Java 21 (LTS) & Spring Boot 3.3.1 | Metadata-Only Coordinator, Spring Security 6, JWT, JPA |
+| **Storage Engine** | Binary Offset Container (`storage.container`) | Pre-allocated binary files, direct offset reads/writes |
+| **Frontend App** | Flutter 3.x (Dart 3) & Riverpod | Material 3 UI, Dark Mode, Responsive Layout |
+| **Mobile Host** | Android Native Kotlin Foreground Service | 24/7 Uptime, Persistent System Notification, Boot Auto-Start |
+| **Cryptography** | AES-256-GCM + SHA-256 | Authenticated encryption, per-chunk integrity checksums |
+| **Cloud Sync** | Firebase Storage & Firestore | Dual-mode instant mobile backup & synchronization |
+| **In-App Debugger**| In-App Logger (`DebugLogService`) | Real-time on-screen stack traces & log viewer (`DebugConsoleModal`) |
 
 ---
 
-## 📁 Repository Structure
+## 📂 Repository Structure
 
 ```
 .
-├── backend/
-│   ├── build.gradle               # Dependency configurations & Gradle plugins
-│   ├── settings.gradle            # Project settings
-│   └── src/
-│       ├── main/
-│       │   ├── java/com/neurovault/backend/
-│       │   │   ├── config/        # Security & application beans
-│       │   │   ├── controller/    # REST API endpoints (e.g., AuthController)
-│       │   │   ├── dto/           # Data Transfer Objects (Requests/Responses)
-│       │   │   ├── entity/        # JPA Domain Entities
-│       │   │   ├── exception/     # Global exception handling & custom errors
-│       │   │   ├── repository/    # Spring Data JPA Repositories
-│       │   │   ├── security/      # JWT filter, UserDetailsService & Utils
-│       │   │   └── service/       # Business logic layer
-│       │   └── resources/
-│       │       └── application.yml # Environment and database configuration
-│       └── test/                  # Unit and integration test suite
-└── DOCUMENTATION.md           # Deep-dive architecture and design guide
-└── README.md
+├── backend/                        # Java 21 Spring Boot Backend Core
+│   ├── src/main/java/com/neurovault/backend/
+│   │   ├── config/                 # Security, JWT & DB Beans
+│   │   ├── controller/             # REST Endpoints (/api/auth, /api/files, /api/hosts, /api/cluster)
+│   │   ├── entity/                 # JPA Domain Entities (User, Host, FileMetadata, StorageContainer)
+│   │   ├── repository/             # Spring Data Repositories
+│   │   ├── security/               # JWT Filters & Auth
+│   │   ├── service/                # Replication, Self-Healing & Host Selection
+│   │   └── storage/                # Binary Offset Storage Engine & Container Manager
+│   └── build.gradle                # Dependencies & Build Manifest
+│
+├── frontend/                       # Flutter Cross-Platform Client
+│   ├── android/                    # Android Native Code
+│   │   └── app/src/main/kotlin/com/example/frontend/
+│   │       ├── HostForegroundService.kt  # 24/7 Android Background Foreground Host Service
+│   │       ├── BootReceiver.kt          # Device Reboot Auto-Start Receiver
+│   │       └── MainActivity.kt          # MethodChannel Bridge (neurovault/host_service)
+│   ├── lib/
+│   │   ├── core/                   # Crypto Engine, Firebase Service & Network Client
+│   │   │   └── utils/
+│   │   │       ├── debug_log_service.dart  # In-App Memory Logger
+│   │   │       └── multi_host_test.py      # Multi-Node Test Harness
+│   │   ├── features/               # Feature Modules (Auth, Dashboard, Files, Host, Settings)
+│   │   │   └── files/screens/
+│   │   │       ├── upload_dialog.dart      # 4MB Chunking Modal & Live Progress
+│   │   │       └── file_manager_screen.dart# Vault File Manager UI
+│   │   └── widgets/
+│   │       └── debug_console_modal.dart    # On-Screen In-App Debug Console
+│   └── pubspec.yaml                # Flutter Dependencies
+│
+└── build_and_push_apk.bat          # 1-Click Release APK Compiler & GitHub Sync Script
 ```
 
 ---
 
-## 📡 API Reference Summary
+## 📡 REST API Reference
 
-### Authentication (`/api/auth` or `/api/v1/auth`)
+### 🔑 Authentication (`/api/auth`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Register user account (`CLIENT`, `HOST`, or `BOTH`) |
+| `POST` | `/api/auth/login` | Authenticate user and receive JWT token |
 
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/auth/register` | Register a new user | ❌ No |
-| `POST` | `/api/v1/auth/login` | Authenticate user and receive JWT token | ❌ No |
-| `GET` | `/api/v1/auth/me` | Fetch authenticated user details | ✅ Yes (Bearer Token) |
+### 🖥️ Host Node Management (`/api/hosts`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/hosts/register` | Register new storage host node |
+| `GET` | `/api/hosts/my-hosts` | List hosts owned by current user |
+| `POST` | `/api/hosts/{hostId}/heartbeat` | Submit node heartbeat & capacity status |
 
-### Cluster Management & Monitoring (`/api/cluster`)
+### 📦 Storage & File Pipelines (`/api/files` & `/api/storage`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/files/upload-plan` | Request upload session & host allocation plan |
+| `POST` | `/api/storage/chunks` | Store encrypted binary chunk on target host node |
+| `POST` | `/api/files/upload-complete` | Finalize upload session with chunk metadata |
+| `POST` | `/api/files/download-plan/{fileId}`| Fetch download plan & chunk locations |
+| `GET` | `/api/storage/chunks/{chunkId}` | Read encrypted chunk payload from host |
 
-| Method | Endpoint | Description | Auth Required |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/api/cluster/status` | Fetch cluster summary statistics | ✅ Yes |
-| `GET` | `/api/cluster/hosts` | List status and health of all hosts | ✅ Yes |
-| `GET` | `/api/cluster/replicas` | Fetch placement info for all chunk replicas | ✅ Yes |
-| `POST` | `/api/cluster/repair` | Manually trigger self-healing recovery scan | ✅ Yes |
-| `GET` | `/api/cluster/health` | Get overall cluster health level and active issues | ✅ Yes |
-
-For details on self-healing workflows, replication algorithms, and load-balancing strategies, check [DOCUMENTATION.md](file:///c:/Users/Sri%20Ashwin/OneDrive/Desktop/neurovault/Neurovault/DOCUMENTATION.md).
+### 🌐 Cluster Health & Self-Healing (`/api/cluster`)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/cluster/status` | Active cluster nodes, total storage & used space |
+| `GET` | `/api/cluster/health` | System health status & offline node diagnostics |
+| `POST` | `/api/cluster/repair` | Trigger automatic self-healing replication scan |
 
 ---
 
-## ⚙️ Getting Started & Setup
+## 🧪 Testing & Verification
 
-### Prerequisites
-
-- **Java JDK 21** installed and configured in system path.
-- **PostgreSQL 14+** running locally or via Docker.
-- Database `neurovault` created on host (`jdbc:postgresql://localhost:5432/neurovault`).
-
-### Configuration
-
-Database and JWT settings are located in `backend/src/main/resources/application.yml`:
-
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/neurovault
-    username: postgres
-    password: your_password
-
-app:
-  jwt:
-    secret: YOUR_SECURE_256_BIT_SECRET_KEY
-    expiration-ms: 86400000 # 24 Hours
+### Running Backend Unit & Integration Tests
+```powershell
+cd backend
+.\gradlew.bat test
 ```
+*(All 127 test cases pass cleanly)*
 
-### Build & Run
-
-1. **Navigate to backend**:
-   ```bash
-   cd backend
-   ```
-
-2. **Run tests**:
-   ```bash
-   ./gradlew test
-   ```
-
-3. **Start backend application**:
-   ```bash
-   ./gradlew bootRun
-   ```
+### Running Multi-Host Distributed Simulation Test
+```powershell
+python frontend\lib\core\utils\multi_host_test.py
+```
+*(Simulates 3 host nodes, client-side AES encryption, chunk distribution across nodes, SHA-256 integrity verification, and reassembly)*
 
 ---
 
-## 📄 License
+## 🚀 Building Release APK for Android
 
-This project is open-source software under the standard project terms.
+Compile the production APK and sync automatically with GitHub:
+```powershell
+.\build_and_push_apk.bat
+```
+The output APK is located at: `frontend/build/app/outputs/flutter-apk/app-release.apk`.

@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.storage.service.StorageServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-07-22T04:36:32" hostname="ASHOK" time="0.413">
+<testsuite name="com.neurovault.backend.storage.service.StorageServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-07-26T08:21:49" hostname="ASHOK" time="2.111">
   <properties/>
-  <testcase name="createStorage_shouldRejectDuplicateContainer()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.356"/>
+  <testcase name="createStorage_shouldUpdateExistingContainer()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="2.018"/>
   <testcase name="createStorage_shouldCreateContainerAndPersist()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.016"/>
-  <testcase name="listChunks_shouldReturnDtoList()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.008"/>
-  <testcase name="readChunk_shouldReturnEncryptedBytes()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.005"/>
-  <testcase name="storeChunk_shouldDelegateToEngine()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.008"/>
-  <testcase name="deleteStorage_shouldDeleteContainerAndCleanup()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.005"/>
-  <testcase name="createStorage_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.003"/>
-  <testcase name="getStorageStatus_shouldReturnLiveMetrics()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.006"/>
-  <system-out><![CDATA[2026-07-22T10:06:32.814+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host dd615df2-d59e-48f9-b47a-c026ef5da04e with size 1 GB
-2026-07-22T10:06:32.826+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host d28694b8-ca8f-40d7-8ed2-b2e9e16dad36 with size 1 GB
-2026-07-22T10:06:32.828+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host d28694b8-ca8f-40d7-8ed2-b2e9e16dad36 at .\test-storage\d28694b8-ca8f-40d7-8ed2-b2e9e16dad36\storage.container
-2026-07-22T10:06:32.861+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Deleting storage container for host f1980850-5b4b-4b3a-a843-3c31910eacb7
-2026-07-22T10:06:32.863+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container deleted for host f1980850-5b4b-4b3a-a843-3c31910eacb7
-2026-07-22T10:06:32.867+05:30  INFO 11652 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host afe938dc-c287-4076-8c1b-5bf566651db5 with size 1 GB
+  <testcase name="listChunks_shouldReturnDtoList()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.012"/>
+  <testcase name="readChunk_shouldReturnEncryptedBytes()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.007"/>
+  <testcase name="storeChunk_shouldDelegateToEngine()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.013"/>
+  <testcase name="deleteStorage_shouldDeleteContainerAndCleanup()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.009"/>
+  <testcase name="createStorage_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.008"/>
+  <testcase name="getStorageStatus_shouldReturnLiveMetrics()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.009"/>
+  <system-out><![CDATA[13:51:51.031 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host b4818a65-c59a-45d2-9ec8-08f0743ff6fb with size 1 GB (path=null)
+13:51:51.041 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating disk container file at: .\test-storage\b4818a65-c59a-45d2-9ec8-08f0743ff6fb\storage.container
+13:51:51.045 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container created for host b4818a65-c59a-45d2-9ec8-08f0743ff6fb at .\test-storage\b4818a65-c59a-45d2-9ec8-08f0743ff6fb\storage.container (1073741824 bytes locked on disk)
+13:51:51.112 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host b629a4e8-59c9-412e-addf-950db816169b with size 1 GB (path=null)
+13:51:51.113 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating disk container file at: .\test-storage\b629a4e8-59c9-412e-addf-950db816169b\storage.container
+13:51:51.114 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container created for host b629a4e8-59c9-412e-addf-950db816169b at .\test-storage\b629a4e8-59c9-412e-addf-950db816169b\storage.container (1073741824 bytes locked on disk)
+13:51:51.163 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Deleting storage container for host 69d2391c-44f7-45e6-acf2-6be6f0d14d47
+13:51:51.164 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Storage container deleted for host 69d2391c-44f7-45e6-acf2-6be6f0d14d47
+13:51:51.173 [Test worker] INFO com.neurovault.backend.storage.service.StorageService -- Creating storage container for host 584507a9-522c-4884-b288-70b047a2e232 with size 1 GB (path=null)
 ]]></system-out>
-  <system-err><![CDATA[]]></system-err>
+  <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (C:\Users\ashok\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.17\e3c251a39dc90badaf71c83427ba46840f219d8d\byte-buddy-agent-1.14.17.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+]]></system-err>
 </testsuite>
