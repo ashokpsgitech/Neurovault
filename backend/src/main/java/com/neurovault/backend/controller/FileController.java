@@ -73,8 +73,9 @@ public class FileController {
 
     /**
      * Requests a download plan from the Coordinator.
+     * Supports both GET and POST requests for client flexibility.
      */
-    @PostMapping("/download-plan/{fileId}")
+    @RequestMapping(value = "/download-plan/{fileId}", method = {RequestMethod.GET, RequestMethod.POST})
     public ResponseEntity<DownloadPlanResponse> requestDownloadPlan(@PathVariable UUID fileId) {
         User user = getAuthenticatedUser();
         log.info("Download plan request from user {} for file {}", user.getId(), fileId);

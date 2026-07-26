@@ -49,6 +49,9 @@ public class AuthController {
      */
     @GetMapping("/me")
     public ResponseEntity<UserDto> me(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         UserDto currentUser = authService.getCurrentUser(principal.getName());
         return ResponseEntity.ok(currentUser);
     }
