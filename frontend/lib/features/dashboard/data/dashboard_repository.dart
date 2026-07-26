@@ -1,11 +1,10 @@
 import '../../../core/firebase/firebase_service.dart';
-import '../../../core/storage/local_file_cache_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../../authentication/models/user_model.dart';
 import '../../files/models/file_metadata_model.dart';
 import '../models/dashboard_stats_model.dart';
 
-/// Repository fetching and consolidating dashboard statistics via Firebase and persistent local cache.
+/// Repository fetching and consolidating dashboard statistics strictly online via Firebase Cloud Services.
 class DashboardRepository extends BaseRepository {
   final FirebaseService _firebaseService;
 
@@ -16,12 +15,10 @@ class DashboardRepository extends BaseRepository {
       final user = await _firebaseService.getCurrentUser() ??
           const UserModel(id: 'guest', username: 'Vault User', email: '', role: 'CLIENT');
 
-      List<FileItem> remoteFiles = [];
+      List<FileItem> files = [];
       try {
-        remoteFiles = await _firebaseService.listUserFiles();
+        files = await _firebaseService.listUserFiles();
       } catch (_) {}
-
-      final files = await LocalFileCacheService().mergeWithRemote(remoteFiles);
 
       int storageUsed = 0;
       for (final f in files) {

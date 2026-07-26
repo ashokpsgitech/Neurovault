@@ -3,30 +3,29 @@ import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
 import '../../../core/firebase/firebase_service.dart';
-import '../../../core/storage/local_file_cache_service.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/file_metadata_model.dart';
 import '../models/progress_model.dart';
 
-/// Repository handling zero-trust AES-256 encryption, 24/7 Firebase storage, and metadata sync.
+/// Repository handling zero-trust AES-256 encryption, 100% online cloud storage, and live metadata sync.
 class FileRepository extends BaseRepository {
   final FirebaseService _firebaseService;
   final DebugLogService _logger = DebugLogService();
 
   FileRepository(this._firebaseService);
 
+  /// Fetches files strictly online from Cloud Firestore.
   Future<List<FileItem>> listFiles() async {
     try {
-      final remoteFiles = await _firebaseService.listUserFiles();
-      return await LocalFileCacheService().mergeWithRemote(remoteFiles);
+      return await _firebaseService.listUserFiles();
     } catch (e, st) {
       _logger.error('[FileRepository] listFiles remote error: $e', e, st);
-      return await LocalFileCacheService().loadCachedFiles();
+      return [];
     }
   }
 
-  /// Zero-Trust Upload Pipeline (Client-Side Encryption + Firebase Cloud Sync)
+  /// Zero-Trust Upload Pipeline (Client-Side Encryption + 100% Online Cloud Upload)
   Future<FileItem> uploadFile({
     required String filename,
     required Uint8List fileBytes,
@@ -34,7 +33,7 @@ class FileRepository extends BaseRepository {
   }) async {
     _logger.info('[FileRepository] uploadFile() START: $filename (${fileBytes.length} bytes)');
 
-    // Step 1: Generate AES key and encrypt
+    // Step 1: Generate AES key and encrypt in background isolate
     onProgress(PipelineProgress(
       filename: filename,
       currentChunk: 0,
@@ -56,7 +55,7 @@ class FileRepository extends BaseRepository {
       rethrow;
     }
 
-    // Step 2: Upload to Firebase Storage
+    // Step 2: Upload directly online to Firebase Cloud Storage
     onProgress(PipelineProgress(
       filename: filename,
       currentChunk: 1,
@@ -66,30 +65,12 @@ class FileRepository extends BaseRepository {
     ));
     await Future.delayed(Duration.zero);
 
-    FileItem uploadedItem;
-    try {
-      _logger.info('[FileRepository] Calling uploadEncryptedFile on FirebaseService...');
-      uploadedItem = await _firebaseService.uploadEncryptedFile(
-        filename: filename,
-        fileBytes: encryptedBytes,
-        aesKeyBase64: encodedKey,
-      );
-      _logger.info('[FileRepository] Upload SUCCESS. File ID: ${uploadedItem.id}');
-    } catch (e) {
-      _logger.warn('[FileRepository] Firebase Storage unavailable ($e). Saving encrypted file to local Vault.');
-      final fileId = DateTime.now().millisecondsSinceEpoch.toString();
-      uploadedItem = FileItem(
-        id: fileId,
-        filename: filename,
-        sizeBytes: encryptedBytes.length,
-        createdAt: DateTime.now(),
-        chunkCount: 1,
-      );
-    }
-
-    // Save uploaded item & encrypted payload to persistent local cache
-    await LocalFileCacheService().saveEncryptedPayload(uploadedItem.id, encryptedBytes, encodedKey);
-    await LocalFileCacheService().saveFile(uploadedItem);
+    final uploadedItem = await _firebaseService.uploadEncryptedFile(
+      filename: filename,
+      fileBytes: encryptedBytes,
+      aesKeyBase64: encodedKey,
+    );
+    _logger.info('[FileRepository] Upload SUCCESS. File ID: ${uploadedItem.id}');
 
     onProgress(PipelineProgress(
       filename: filename,
@@ -103,7 +84,7 @@ class FileRepository extends BaseRepository {
     return uploadedItem;
   }
 
-  /// Zero-Trust Download Pipeline (Firebase Retrieval / Local Cache + Client-Side Decryption)
+  /// Zero-Trust Download Pipeline (100% Online Retrieval from Cloud Vault + Client-Side Decryption)
   Future<Uint8List> downloadFile({
     required FileItem fileItem,
     required void Function(PipelineProgress progress) onProgress,
@@ -119,19 +100,8 @@ class FileRepository extends BaseRepository {
     ));
     await Future.delayed(Duration.zero);
 
-    Map<String, dynamic>? cloudPayload;
-    cloudPayload = await LocalFileCacheService().loadEncryptedPayload(fileItem.id);
-    if (cloudPayload == null) {
-      try {
-        cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
-        _logger.info('[FileRepository] Download from Firebase OK.');
-      } catch (e, st) {
-        _logger.error('[FileRepository] DOWNLOAD ERROR: $e', e, st);
-        rethrow;
-      }
-    } else {
-      _logger.info('[FileRepository] Loaded encrypted payload from local storage cache.');
-    }
+    final cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
+    _logger.info('[FileRepository] Download from Cloud Storage OK.');
 
     final Uint8List encryptedBytes = cloudPayload['encryptedBytes'];
     final String encryptedAesKey = cloudPayload['encryptedAesKey'];
