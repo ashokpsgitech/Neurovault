@@ -634,4 +634,17 @@ class FirebaseService {
       }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
+
+  /// Clears all host node documents from Cloud Firestore `hosts` collection for debugging reset.
+  Future<void> clearAllHostNodes() async {
+    try {
+      final snapshot = await _firestore.collection('hosts').get();
+      for (final doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+      DebugLogService().info('[FirebaseService] Cleared all registered host nodes from Cloud Firestore.');
+    } catch (e) {
+      DebugLogService().error('[FirebaseService] clearAllHostNodes error: $e');
+    }
+  }
 }
