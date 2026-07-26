@@ -27,9 +27,30 @@ import java.util.stream.Collectors;
  * <p>Following Metadata-Only Coordinator architecture rules:
  * The Coordinator NEVER receives, proxies, or stores raw or encrypted file byte streams.</p>
  */
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+/**
+ * Control Plane service responsible for upload session coordination,
+ * host chunk placement planning, and metadata persistence.
+ *
+ * <p>Following Metadata-Only Coordinator architecture rules:
+ * The Coordinator NEVER receives, proxies, or stores raw or encrypted file byte streams.</p>
+ */
 @Service
 @Slf4j
 public class UploadService {
+
+    @Value("${neurovault.host.port:8080}")
+    private int hostPort;
 
     private final CoordinatorService coordinatorService;
     private final UploadSessionManager sessionManager;
@@ -78,26 +99,48 @@ public class UploadService {
         UUID fileId = UUID.randomUUID();
         session.setFileId(fileId);
 
+        FileMetadata placeholderFile = FileMetadata.builder()
+                .id(fileId)
+                .owner(user)
+                .name(request.getFilename())
+                .path("/" + request.getFilename())
+                .sizeBytes(request.getFileSize())
+                .encryptedAesKey("PENDING")
+                .fileHash("PENDING")
+                .build();
+        FileMetadata savedPlaceholder = fileMetadataRepository.save(placeholderFile);
+
         List<ChunkAllocationDto> allocations = new ArrayList<>();
 
         for (int i = 0; i < request.getTotalChunks(); i++) {
             UUID hostId = UUID.randomUUID();
             String hostName = "MicroServer-Node";
             String publicIp = "127.0.0.1";
-            String uploadUrl = "http://localhost:8080/api/storage/chunks";
+            String uploadUrl = String.format("http://localhost:%d/api/storage/chunks", hostPort);
 
             if (!targetHosts.isEmpty()) {
                 Host targetHost = targetHosts.get(i % targetHosts.size());
                 hostId = targetHost.getId();
                 hostName = targetHost.getName();
                 publicIp = targetHost.getPublicIp() != null ? targetHost.getPublicIp() : "127.0.0.1";
-                uploadUrl = String.format("http://%s:8080/api/storage/chunks", publicIp);
+                uploadUrl = String.format("http://%s:%d/api/storage/chunks", publicIp, hostPort);
             }
+
+            UUID chunkId = UUID.randomUUID();
+            Chunk pendingChunk = Chunk.builder()
+                    .id(chunkId)
+                    .file(savedPlaceholder)
+                    .chunkIndex(i)
+                    .sizeBytes(4 * 1024 * 1024L)
+                    .checksum("PENDING")
+                    .status(Chunk.Status.PENDING)
+                    .build();
+            chunkRepository.save(pendingChunk);
 
             String chunkToken = coordinatorService.generateChunkToken(session.getId(), hostId, i);
 
             allocations.add(ChunkAllocationDto.builder()
-                    .chunkId(UUID.randomUUID())
+                    .chunkId(chunkId)
                     .chunkIndex(i)
                     .hostId(hostId)
                     .hostName(hostName)
@@ -131,7 +174,7 @@ public class UploadService {
         if (session.getStatus() == UploadSession.Status.COMPLETED) {
             return UploadResponse.builder()
                     .uploadId(session.getId())
-                    .fileId(UUID.randomUUID())
+                    .fileId(session.getFileId() != null ? session.getFileId() : UUID.randomUUID())
                     .fileName(session.getFileName())
                     .fileSize(session.getFileSize())
                     .status(UploadSession.Status.COMPLETED.name())
@@ -156,17 +199,32 @@ public class UploadService {
 
         if (request.getUploadedChunks() != null) {
             for (UploadCompleteRequest.UploadedChunkSummary chunkSummary : request.getUploadedChunks()) {
-                UUID chunkId = chunkSummary.getChunkId() != null ? chunkSummary.getChunkId() : UUID.randomUUID();
-                Chunk chunkEntity = Chunk.builder()
-                        .id(chunkId)
-                        .file(savedFile)
-                        .chunkIndex(chunkSummary.getChunkIndex())
-                        .sizeBytes(chunkSummary.getSizeBytes())
-                        .checksum(chunkSummary.getChunkHash() != null ? chunkSummary.getChunkHash() : "SHA256_CHUNK_HASH")
-                        .status(Chunk.Status.ACTIVE)
-                        .build();
+                UUID chunkId = chunkSummary.getChunkId();
+                Chunk savedChunk = null;
 
-                Chunk savedChunk = chunkRepository.save(chunkEntity);
+                if (chunkId != null) {
+                    Optional<Chunk> existingOpt = chunkRepository.findById(chunkId);
+                    if (existingOpt.isPresent()) {
+                        Chunk existing = existingOpt.get();
+                        existing.setChecksum(chunkSummary.getChunkHash() != null ? chunkSummary.getChunkHash() : "SHA256_CHUNK_HASH");
+                        existing.setSizeBytes(chunkSummary.getSizeBytes() != null ? chunkSummary.getSizeBytes() : existing.getSizeBytes());
+                        existing.setStatus(Chunk.Status.ACTIVE);
+                        savedChunk = chunkRepository.save(existing);
+                    }
+                }
+
+                if (savedChunk == null) {
+                    UUID targetChunkId = chunkId != null ? chunkId : UUID.randomUUID();
+                    Chunk chunkEntity = Chunk.builder()
+                            .id(targetChunkId)
+                            .file(savedFile)
+                            .chunkIndex(chunkSummary.getChunkIndex() != null ? chunkSummary.getChunkIndex() : 0)
+                            .sizeBytes(chunkSummary.getSizeBytes() != null ? chunkSummary.getSizeBytes() : 0L)
+                            .checksum(chunkSummary.getChunkHash() != null ? chunkSummary.getChunkHash() : "SHA256_CHUNK_HASH")
+                            .status(Chunk.Status.ACTIVE)
+                            .build();
+                    savedChunk = chunkRepository.save(chunkEntity);
+                }
 
                 if (chunkSummary.getHostId() != null) {
                     replicationService.assignReplicas(savedChunk.getId(), List.of(chunkSummary.getHostId()));

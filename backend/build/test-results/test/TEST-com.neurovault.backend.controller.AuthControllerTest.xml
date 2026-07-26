@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.controller.AuthControllerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-07-26T09:35:52" hostname="ASHOK" time="1.789">
+<testsuite name="com.neurovault.backend.controller.AuthControllerTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:26:33" hostname="ASHOK" time="2.345">
   <properties/>
-  <testcase name="testLogin_Success()" classname="com.neurovault.backend.controller.AuthControllerTest" time="1.342"/>
-  <testcase name="testRegisterUser_Success()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.14"/>
-  <testcase name="testLogin_InvalidCredentials()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.186"/>
-  <testcase name="testRegisterUser_DuplicateEmail()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.111"/>
-  <system-out><![CDATA[15:05:44.439 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.neurovault.backend.controller.AuthControllerTest]: AuthControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-15:05:44.658 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.controller.AuthControllerTest
+  <testcase name="testLogin_Success()" classname="com.neurovault.backend.controller.AuthControllerTest" time="1.724"/>
+  <testcase name="testRegisterUser_Success()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.196"/>
+  <testcase name="testLogin_InvalidCredentials()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.268"/>
+  <testcase name="testRegisterUser_DuplicateEmail()" classname="com.neurovault.backend.controller.AuthControllerTest" time="0.152"/>
+  <system-out><![CDATA[16:56:24.285 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.neurovault.backend.controller.AuthControllerTest]: AuthControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+16:56:24.538 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.controller.AuthControllerTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -17,44 +17,44 @@
 
  :: Spring Boot ::                (v3.3.1)
 
-2026-07-26T15:05:45.406+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Starting AuthControllerTest using Java 21.0.11 with PID 29468 (started by ashok in D:\Project\micro server\backend)
-2026-07-26T15:05:45.407+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Running with Spring Boot v3.3.1, Spring v6.1.10
-2026-07-26T15:05:45.408+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : The following 1 profile is active: "test"
-2026-07-26T15:05:46.541+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-07-26T15:05:46.648+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 98 ms. Found 10 JPA repository interfaces.
-2026-07-26T15:05:47.499+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-07-26T15:05:47.637+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
-2026-07-26T15:05:47.709+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-07-26T15:05:48.209+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-07-26T15:05:48.261+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-07-26T15:05:48.527+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
-2026-07-26T15:05:48.530+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-07-26T15:05:48.574+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-07-26T15:05:49.943+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-07-26T15:05:50.062+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-07-26T15:05:50.715+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2026-07-26T15:05:50.717+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
-2026-07-26T15:05:51.272+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-07-26T15:05:52.598+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
-2026-07-26T15:05:52.600+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
-2026-07-26T15:05:52.601+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
-2026-07-26T15:05:52.601+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 0 ms
-2026-07-26T15:05:52.659+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
-2026-07-26T15:05:52.660+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Started AuthControllerTest in 7.714 seconds (process running for 9.721)
-2026-07-26T15:05:52.962+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
-2026-07-26T15:05:52.963+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
-2026-07-26T15:05:52.964+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
-2026-07-26T15:05:52.967+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T15:05:52.989+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
-2026-07-26T15:05:52.989+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T15:05:52.989+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
-2026-07-26T15:05:52.995+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
-2026-07-26T15:05:52.996+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T15:05:53.000+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
-2026-07-26T15:05:53.001+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
-2026-07-26T15:05:53.006+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
-2026-07-26T15:05:53.382+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
-2026-07-26T15:05:53.382+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-26T16:56:25.345+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Starting AuthControllerTest using Java 21.0.11 with PID 7872 (started by ashok in D:\Project\micro server\backend)
+2026-07-26T16:56:25.346+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-07-26T16:56:25.347+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : The following 1 profile is active: "test"
+2026-07-26T16:56:26.742+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-26T16:56:26.892+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 139 ms. Found 10 JPA repository interfaces.
+2026-07-26T16:56:27.935+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-26T16:56:28.073+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.2.Final
+2026-07-26T16:56:28.145+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-26T16:56:28.797+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-26T16:56:28.850+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-07-26T16:56:29.155+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2026-07-26T16:56:29.158+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-07-26T16:56:29.198+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-26T16:56:31.185+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-26T16:56:31.309+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-26T16:56:31.976+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-26T16:56:31.978+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-26T16:56:32.593+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-26T16:56:33.751+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-07-26T16:56:33.753+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-07-26T16:56:33.753+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-07-26T16:56:33.755+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-07-26T16:56:33.804+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-07-26T16:56:33.806+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.controller.AuthControllerTest      : Started AuthControllerTest in 9.019 seconds (process running for 11.223)
+2026-07-26T16:56:34.174+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-07-26T16:56:34.175+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-26T16:56:34.175+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-26T16:56:34.179+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T16:56:34.203+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-07-26T16:56:34.203+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T16:56:34.203+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-26T16:56:34.209+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-26T16:56:34.211+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:56:34.214+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-26T16:56:34.215+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-26T16:56:34.220+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-26T16:56:34.639+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-26T16:56:34.640+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
 ]]></system-out>
   <system-err><![CDATA[WARNING: A Java agent has been loaded dynamically (C:\Users\ashok\.gradle\caches\modules-2\files-2.1\net.bytebuddy\byte-buddy-agent\1.14.17\e3c251a39dc90badaf71c83427ba46840f219d8d\byte-buddy-agent-1.14.17.jar)
 WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning

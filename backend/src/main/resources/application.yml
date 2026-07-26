@@ -30,6 +30,7 @@ neurovault:
   storage:
     base-dir: ./neurovault-storage
   host:
+    port: 8080
     heartbeat-check-interval-ms: 60000
     heartbeat-miss-threshold: 3
   engine:

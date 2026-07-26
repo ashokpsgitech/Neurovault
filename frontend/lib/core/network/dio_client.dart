@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../config/env_config.dart';
+import '../utils/debug_log_service.dart';
 
 /// Dio HTTP client configuration with timeouts and JWT interceptor.
 class DioClient {
@@ -26,6 +27,11 @@ class DioClient {
           return handler.next(options);
         },
         onError: (DioException error, handler) {
+          final uri = error.requestOptions.uri;
+          final status = error.response?.statusCode ?? 0;
+          DebugLogService().error(
+            '[DioClient] HTTP $status ${error.requestOptions.method} $uri: ${error.message}'
+          );
           return handler.next(error);
         },
       ),

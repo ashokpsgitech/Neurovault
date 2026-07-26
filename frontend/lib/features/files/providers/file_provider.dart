@@ -9,6 +9,7 @@ import '../models/file_metadata_model.dart';
 import 'file_state.dart';
 
 final fileRepositoryProvider = Provider<FileRepository>((ref) {
+  ref.keepAlive();
   final firebaseService = FirebaseService();
   return FileRepository(firebaseService);
 });

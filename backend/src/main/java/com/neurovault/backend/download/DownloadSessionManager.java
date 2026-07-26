@@ -38,17 +38,19 @@ public class DownloadSessionManager {
      * @return the persisted {@link DownloadSession}
      */
     @Transactional
-    public DownloadSession createSession(User user, FileMetadata file) {
+    public DownloadSession createSession(User user, FileMetadata file, int totalChunks) {
         DownloadSession session = DownloadSession.builder()
                 .user(user)
                 .file(file)
+                .totalChunks(totalChunks)
+                .completedChunks(0)
                 .status(DownloadSession.Status.INITIALIZED)
                 .expiresAt(LocalDateTime.now().plusHours(1))
                 .build();
 
         DownloadSession saved = downloadSessionRepository.save(session);
-        log.info("Created download session {} for file '{}' by user {}",
-                saved.getId(), file.getName(), user.getId());
+        log.info("Created download session {} for file '{}' ({} chunks) by user {}",
+                saved.getId(), file.getName(), totalChunks, user.getId());
         return saved;
     }
 

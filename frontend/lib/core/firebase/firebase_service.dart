@@ -31,7 +31,9 @@ class FirebaseService {
           options: DefaultFirebaseOptions.currentPlatform,
         );
       }
-    } catch (_) {}
+    } catch (e, st) {
+      DebugLogService().error('[FirebaseService.initialize] Firebase init error: $e', e, st);
+    }
   }
 
   /// Authenticates or registers user using Google Sign-In provider.
@@ -466,7 +468,8 @@ class FirebaseService {
           chunkCount: data['chunkCount'] ?? 1,
         );
       }).toList();
-    } catch (_) {
+    } catch (e, st) {
+      DebugLogService().error('[FirebaseService] listUserFiles error: $e', e, st);
       return [];
     }
   }

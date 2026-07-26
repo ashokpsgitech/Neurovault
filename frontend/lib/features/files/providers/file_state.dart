@@ -23,10 +23,11 @@ class FileLoaded extends FileState {
   FileLoaded copyWith({
     List<FileItem>? files,
     PipelineProgress? activeProgress,
+    bool clearProgress = false,
   }) {
     return FileLoaded(
       files ?? this.files,
-      activeProgress,
+      clearProgress ? null : (activeProgress ?? this.activeProgress),
     );
   }
 }

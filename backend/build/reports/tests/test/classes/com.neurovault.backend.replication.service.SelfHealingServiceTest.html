@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.197s</div>
+<div class="counter">0.265s</div>
 <p>duration</p>
 </div>
 </td>
@@ -79,17 +79,17 @@
 </thead>
 <tr>
 <td class="success">testHealChunk_Success()</td>
-<td class="success">0.082s</td>
+<td class="success">0.110s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">testRunHealingCycle_InsufficientHosts()</td>
-<td class="success">0.038s</td>
+<td class="success">0.056s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">testRunHealingCycle_Success()</td>
-<td class="success">0.077s</td>
+<td class="success">0.099s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -97,8 +97,8 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-07-26T15:06:14.730+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.SelfHealingServiceTest]: SelfHealingServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-07-26T15:06:14.732+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.SelfHealingServiceTest
+<pre>2026-07-26T16:57:09.372+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.SelfHealingServiceTest]: SelfHealingServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-26T16:57:09.375+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.SelfHealingServiceTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -109,115 +109,148 @@
 
  :: Spring Boot ::                (v3.3.1)
 
-2026-07-26T15:06:14.756+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Starting SelfHealingServiceTest using Java 21.0.11 with PID 29468 (started by ashok in D:\Project\micro server\backend)
-2026-07-26T15:06:14.756+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Running with Spring Boot v3.3.1, Spring v6.1.10
-2026-07-26T15:06:14.756+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : The following 1 profile is active: &quot;test&quot;
-2026-07-26T15:06:14.946+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-07-26T15:06:14.969+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 22 ms. Found 10 JPA repository interfaces.
-2026-07-26T15:06:15.052+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-07-26T15:06:15.055+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-07-26T15:06:15.065+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-07-26T15:06:15.066+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-11 - Starting...
-2026-07-26T15:06:15.068+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-11 - Added connection conn100: url=jdbc:h2:mem:testdb_selfhealing user=SA
-2026-07-26T15:06:15.068+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-11 - Start completed.
-2026-07-26T15:06:15.069+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-07-26T15:06:15.214+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-07-26T15:06:15.231+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-07-26T15:06:15.264+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2026-07-26T15:06:15.264+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
-2026-07-26T15:06:15.379+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-07-26T15:06:15.520+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
-2026-07-26T15:06:15.520+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Started SelfHealingServiceTest in 0.785 seconds (process running for 32.581)
-2026-07-26T15:06:15.523+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
-2026-07-26T15:06:15.524+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
-2026-07-26T15:06:15.524+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
-2026-07-26T15:06:15.527+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T15:06:15.529+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
-2026-07-26T15:06:15.529+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T15:06:15.530+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
-2026-07-26T15:06:15.532+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
-2026-07-26T15:06:15.532+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T15:06:15.534+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
-2026-07-26T15:06:15.534+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
-2026-07-26T15:06:15.536+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
-2026-07-26T15:06:15.542+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.544+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
-2026-07-26T15:06:15.544+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
-2026-07-26T15:06:15.547+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica da82ea3f-21d4-449b-85ef-d43dec7d907f for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0 on host 21e27da1-7954-4432-8acd-7e23f6bbf48d
-2026-07-26T15:06:15.550+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0 — deficit: 2
-2026-07-26T15:06:15.550+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=da897eed-e0e0-4474-9dcc-2898eaf95ee0, message='Initiating repair for deficit of 2', time=2026-07-26T15:06:15.550440200}
-2026-07-26T15:06:15.557+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0, excluding 1 hosts
-2026-07-26T15:06:15.558+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [21e27da1-7954-4432-8acd-7e23f6bbf48d]
-2026-07-26T15:06:15.568+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.581+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 229a714d-def9-4403-963c-c1176c3e25b6 (name=HostB) with score {:.4f}
-2026-07-26T15:06:15.581+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 229a714d-def9-4403-963c-c1176c3e25b6 (name=HostB) for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.581+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.584+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 8eb6ed0e-9ced-4dd1-a44e-7ba50a2c06f5 for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0 on host 229a714d-def9-4403-963c-c1176c3e25b6
-2026-07-26T15:06:15.584+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=229a714d-def9-4403-963c-c1176c3e25b6, chunkId=da897eed-e0e0-4474-9dcc-2898eaf95ee0, message='Replica restored on host HostB (229a714d-def9-4403-963c-c1176c3e25b6)', time=2026-07-26T15:06:15.584444800}
-2026-07-26T15:06:15.584+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/2 created on host HostB for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.585+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0, excluding 2 hosts
-2026-07-26T15:06:15.585+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [21e27da1-7954-4432-8acd-7e23f6bbf48d, 229a714d-def9-4403-963c-c1176c3e25b6]
-2026-07-26T15:06:15.591+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.596+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 8a14386f-2033-444a-b77d-488bb13436a1 (name=HostC) with score {:.4f}
-2026-07-26T15:06:15.596+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 8a14386f-2033-444a-b77d-488bb13436a1 (name=HostC) for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.596+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.598+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica b93cd6ee-8e4e-4145-bd27-c826cdfda9eb for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0 on host 8a14386f-2033-444a-b77d-488bb13436a1
-2026-07-26T15:06:15.599+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=8a14386f-2033-444a-b77d-488bb13436a1, chunkId=da897eed-e0e0-4474-9dcc-2898eaf95ee0, message='Replica restored on host HostC (8a14386f-2033-444a-b77d-488bb13436a1)', time=2026-07-26T15:06:15.599439400}
-2026-07-26T15:06:15.599+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 2/2 created on host HostC for chunk da897eed-e0e0-4474-9dcc-2898eaf95ee0
-2026-07-26T15:06:15.599+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_COMPLETED, hostId=null, chunkId=da897eed-e0e0-4474-9dcc-2898eaf95ee0, message='All 2 replicas restored', time=2026-07-26T15:06:15.599439400}
-2026-07-26T15:06:15.614+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T15:06:15.624+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
-2026-07-26T15:06:15.624+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Found 1 under-replicated chunks — initiating repairs
-2026-07-26T15:06:15.624+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk ef2ca670-a623-4cb3-a7e0-939244b7393c — deficit: 3
-2026-07-26T15:06:15.624+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=ef2ca670-a623-4cb3-a7e0-939244b7393c, message='Initiating repair for deficit of 3', time=2026-07-26T15:06:15.624441800}
-2026-07-26T15:06:15.627+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c, excluding 0 hosts
-2026-07-26T15:06:15.627+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding []
-2026-07-26T15:06:15.632+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.637+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host c1d22cd1-60b9-4e3a-8c37-29c5027af54e (name=HostA) with score {:.4f}
-2026-07-26T15:06:15.637+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host c1d22cd1-60b9-4e3a-8c37-29c5027af54e (name=HostA) for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c
-2026-07-26T15:06:15.637+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c
-2026-07-26T15:06:15.640+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 97d3b06f-61e8-4a17-afc3-64d5fcaab369 for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c on host c1d22cd1-60b9-4e3a-8c37-29c5027af54e
-2026-07-26T15:06:15.640+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=c1d22cd1-60b9-4e3a-8c37-29c5027af54e, chunkId=ef2ca670-a623-4cb3-a7e0-939244b7393c, message='Replica restored on host HostA (c1d22cd1-60b9-4e3a-8c37-29c5027af54e)', time=2026-07-26T15:06:15.640182900}
-2026-07-26T15:06:15.640+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/3 created on host HostA for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c
-2026-07-26T15:06:15.640+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c, excluding 1 hosts
-2026-07-26T15:06:15.640+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [c1d22cd1-60b9-4e3a-8c37-29c5027af54e]
-2026-07-26T15:06:15.642+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.642+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → No more eligible hosts for chunk ef2ca670-a623-4cb3-a7e0-939244b7393c (placed 1/3)
-2026-07-26T15:06:15.643+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Self-healing cycle complete: inspected=1, initiated=3, succeeded=1, failed=2 ═══
-2026-07-26T15:06:15.656+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T15:06:15.664+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
-2026-07-26T15:06:15.664+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Found 1 under-replicated chunks — initiating repairs
-2026-07-26T15:06:15.664+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165 — deficit: 3
-2026-07-26T15:06:15.664+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=0130d06e-4a3c-4245-a50b-9d0bd8a2f165, message='Initiating repair for deficit of 3', time=2026-07-26T15:06:15.664183}
-2026-07-26T15:06:15.666+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165, excluding 0 hosts
-2026-07-26T15:06:15.667+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding []
-2026-07-26T15:06:15.675+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 3 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.689+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host e599e271-2990-4b4a-8bd7-10a168bfddb1 (name=HostA) with score {:.4f}
-2026-07-26T15:06:15.689+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host e599e271-2990-4b4a-8bd7-10a168bfddb1 (name=HostA) for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.689+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.691+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 96bcd4a6-273c-4bc3-9692-770585a891e6 for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165 on host e599e271-2990-4b4a-8bd7-10a168bfddb1
-2026-07-26T15:06:15.692+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=e599e271-2990-4b4a-8bd7-10a168bfddb1, chunkId=0130d06e-4a3c-4245-a50b-9d0bd8a2f165, message='Replica restored on host HostA (e599e271-2990-4b4a-8bd7-10a168bfddb1)', time=2026-07-26T15:06:15.692179800}
-2026-07-26T15:06:15.692+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/3 created on host HostA for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.692+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165, excluding 1 hosts
-2026-07-26T15:06:15.692+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [e599e271-2990-4b4a-8bd7-10a168bfddb1]
-2026-07-26T15:06:15.698+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.704+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host d9897faf-c679-45bc-aeec-2db95d1d3921 (name=HostB) with score {:.4f}
-2026-07-26T15:06:15.705+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host d9897faf-c679-45bc-aeec-2db95d1d3921 (name=HostB) for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.705+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.707+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 610b5633-8b14-48be-b395-2829293b0fde for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165 on host d9897faf-c679-45bc-aeec-2db95d1d3921
-2026-07-26T15:06:15.707+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=d9897faf-c679-45bc-aeec-2db95d1d3921, chunkId=0130d06e-4a3c-4245-a50b-9d0bd8a2f165, message='Replica restored on host HostB (d9897faf-c679-45bc-aeec-2db95d1d3921)', time=2026-07-26T15:06:15.707575900}
-2026-07-26T15:06:15.707+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 2/3 created on host HostB for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.707+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165, excluding 2 hosts
-2026-07-26T15:06:15.707+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [e599e271-2990-4b4a-8bd7-10a168bfddb1, d9897faf-c679-45bc-aeec-2db95d1d3921]
-2026-07-26T15:06:15.711+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
-2026-07-26T15:06:15.715+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 702065de-1765-4737-b184-4a45eaa9869a (name=HostC) with score {:.4f}
-2026-07-26T15:06:15.715+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 702065de-1765-4737-b184-4a45eaa9869a (name=HostC) for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.716+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.718+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica abd6d2f3-bc5a-47fe-8bea-cf3bc0c388ca for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165 on host 702065de-1765-4737-b184-4a45eaa9869a
-2026-07-26T15:06:15.718+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=702065de-1765-4737-b184-4a45eaa9869a, chunkId=0130d06e-4a3c-4245-a50b-9d0bd8a2f165, message='Replica restored on host HostC (702065de-1765-4737-b184-4a45eaa9869a)', time=2026-07-26T15:06:15.718578400}
-2026-07-26T15:06:15.718+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 3/3 created on host HostC for chunk 0130d06e-4a3c-4245-a50b-9d0bd8a2f165
-2026-07-26T15:06:15.718+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_COMPLETED, hostId=null, chunkId=0130d06e-4a3c-4245-a50b-9d0bd8a2f165, message='All 3 replicas restored', time=2026-07-26T15:06:15.718578400}
-2026-07-26T15:06:15.718+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Self-healing cycle complete: inspected=1, initiated=3, succeeded=3, failed=0 ═══
+2026-07-26T16:57:09.416+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Starting SelfHealingServiceTest using Java 21.0.11 with PID 7872 (started by ashok in D:\Project\micro server\backend)
+2026-07-26T16:57:09.416+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-07-26T16:57:09.416+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : The following 1 profile is active: &quot;test&quot;
+2026-07-26T16:57:09.831+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-26T16:57:09.870+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 38 ms. Found 10 JPA repository interfaces.
+2026-07-26T16:57:09.904+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-26T16:57:09.905+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-26T16:57:09.908+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T16:57:09.923+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 1/1 hosts healthy
+2026-07-26T16:57:09.923+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T16:57:09.923+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-26T16:57:09.928+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-26T16:57:09.929+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:57:09.931+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-26T16:57:09.931+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-26T16:57:09.938+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-26T16:57:09.945+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=1/1 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-26T16:57:09.945+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-26T16:57:10.081+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-26T16:57:10.086+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-26T16:57:10.112+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-26T16:57:10.113+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-11 - Starting...
+2026-07-26T16:57:10.115+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-11 - Added connection conn100: url=jdbc:h2:mem:testdb_selfhealing user=SA
+2026-07-26T16:57:10.116+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-11 - Start completed.
+2026-07-26T16:57:10.116+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-26T16:57:10.442+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-26T16:57:10.467+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-26T16:57:10.525+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-26T16:57:10.526+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-26T16:57:10.714+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-26T16:57:11.050+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-07-26T16:57:11.051+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingServiceTest   : Started SelfHealingServiceTest in 1.671 seconds (process running for 48.468)
+2026-07-26T16:57:11.057+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-07-26T16:57:11.059+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-26T16:57:11.059+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-26T16:57:11.063+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T16:57:11.066+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-07-26T16:57:11.067+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T16:57:11.067+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-26T16:57:11.071+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-26T16:57:11.072+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:57:11.074+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-26T16:57:11.075+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-26T16:57:11.078+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.078+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-26T16:57:11.083+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 475c1b64-968d-458e-a594-f48fa171795b for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc on host e469a9d3-d914-49de-90b3-bb1ff8249530
+2026-07-26T16:57:11.087+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc — deficit: 2
+2026-07-26T16:57:11.088+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-26T16:57:11.089+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-26T16:57:11.089+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=c8090a39-0e0e-4b6d-82ea-790b2390b7dc, message='Initiating repair for deficit of 2', time=2026-07-26T16:57:11.089618700}
+2026-07-26T16:57:11.100+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc, excluding 1 hosts
+2026-07-26T16:57:11.101+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [e469a9d3-d914-49de-90b3-bb1ff8249530]
+2026-07-26T16:57:11.115+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.132+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc (name=HostB) with score {:.4f}
+2026-07-26T16:57:11.132+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc (name=HostB) for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.132+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.136+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica c6ff6172-8026-40c0-90d6-57b8b71c94ec for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc on host 9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc
+2026-07-26T16:57:11.137+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc, chunkId=c8090a39-0e0e-4b6d-82ea-790b2390b7dc, message='Replica restored on host HostB (9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc)', time=2026-07-26T16:57:11.137030300}
+2026-07-26T16:57:11.137+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/2 created on host HostB for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.137+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc, excluding 2 hosts
+2026-07-26T16:57:11.137+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [9ec33a48-5a9b-4000-a0c2-0d8bc716b0dc, e469a9d3-d914-49de-90b3-bb1ff8249530]
+2026-07-26T16:57:11.145+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.153+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host ee7727dc-3df3-47b1-ae89-53d010c8dda4 (name=HostC) with score {:.4f}
+2026-07-26T16:57:11.153+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host ee7727dc-3df3-47b1-ae89-53d010c8dda4 (name=HostC) for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.153+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.156+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica ebb55cc4-d4fd-4ad7-a86c-3430cc45232c for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc on host ee7727dc-3df3-47b1-ae89-53d010c8dda4
+2026-07-26T16:57:11.157+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=ee7727dc-3df3-47b1-ae89-53d010c8dda4, chunkId=c8090a39-0e0e-4b6d-82ea-790b2390b7dc, message='Replica restored on host HostC (ee7727dc-3df3-47b1-ae89-53d010c8dda4)', time=2026-07-26T16:57:11.157507700}
+2026-07-26T16:57:11.157+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 2/2 created on host HostC for chunk c8090a39-0e0e-4b6d-82ea-790b2390b7dc
+2026-07-26T16:57:11.158+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_COMPLETED, hostId=null, chunkId=c8090a39-0e0e-4b6d-82ea-790b2390b7dc, message='All 2 replicas restored', time=2026-07-26T16:57:11.158127600}
+2026-07-26T16:57:11.183+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:57:11.184+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-26T16:57:11.184+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-26T16:57:11.187+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T16:57:11.199+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
+2026-07-26T16:57:11.200+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Found 1 under-replicated chunks — initiating repairs
+2026-07-26T16:57:11.201+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464 — deficit: 3
+2026-07-26T16:57:11.201+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 1/1 hosts healthy
+2026-07-26T16:57:11.201+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=4b1c7add-c6fe-47f0-8bbf-45569e698464, message='Initiating repair for deficit of 3', time=2026-07-26T16:57:11.201940900}
+2026-07-26T16:57:11.201+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T16:57:11.202+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-26T16:57:11.205+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464, excluding 0 hosts
+2026-07-26T16:57:11.205+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding []
+2026-07-26T16:57:11.206+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-26T16:57:11.207+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:57:11.211+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.212+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
+2026-07-26T16:57:11.212+05:30  WARN 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : Found 1 under-replicated chunks — initiating repairs
+2026-07-26T16:57:11.213+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : Healing chunk 430c9cdf-7290-495c-bf87-f0803f84bdd6 — deficit: 2
+2026-07-26T16:57:11.213+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=430c9cdf-7290-495c-bf87-f0803f84bdd6, message='Initiating repair for deficit of 2', time=2026-07-26T16:57:11.213072100}
+2026-07-26T16:57:11.215+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 430c9cdf-7290-495c-bf87-f0803f84bdd6, excluding 1 hosts
+2026-07-26T16:57:11.215+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes (user=null, mode=null), excluding [56c4acf4-528c-4f29-bdc9-2f5995aaf8f6]
+2026-07-26T16:57:11.216+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 2b7dcd37-63c2-484d-baf4-c6a802557c8d (name=HostA) with score {:.4f}
+2026-07-26T16:57:11.216+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 2b7dcd37-63c2-484d-baf4-c6a802557c8d (name=HostA) for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464
+2026-07-26T16:57:11.216+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464
+2026-07-26T16:57:11.218+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-07-26T16:57:11.218+05:30  WARN 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       :   → No more eligible hosts for chunk 430c9cdf-7290-495c-bf87-f0803f84bdd6 (placed 0/2)
+2026-07-26T16:57:11.218+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Self-healing cycle complete: inspected=1, initiated=2, succeeded=0, failed=2 ═══
+2026-07-26T16:57:11.219+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 8fa03b7e-c97c-4e7b-b9ae-97c4e6e46687 for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464 on host 2b7dcd37-63c2-484d-baf4-c6a802557c8d
+2026-07-26T16:57:11.220+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=2b7dcd37-63c2-484d-baf4-c6a802557c8d, chunkId=4b1c7add-c6fe-47f0-8bbf-45569e698464, message='Replica restored on host HostA (2b7dcd37-63c2-484d-baf4-c6a802557c8d)', time=2026-07-26T16:57:11.220142200}
+2026-07-26T16:57:11.220+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/3 created on host HostA for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464
+2026-07-26T16:57:11.220+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464, excluding 1 hosts
+2026-07-26T16:57:11.220+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [2b7dcd37-63c2-484d-baf4-c6a802557c8d]
+2026-07-26T16:57:11.222+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.223+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → No more eligible hosts for chunk 4b1c7add-c6fe-47f0-8bbf-45569e698464 (placed 1/3)
+2026-07-26T16:57:11.223+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Self-healing cycle complete: inspected=1, initiated=3, succeeded=1, failed=2 ═══
+2026-07-26T16:57:11.224+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-26T16:57:11.233+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=1/1 online, files=2, chunks=2, replicas=1/1 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-26T16:57:11.233+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-26T16:57:11.239+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T16:57:11.248+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Found 1 under-replicated chunks
+2026-07-26T16:57:11.248+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Found 1 under-replicated chunks — initiating repairs
+2026-07-26T16:57:11.248+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : Healing chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d — deficit: 3
+2026-07-26T16:57:11.249+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_INITIATED, hostId=null, chunkId=2b8ea3a7-9ef0-43e4-b764-45455e04a74d, message='Initiating repair for deficit of 3', time=2026-07-26T16:57:11.249913100}
+2026-07-26T16:57:11.253+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d, excluding 0 hosts
+2026-07-26T16:57:11.253+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding []
+2026-07-26T16:57:11.261+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 3 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.276+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host bfb00eba-2458-4bc9-b500-37ac64564a1d (name=HostA) with score {:.4f}
+2026-07-26T16:57:11.277+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host bfb00eba-2458-4bc9-b500-37ac64564a1d (name=HostA) for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.277+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.280+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 8795cd50-c7fa-4c8f-8ae0-c0c95da56b19 for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d on host bfb00eba-2458-4bc9-b500-37ac64564a1d
+2026-07-26T16:57:11.281+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=bfb00eba-2458-4bc9-b500-37ac64564a1d, chunkId=2b8ea3a7-9ef0-43e4-b764-45455e04a74d, message='Replica restored on host HostA (bfb00eba-2458-4bc9-b500-37ac64564a1d)', time=2026-07-26T16:57:11.281529300}
+2026-07-26T16:57:11.281+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 1/3 created on host HostA for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.281+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d, excluding 1 hosts
+2026-07-26T16:57:11.282+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [bfb00eba-2458-4bc9-b500-37ac64564a1d]
+2026-07-26T16:57:11.290+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.301+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 175ddaee-19ee-4581-9725-c91e17fff797 (name=HostB) with score {:.4f}
+2026-07-26T16:57:11.301+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 175ddaee-19ee-4581-9725-c91e17fff797 (name=HostB) for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.301+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.304+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 34401830-40af-4b41-9bab-9757a263d3d7 for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d on host 175ddaee-19ee-4581-9725-c91e17fff797
+2026-07-26T16:57:11.304+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=175ddaee-19ee-4581-9725-c91e17fff797, chunkId=2b8ea3a7-9ef0-43e4-b764-45455e04a74d, message='Replica restored on host HostB (175ddaee-19ee-4581-9725-c91e17fff797)', time=2026-07-26T16:57:11.304384}
+2026-07-26T16:57:11.304+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 2/3 created on host HostB for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.304+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selecting replacement host for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d, excluding 2 hosts
+2026-07-26T16:57:11.304+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 100 bytes (user=null, mode=null), excluding [bfb00eba-2458-4bc9-b500-37ac64564a1d, 175ddaee-19ee-4581-9725-c91e17fff797]
+2026-07-26T16:57:11.310+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 3 total hosts
+2026-07-26T16:57:11.315+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 7e3e7508-b3a3-4a20-a168-b7b134436f81 (name=HostC) with score {:.4f}
+2026-07-26T16:57:11.316+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.HostSelectionService     : Selected replacement host 7e3e7508-b3a3-4a20-a168-b7b134436f81 (name=HostC) for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.316+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.318+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica f4e4d717-6a45-4faa-8d9c-66d4afd12750 for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d on host 7e3e7508-b3a3-4a20-a168-b7b134436f81
+2026-07-26T16:57:11.319+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPLICA_RESTORED, hostId=7e3e7508-b3a3-4a20-a168-b7b134436f81, chunkId=2b8ea3a7-9ef0-43e4-b764-45455e04a74d, message='Replica restored on host HostC (7e3e7508-b3a3-4a20-a168-b7b134436f81)', time=2026-07-26T16:57:11.319457700}
+2026-07-26T16:57:11.319+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       :   → Replica 3/3 created on host HostC for chunk 2b8ea3a7-9ef0-43e4-b764-45455e04a74d
+2026-07-26T16:57:11.319+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=REPAIR_COMPLETED, hostId=null, chunkId=2b8ea3a7-9ef0-43e4-b764-45455e04a74d, message='All 3 replicas restored', time=2026-07-26T16:57:11.319457700}
+2026-07-26T16:57:11.320+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.SelfHealingService       : ═══ Self-healing cycle complete: inspected=1, initiated=3, succeeded=3, failed=0 ═══
 </pre>
 </span>
 </div>
@@ -229,7 +262,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 3:06:18 pm</p>
+<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 4:57:17 pm</p>
 </div>
 </div>
 </body>

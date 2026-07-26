@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.032s</div>
+<div class="counter">0.031s</div>
 <p>duration</p>
 </div>
 </td>
@@ -81,19 +81,19 @@
 <tr>
 <td class="success">calculateTotalChunks should handle edge cases correctly</td>
 <td class="success">testCalculateTotalChunks()</td>
-<td class="success">0.002s</td>
+<td class="success">0.001s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">each chunk should have valid SHA-256 hash and CRC32 checksum</td>
 <td class="success">testChunkMetadata()</td>
-<td class="success">0.007s</td>
+<td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">getChunkSize should return configured chunk size</td>
 <td class="success">testGetChunkSize()</td>
-<td class="success">0s</td>
+<td class="success">0.001s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
@@ -105,19 +105,19 @@
 <tr>
 <td class="success">mergeChunks should sort by index even if chunks arrive out of order</td>
 <td class="success">testMergeChunks_OutOfOrder()</td>
-<td class="success">0.002s</td>
+<td class="success">0.005s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">splitFile should produce correct number of chunks for multi-chunk data</td>
 <td class="success">testSplitFile_MultipleChunks()</td>
-<td class="success">0.008s</td>
+<td class="success">0.005s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">splitFile with non-aligned size should have smaller last chunk</td>
 <td class="success">testSplitFile_NonAlignedSize()</td>
-<td class="success">0.002s</td>
+<td class="success">0.004s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
@@ -129,13 +129,13 @@
 <tr>
 <td class="success">split then merge should recover original data</td>
 <td class="success">testSplitMerge_RoundTrip()</td>
-<td class="success">0.004s</td>
+<td class="success">0.005s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">verifyChunkOrder should return false for duplicate indices</td>
 <td class="success">testVerifyChunkOrder_DuplicateIndex()</td>
-<td class="success">0.002s</td>
+<td class="success">0.001s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
@@ -147,13 +147,13 @@
 <tr>
 <td class="success">verifyChunkOrder should return false for missing indices</td>
 <td class="success">testVerifyChunkOrder_MissingIndex()</td>
-<td class="success">0.001s</td>
+<td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">verifyChunkOrder should return true for valid contiguous indices</td>
 <td class="success">testVerifyChunkOrder_Valid()</td>
-<td class="success">0.002s</td>
+<td class="success">0.003s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -161,17 +161,17 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-07-26T15:05:58.542+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T15:05:58.547+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2048 bytes) into 2 chunks (chunk size=1024)
-2026-07-26T15:05:58.554+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 2
-2026-07-26T15:05:58.555+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (18 bytes) into 1 chunks (chunk size=1024)
-2026-07-26T15:05:58.560+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2148 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T15:05:58.563+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T15:05:58.563+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 3 chunks into 3072 bytes
-2026-07-26T15:05:58.566+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (5620 bytes) into 6 chunks (chunk size=1024)
-2026-07-26T15:05:58.567+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 6 chunks into 5620 bytes
-2026-07-26T15:05:58.569+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T15:05:58.574+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 0
+<pre>2026-07-26T16:56:41.743+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-07-26T16:56:41.745+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2048 bytes) into 2 chunks (chunk size=1024)
+2026-07-26T16:56:41.750+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 2
+2026-07-26T16:56:41.752+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (18 bytes) into 1 chunks (chunk size=1024)
+2026-07-26T16:56:41.759+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2148 bytes) into 3 chunks (chunk size=1024)
+2026-07-26T16:56:41.763+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-07-26T16:56:41.765+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 3 chunks into 3072 bytes
+2026-07-26T16:56:41.771+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (5620 bytes) into 6 chunks (chunk size=1024)
+2026-07-26T16:56:41.771+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 6 chunks into 5620 bytes
+2026-07-26T16:56:41.775+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-07-26T16:56:41.776+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 0
 </pre>
 </span>
 </div>
@@ -183,7 +183,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 3:06:18 pm</p>
+<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 4:57:16 pm</p>
 </div>
 </div>
 </body>

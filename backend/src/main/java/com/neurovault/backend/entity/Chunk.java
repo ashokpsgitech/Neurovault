@@ -37,6 +37,7 @@ public class Chunk {
     private Status status;
 
     public enum Status {
+        PENDING,
         ACTIVE,
         MISSING,
         CORRUPTED

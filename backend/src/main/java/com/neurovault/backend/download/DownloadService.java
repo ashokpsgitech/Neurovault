@@ -11,6 +11,7 @@ import com.neurovault.backend.repository.ChunkReplicaRepository;
 import com.neurovault.backend.repository.ChunkRepository;
 import com.neurovault.backend.repository.FileMetadataRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +31,9 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class DownloadService {
+
+    @Value("${neurovault.host.port:8080}")
+    private int hostPort;
 
     private final CoordinatorService coordinatorService;
     private final DownloadSessionManager sessionManager;
@@ -68,18 +72,24 @@ public class DownloadService {
             throw new BadRequestException("Access denied: you do not own this file");
         }
 
-        DownloadSession session = sessionManager.createSession(user, file);
         List<Chunk> chunks = chunkRepository.findByFileId(fileId);
         chunks.sort(Comparator.comparingInt(Chunk::getChunkIndex));
+
+        DownloadSession session = sessionManager.createSession(user, file, chunks.size());
 
         List<ChunkLocationDto> chunkLocations = new ArrayList<>();
 
         for (Chunk chunk : chunks) {
             List<ChunkReplica> replicas = chunkReplicaRepository.findByChunkId(chunk.getId());
 
-            Host targetHost = null;
-            if (!replicas.isEmpty() && replicas.get(0).getHost() != null) {
-                targetHost = replicas.get(0).getHost();
+            Host targetHost = replicas.stream()
+                    .map(ChunkReplica::getHost)
+                    .filter(h -> h != null && h.getStatus() == Host.Status.ONLINE)
+                    .findFirst()
+                    .orElseGet(() -> replicas.isEmpty() ? null : replicas.get(0).getHost());
+
+            if (targetHost == null) {
+                log.warn("No ONLINE host replica found for chunk {}", chunk.getId());
             }
 
             UUID hostId = targetHost != null ? targetHost.getId() : UUID.randomUUID();
@@ -87,7 +97,7 @@ public class DownloadService {
             String hostName = targetHost != null ? targetHost.getName() : "Host-Node";
 
             String downloadToken = coordinatorService.generateChunkToken(session.getId(), hostId, chunk.getChunkIndex());
-            String downloadUrl = String.format("http://%s:8080/api/storage/chunks/%s", publicIp, chunk.getId());
+            String downloadUrl = String.format("http://%s:%d/api/storage/chunks/%s", publicIp, hostPort, chunk.getId());
 
             chunkLocations.add(ChunkLocationDto.builder()
                     .chunkId(chunk.getId())
@@ -123,14 +133,17 @@ public class DownloadService {
     public DownloadProgressResponse getProgress(UUID downloadId) {
         DownloadSession session = sessionManager.getSession(downloadId);
         FileMetadata file = session.getFile();
-        List<Chunk> chunks = chunkRepository.findByFileId(file.getId());
+
+        int total = session.getTotalChunks() != null ? session.getTotalChunks() : 1;
+        int completed = session.getCompletedChunks() != null ? session.getCompletedChunks() : 0;
+        double pct = total > 0 ? (completed * 100.0 / total) : 0.0;
 
         return DownloadProgressResponse.builder()
                 .downloadId(downloadId)
                 .fileName(file.getName())
-                .totalChunks(chunks.size())
-                .completedChunks(chunks.size())
-                .progressPercent(100.0)
+                .totalChunks(total)
+                .completedChunks(completed)
+                .progressPercent(pct)
                 .status(session.getStatus().name())
                 .build();
     }

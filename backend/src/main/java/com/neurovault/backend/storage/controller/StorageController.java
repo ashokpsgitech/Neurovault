@@ -1,6 +1,7 @@
 package com.neurovault.backend.storage.controller;
 
 import com.neurovault.backend.entity.User;
+import com.neurovault.backend.exception.BadRequestException;
 import com.neurovault.backend.exception.ResourceNotFoundException;
 import com.neurovault.backend.host.dto.HostStatusDto;
 import com.neurovault.backend.host.service.HostRegistrationService;
@@ -177,6 +178,6 @@ public class StorageController {
                 return hosts.get(0).getHostId();
             }
         }
-        throw new ResourceNotFoundException("No host ID provided and no registered host found for user");
+        throw new BadRequestException("No hostId provided and no registered host found for user. Please include hostId parameter.");
     }
 }

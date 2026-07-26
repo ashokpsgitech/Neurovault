@@ -1,5 +1,6 @@
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
+import '../../../core/utils/debug_log_service.dart';
 import '../models/host_info_model.dart';
 
 /// Network service performing REST HTTP calls to Spring Boot Coordinator /api/host/* and /api/storage/* endpoints.
@@ -55,7 +56,8 @@ class HostService {
     try {
       final response = await _dioClient.dio.get(ApiConstants.hostStatus);
       return HostInfoModel.fromJson(response.data);
-    } catch (_) {
+    } catch (e, st) {
+      DebugLogService().error('[HostService] getHostStatus error: $e', e, st);
       return null;
     }
   }

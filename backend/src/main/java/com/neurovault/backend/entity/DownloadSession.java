@@ -32,6 +32,13 @@ public class DownloadSession {
     @Column(nullable = false, length = 20)
     private Status status;
 
+    @Column(name = "total_chunks")
+    private Integer totalChunks;
+
+    @Column(name = "completed_chunks")
+    @Builder.Default
+    private Integer completedChunks = 0;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

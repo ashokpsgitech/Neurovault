@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:pointycastle/export.dart';
 
 /// Client-Side Cryptographic Engine for NeuroVault.
 /// Implements Zero-Trust AES-256-GCM symmetric payload encryption,
-/// SHA-256 integrity verification, and key derivation.
+/// SHA-256 integrity verification, and secure key derivation.
 class CryptoEngine {
   /// Calculates SHA-256 checksum hex string for chunk payload validation.
   static String calculateSha256(List<int> bytes) {
@@ -12,35 +14,41 @@ class CryptoEngine {
     return digest.toString();
   }
 
-  /// Generates a random 256-bit (32 byte) symmetric AES encryption key.
+  /// Generates a random 256-bit (32 byte) symmetric AES encryption key using CSPRNG.
   static Uint8List generateSymmetricKey() {
-    final key = Uint8List(32);
-    final now = DateTime.now().microsecondsSinceEpoch;
-    for (int i = 0; i < 32; i++) {
-      key[i] = (now + i * 37) % 256;
-    }
-    return key;
+    final random = Random.secure();
+    return Uint8List.fromList(List<int>.generate(32, (_) => random.nextInt(256)));
   }
 
-  /// Encrypts a 4MB chunk payload using AES-256 CTR/GCM stream cipher logic.
+  /// Encrypts a chunk payload using AES-256-GCM with CSPRNG nonce.
+  /// Result format: [12-byte Nonce] + [Ciphertext + 16-byte Auth Tag MAC]
   static Uint8List encryptChunk(Uint8List plainBytes, Uint8List key, int chunkIndex) {
-    final iv = Uint8List(12);
-    final ivBase = utf8.encode('NV-IV-$chunkIndex');
-    for (int i = 0; i < 12; i++) {
-      iv[i] = (ivBase[i % ivBase.length] + i) % 256;
-    }
+    final random = Random.secure();
+    final nonce = Uint8List.fromList(List<int>.generate(12, (_) => random.nextInt(256)));
 
-    final encrypted = Uint8List(plainBytes.length);
-    for (int i = 0; i < plainBytes.length; i++) {
-      final keyByte = key[i % key.length];
-      final ivByte = iv[i % iv.length];
-      encrypted[i] = plainBytes[i] ^ keyByte ^ ivByte;
-    }
-    return encrypted;
+    final cipher = GCMBlockCipher(AESEngine());
+    cipher.init(true, AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)));
+
+    final out = cipher.process(plainBytes);
+
+    final result = Uint8List(12 + out.length);
+    result.setAll(0, nonce);
+    result.setAll(12, out);
+    return result;
   }
 
-  /// Decrypts an encrypted 4MB chunk payload back to raw unencrypted bytes.
+  /// Decrypts an encrypted chunk payload back to raw unencrypted bytes using AES-256-GCM.
   static Uint8List decryptChunk(Uint8List encryptedBytes, Uint8List key, int chunkIndex) {
-    return encryptChunk(encryptedBytes, key, chunkIndex);
+    if (encryptedBytes.length < 12 + 16) {
+      throw Exception('Invalid encrypted payload size for AES-GCM decryption');
+    }
+    final nonce = encryptedBytes.sublist(0, 12);
+    final cipherTextWithTag = encryptedBytes.sublist(12);
+
+    final cipher = GCMBlockCipher(AESEngine());
+    cipher.init(false, AEADParameters(KeyParameter(key), 128, nonce, Uint8List(0)));
+
+    return cipher.process(cipherTextWithTag);
   }
 }
+

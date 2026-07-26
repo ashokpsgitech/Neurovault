@@ -6,6 +6,8 @@ import '../../../core/constants/api_constants.dart';
 import '../../../core/network/dio_client.dart';
 import '../models/file_metadata_model.dart';
 
+import '../../../core/utils/debug_log_service.dart';
+
 /// Network service handling REST requests to Coordinator & Storage Host nodes.
 class FileService {
   final DioClient _dioClient;
@@ -45,9 +47,18 @@ class FileService {
 
     try {
       await _dioClient.dio.post(targetUrl, data: payload);
-    } catch (_) {
-      // Fallback to local storage endpoint if direct host URL fails
-      await _dioClient.dio.post(ApiConstants.storeChunk, data: payload);
+    } catch (primaryError) {
+      DebugLogService().warn(
+        '[FileService] Primary host upload failed ($targetUrl): $primaryError. Falling back to storage endpoint.'
+      );
+      try {
+        await _dioClient.dio.post(ApiConstants.storeChunk, data: payload);
+      } catch (fallbackError) {
+        DebugLogService().error('[FileService] Fallback chunk upload failed: $fallbackError');
+        throw Exception(
+          'Chunk upload failed on both primary host ($primaryError) and fallback ($fallbackError)'
+        );
+      }
     }
   }
 

@@ -134,13 +134,13 @@ class FileRepository extends BaseRepository {
       try {
         symmetricKey = base64Decode(encryptedAesKey);
         _logger.info('[FileRepository] AES key decoded successfully.');
-      } catch (e) {
-        _logger.warn('[FileRepository] AES key decode failed, generating fallback key: $e');
-        symmetricKey = CryptoEngine.generateSymmetricKey();
+      } catch (e, st) {
+        _logger.error('[FileRepository] AES key base64 decode failed: $e', e, st);
+        throw Exception('Failed to decode AES encryption key: $e');
       }
     } else {
-      _logger.warn('[FileRepository] AES key is empty, generating fallback key.');
-      symmetricKey = CryptoEngine.generateSymmetricKey();
+      _logger.error('[FileRepository] AES key is empty — file cannot be decrypted.');
+      throw Exception('Encryption key missing in file metadata.');
     }
 
     Uint8List decryptedBytes;
@@ -148,8 +148,8 @@ class FileRepository extends BaseRepository {
       decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, 0);
       _logger.info('[FileRepository] Decryption done. Decrypted size: ${decryptedBytes.length} bytes');
     } catch (e, st) {
-      _logger.error('[FileRepository] DECRYPTION ERROR (returning raw bytes): $e', e, st);
-      decryptedBytes = encryptedBytes;
+      _logger.error('[FileRepository] DECRYPTION FAILED: $e', e, st);
+      throw Exception('Failed to decrypt file payload: $e');
     }
 
     onProgress(PipelineProgress(

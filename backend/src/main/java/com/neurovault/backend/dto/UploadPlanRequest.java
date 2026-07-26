@@ -1,6 +1,10 @@
 package com.neurovault.backend.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.neurovault.backend.exception.BadRequestException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,17 +20,23 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UploadPlanRequest {
 
+    @NotBlank(message = "filename is required")
     @JsonAlias({"filename", "name"})
     private String filename;
 
+    @NotNull(message = "fileSize is required")
+    @Min(value = 1, message = "fileSize must be at least 1 byte")
     @JsonAlias({"fileSize", "sizeBytes", "size"})
     private Long fileSize;
 
+    @NotNull(message = "totalChunks is required")
+    @Min(value = 1, message = "totalChunks must be at least 1")
     @JsonAlias({"totalChunks", "chunkCount", "chunks"})
     private Integer totalChunks;
 
     private String mimeType;
 
+    @NotBlank(message = "checksum is required")
     @JsonAlias({"checksum", "sha256Checksum", "fileChecksum"})
     private String checksum;
 
@@ -43,6 +53,10 @@ public class UploadPlanRequest {
     }
 
     public String getChecksum() {
-        return (checksum != null && !checksum.isBlank()) ? checksum : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+        if (checksum == null || checksum.isBlank()) {
+            throw new BadRequestException("File checksum (sha256) is required");
+        }
+        return checksum;
     }
 }
+
