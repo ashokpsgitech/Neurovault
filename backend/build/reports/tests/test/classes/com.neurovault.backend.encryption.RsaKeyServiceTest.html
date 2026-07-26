@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">6.909s</div>
+<div class="counter">6.332s</div>
 <p>duration</p>
 </div>
 </td>
@@ -81,31 +81,31 @@
 <tr>
 <td class="success">encodePublicKey/encodePrivateKey should produce non-empty Base64 strings</td>
 <td class="success">testEncodeKeys()</td>
-<td class="success">0.763s</td>
+<td class="success">0.352s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">generateKeyPair() should produce a valid RSA-4096 key pair</td>
 <td class="success">testGenerateKeyPair()</td>
-<td class="success">1.970s</td>
+<td class="success">1.798s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">unwrapping with wrong private key should fail</td>
 <td class="success">testUnwrap_WrongPrivateKey_Fails()</td>
-<td class="success">1.227s</td>
+<td class="success">1.239s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">wrapping same key twice should produce different wrapped values</td>
 <td class="success">testWrapKey_ProducesDifferentOutputs()</td>
-<td class="success">2.027s</td>
+<td class="success">1.489s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">wrapKey/unwrapKey round-trip should recover original AES key</td>
 <td class="success">testWrapUnwrap_RoundTrip()</td>
-<td class="success">0.922s</td>
+<td class="success">1.454s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -113,17 +113,17 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-07-26T13:52:03.990+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:03.993+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
-2026-07-26T13:52:04.005+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Unwrapped AES key successfully
-2026-07-26T13:52:04.883+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:05.208+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:05.209+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
-2026-07-26T13:52:05.994+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:07.966+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:09.991+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
-2026-07-26T13:52:09.992+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
-2026-07-26T13:52:09.992+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
+<pre>2026-07-26T15:06:00.031+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:00.036+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
+2026-07-26T15:06:00.053+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Unwrapped AES key successfully
+2026-07-26T15:06:00.488+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:01.292+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:01.293+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
+2026-07-26T15:06:01.645+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:03.445+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:04.932+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Generated RSA-4096 key pair
+2026-07-26T15:06:04.933+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
+2026-07-26T15:06:04.934+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.RsaKeyService     : Wrapped AES key (512 bytes wrapped -&gt; 684 chars Base64)
 </pre>
 </span>
 </div>
@@ -135,7 +135,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 1:52:19 pm</p>
+<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 3:06:18 pm</p>
 </div>
 </div>
 </body>

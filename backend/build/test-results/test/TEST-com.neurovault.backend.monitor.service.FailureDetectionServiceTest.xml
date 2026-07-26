@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-07-26T08:22:13" hostname="ASHOK" time="0.059">
+<testsuite name="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-07-26T09:36:09" hostname="ASHOK" time="0.066">
   <properties/>
-  <testcase name="testDetectFailures_HostOffline_And_Deduplication()" classname="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" time="0.038"/>
-  <testcase name="testDetectFailures_DiskFull()" classname="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" time="0.021"/>
-  <system-out><![CDATA[2026-07-26T13:52:12.324+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.monitor.service.FailureDetectionServiceTest]: FailureDetectionServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-07-26T13:52:12.326+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.monitor.service.FailureDetectionServiceTest
+  <testcase name="testDetectFailures_HostOffline_And_Deduplication()" classname="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" time="0.045"/>
+  <testcase name="testDetectFailures_DiskFull()" classname="com.neurovault.backend.monitor.service.FailureDetectionServiceTest" time="0.02"/>
+  <system-out><![CDATA[2026-07-26T15:06:08.505+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.monitor.service.FailureDetectionServiceTest]: FailureDetectionServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-26T15:06:08.507+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.monitor.service.FailureDetectionServiceTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -15,50 +15,50 @@
 
  :: Spring Boot ::                (v3.3.1)
 
-2026-07-26T13:52:12.349+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Starting FailureDetectionServiceTest using Java 21.0.11 with PID 16592 (started by ashok in D:\Project\micro server\backend)
-2026-07-26T13:52:12.349+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Running with Spring Boot v3.3.1, Spring v6.1.10
-2026-07-26T13:52:12.349+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : The following 1 profile is active: "test"
-2026-07-26T13:52:12.503+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-07-26T13:52:12.524+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 20 ms. Found 10 JPA repository interfaces.
-2026-07-26T13:52:12.587+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-07-26T13:52:12.590+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-07-26T13:52:12.597+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-07-26T13:52:12.598+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-7 - Starting...
-2026-07-26T13:52:12.600+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-7 - Added connection conn60: url=jdbc:h2:mem:testdb_failuredetect user=SA
-2026-07-26T13:52:12.601+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-7 - Start completed.
-2026-07-26T13:52:12.601+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-07-26T13:52:12.746+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-07-26T13:52:12.767+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-07-26T13:52:12.822+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2026-07-26T13:52:12.834+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
-2026-07-26T13:52:12.949+05:30  WARN 16592 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-07-26T13:52:13.072+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Started FailureDetectionServiceTest in 0.744 seconds (process running for 25.041)
-2026-07-26T13:52:13.072+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
-2026-07-26T13:52:13.077+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
-2026-07-26T13:52:13.078+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
-2026-07-26T13:52:13.078+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
-2026-07-26T13:52:13.079+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T13:52:13.082+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
-2026-07-26T13:52:13.082+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T13:52:13.082+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
-2026-07-26T13:52:13.085+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T13:52:13.085+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
-2026-07-26T13:52:13.085+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T13:52:13.087+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
-2026-07-26T13:52:13.087+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
-2026-07-26T13:52:13.090+05:30 DEBUG 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
-2026-07-26T13:52:13.097+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
-2026-07-26T13:52:13.097+05:30  INFO 16592 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
-2026-07-26T13:52:13.099+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
-2026-07-26T13:52:13.102+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HOST_OFFLINE, hostId=9f16f8bb-decc-4a68-b7fa-3fda8fb85b3c, chunkId=null, message='Host FailHost is OFFLINE', time=2026-07-26T13:52:13.102398800}
-2026-07-26T13:52:13.103+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 1 new events published
-2026-07-26T13:52:13.104+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T13:52:13.111+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
-2026-07-26T13:52:13.111+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T13:52:13.122+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T13:52:13.132+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
-2026-07-26T13:52:13.132+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=DISK_FULL, hostId=bd2937d7-afe5-4f94-80bf-27602500edd7, chunkId=null, message='Host DiskFullHost disk is FULL', time=2026-07-26T13:52:13.132409600}
-2026-07-26T13:52:13.132+05:30  INFO 16592 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 1 new events published
+2026-07-26T15:06:08.547+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Starting FailureDetectionServiceTest using Java 21.0.11 with PID 29468 (started by ashok in D:\Project\micro server\backend)
+2026-07-26T15:06:08.548+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-07-26T15:06:08.548+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : The following 1 profile is active: "test"
+2026-07-26T15:06:08.816+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-07-26T15:06:08.840+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 24 ms. Found 10 JPA repository interfaces.
+2026-07-26T15:06:08.936+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-07-26T15:06:08.940+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-07-26T15:06:08.955+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-07-26T15:06:08.956+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-7 - Starting...
+2026-07-26T15:06:08.961+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-7 - Added connection conn60: url=jdbc:h2:mem:testdb_failuredetect user=SA
+2026-07-26T15:06:08.962+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-7 - Start completed.
+2026-07-26T15:06:08.962+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-07-26T15:06:09.228+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-07-26T15:06:09.275+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-07-26T15:06:09.347+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-07-26T15:06:09.348+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-07-26T15:06:09.684+05:30  WARN 29468 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-07-26T15:06:09.849+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-07-26T15:06:09.850+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.s.FailureDetectionServiceTest    : Started FailureDetectionServiceTest in 1.338 seconds (process running for 26.91)
+2026-07-26T15:06:09.854+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-07-26T15:06:09.854+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-07-26T15:06:09.854+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-07-26T15:06:09.857+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T15:06:09.860+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-07-26T15:06:09.860+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T15:06:09.860+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-07-26T15:06:09.864+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-07-26T15:06:09.864+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-07-26T15:06:09.866+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-07-26T15:06:09.866+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-07-26T15:06:09.866+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T15:06:09.868+05:30 DEBUG 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-07-26T15:06:09.875+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-07-26T15:06:09.876+05:30  INFO 29468 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-07-26T15:06:09.881+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
+2026-07-26T15:06:09.885+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HOST_OFFLINE, hostId=7524772a-eb21-4755-b98f-0ff488cecade, chunkId=null, message='Host FailHost is OFFLINE', time=2026-07-26T15:06:09.885012500}
+2026-07-26T15:06:09.885+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 1 new events published
+2026-07-26T15:06:09.886+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T15:06:09.896+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
+2026-07-26T15:06:09.896+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-07-26T15:06:09.907+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-07-26T15:06:09.917+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/1 hosts healthy
+2026-07-26T15:06:09.917+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=DISK_FULL, hostId=7154cc6d-9792-4a06-92e6-2cd5eccc21c9, chunkId=null, message='Host DiskFullHost disk is FULL', time=2026-07-26T15:06:09.917011900}
+2026-07-26T15:06:09.917+05:30  INFO 29468 --- [neurovault-backend] [    Test worker] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 1 new events published
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

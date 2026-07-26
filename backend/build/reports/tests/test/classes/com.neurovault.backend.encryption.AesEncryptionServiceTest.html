@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.341s</div>
+<div class="counter">0.335s</div>
 <p>duration</p>
 </div>
 </td>
@@ -81,43 +81,43 @@
 <tr>
 <td class="success">decrypting with wrong key should throw exception</td>
 <td class="success">testDecrypt_WrongKey_Fails()</td>
-<td class="success">0.002s</td>
+<td class="success">0.004s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">encryptBytes/decryptBytes convenience methods should work</td>
 <td class="success">testEncryptDecryptBytes()</td>
-<td class="success">0.011s</td>
+<td class="success">0.014s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">encrypting empty data should work correctly</td>
 <td class="success">testEncryptDecrypt_EmptyData()</td>
-<td class="success">0.004s</td>
+<td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">encrypt/decrypt round-trip for large file (&gt;4MB) should recover original data</td>
 <td class="success">testEncryptDecrypt_LargeFile()</td>
-<td class="success">0.320s</td>
+<td class="success">0.310s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">encrypt/decrypt round-trip for small file should recover original data</td>
 <td class="success">testEncryptDecrypt_SmallFile()</td>
-<td class="success">0.001s</td>
+<td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">encrypting same plaintext twice should produce different ciphertexts (random IV)</td>
 <td class="success">testEncrypt_ProducesDifferentCiphertext()</td>
-<td class="success">0.002s</td>
+<td class="success">0.001s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">generateKey() should produce a valid AES-256 key</td>
 <td class="success">testGenerateKey()</td>
-<td class="success">0.001s</td>
+<td class="success">0.002s</td>
 <td class="success">passed</td>
 </tr>
 </table>
@@ -125,17 +125,17 @@
 <div id="tab1" class="tab">
 <h2>Standard output</h2>
 <span class="code">
-<pre>2026-07-26T13:52:02.696+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 23 bytes of plaintext (hash=b134349ff8577decdd663ba8053ba3b96215d244abffda20fbb574ed30b3988a)
-2026-07-26T13:52:02.697+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 39 bytes of ciphertext to 23 bytes of plaintext
-2026-07-26T13:52:02.699+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 0 bytes of plaintext (hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)
-2026-07-26T13:52:02.700+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 16 bytes of ciphertext to 0 bytes of plaintext
-2026-07-26T13:52:02.703+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 25 bytes of plaintext (hash=bfa63a8d9c04f2d0569b796bc17d7e03c965e5485647944518c610f27f304fa1)
-2026-07-26T13:52:02.703+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 25 bytes of plaintext (hash=bfa63a8d9c04f2d0569b796bc17d7e03c965e5485647944518c610f27f304fa1)
-2026-07-26T13:52:02.927+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 5242880 bytes of plaintext (hash=ba0c6921a1cfcbbc79de31f15a30d7e6a1f86790997ca88a64899eb22dbe1c27)
-2026-07-26T13:52:03.015+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 5242896 bytes of ciphertext to 5242880 bytes of plaintext
-2026-07-26T13:52:03.027+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 11 bytes of plaintext (hash=8155226402aa3249691e8059f632b70e69774b647f8a0bce8a4142b8d391c5b8)
-2026-07-26T13:52:03.030+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 39 bytes of plaintext (hash=f9e987bdae961c5c6a17a381793afe7743a162cbebcf0289f0fcb80115ef0a2c)
-2026-07-26T13:52:03.030+05:30 DEBUG 16592 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 55 bytes of ciphertext to 39 bytes of plaintext
+<pre>2026-07-26T15:05:58.202+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 23 bytes of plaintext (hash=b134349ff8577decdd663ba8053ba3b96215d244abffda20fbb574ed30b3988a)
+2026-07-26T15:05:58.202+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 39 bytes of ciphertext to 23 bytes of plaintext
+2026-07-26T15:05:58.205+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 0 bytes of plaintext (hash=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855)
+2026-07-26T15:05:58.206+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 16 bytes of ciphertext to 0 bytes of plaintext
+2026-07-26T15:05:58.208+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 25 bytes of plaintext (hash=bfa63a8d9c04f2d0569b796bc17d7e03c965e5485647944518c610f27f304fa1)
+2026-07-26T15:05:58.208+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 25 bytes of plaintext (hash=bfa63a8d9c04f2d0569b796bc17d7e03c965e5485647944518c610f27f304fa1)
+2026-07-26T15:05:58.381+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 5242880 bytes of plaintext (hash=ba0c6921a1cfcbbc79de31f15a30d7e6a1f86790997ca88a64899eb22dbe1c27)
+2026-07-26T15:05:58.506+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 5242896 bytes of ciphertext to 5242880 bytes of plaintext
+2026-07-26T15:05:58.525+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 11 bytes of plaintext (hash=8155226402aa3249691e8059f632b70e69774b647f8a0bce8a4142b8d391c5b8)
+2026-07-26T15:05:58.528+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Encrypted 39 bytes of plaintext (hash=f9e987bdae961c5c6a17a381793afe7743a162cbebcf0289f0fcb80115ef0a2c)
+2026-07-26T15:05:58.529+05:30 DEBUG 29468 --- [neurovault-backend] [    Test worker] c.n.b.encryption.AesEncryptionService    : Decrypted 55 bytes of ciphertext to 39 bytes of plaintext
 </pre>
 </span>
 </div>
@@ -147,7 +147,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 1:52:19 pm</p>
+<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 3:06:18 pm</p>
 </div>
 </div>
 </body>

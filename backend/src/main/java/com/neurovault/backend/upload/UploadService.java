@@ -67,7 +67,7 @@ public class UploadService {
         log.info("Creating upload plan for file '{}' ({} bytes, {} chunks) for user {}",
                 request.getFilename(), request.getFileSize(), request.getTotalChunks(), user.getId());
 
-        List<Host> targetHosts = coordinatorService.selectTargetHosts(request.getTotalChunks());
+        List<Host> targetHosts = coordinatorService.selectTargetHostsForUserAndMode(request.getTotalChunks(), user.getId(), null);
         if (targetHosts.isEmpty()) {
             targetHosts = hostRepository.findAll();
         }

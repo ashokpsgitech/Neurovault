@@ -36,6 +36,13 @@ public interface HostSelectionStrategy {
     List<Host> selectHosts(int count, long chunkSizeBytes, Set<UUID> excludeHostIds);
 
     /**
+     * Selects candidate hosts enforcing user ownership and Public vs Private Mode constraints.
+     */
+    default List<Host> selectHostsForUserAndMode(int count, long chunkSizeBytes, Set<UUID> excludeHostIds, UUID userId, Host.Mode mode) {
+        return selectHosts(count, chunkSizeBytes, excludeHostIds);
+    }
+
+    /**
      * Returns a human-readable name for this strategy (e.g., "WeightedScore").
      *
      * @return strategy name

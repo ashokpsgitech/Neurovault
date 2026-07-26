@@ -69,8 +69,13 @@ public class WeightedScoreHostSelectionStrategy implements HostSelectionStrategy
 
     @Override
     public List<Host> selectHosts(int count, long chunkSizeBytes, Set<UUID> excludeHostIds) {
-        log.debug("Selecting {} hosts for chunk of {} bytes, excluding {}",
-                count, chunkSizeBytes, excludeHostIds);
+        return selectHostsForUserAndMode(count, chunkSizeBytes, excludeHostIds, null, null);
+    }
+
+    @Override
+    public List<Host> selectHostsForUserAndMode(int count, long chunkSizeBytes, Set<UUID> excludeHostIds, UUID userId, Host.Mode mode) {
+        log.debug("Selecting {} hosts for chunk of {} bytes (user={}, mode={}), excluding {}",
+                count, chunkSizeBytes, userId, mode, excludeHostIds);
 
         List<Host> allHosts = hostRepository.findAll();
         LocalDateTime now = LocalDateTime.now();
@@ -83,6 +88,12 @@ public class WeightedScoreHostSelectionStrategy implements HostSelectionStrategy
                 .filter(host -> isHeartbeatRecent(host, heartbeatCutoff))
                 .filter(host -> hasActiveContainer(host))
                 .filter(host -> getAvailableCapacity(host) >= chunkSizeBytes)
+                .filter(host -> {
+                    if (mode == Host.Mode.PRIVATE && userId != null) {
+                        return host.getOwner() != null && userId.equals(host.getOwner().getId());
+                    }
+                    return true;
+                })
                 .collect(Collectors.toList());
 
         log.debug("Found {} eligible candidates from {} total hosts",

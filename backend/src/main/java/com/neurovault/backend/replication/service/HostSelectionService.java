@@ -48,8 +48,12 @@ public class HostSelectionService {
      * @throws InsufficientHostsException if not enough eligible hosts are available
      */
     public List<Host> selectHostsForChunk(UUID chunkId, int replicaCount) {
-        log.info("Selecting {} hosts for chunk {} using strategy '{}'",
-                replicaCount, chunkId, selectionStrategy.getStrategyName());
+        return selectHostsForChunk(chunkId, replicaCount, null, null);
+    }
+
+    public List<Host> selectHostsForChunk(UUID chunkId, int replicaCount, UUID userId, Host.Mode mode) {
+        log.info("Selecting {} hosts for chunk {} (user={}, mode={}) using strategy '{}'",
+                replicaCount, chunkId, userId, mode, selectionStrategy.getStrategyName());
 
         long chunkSizeBytes = chunkRepository.findById(chunkId)
                 .map(chunk -> chunk.getSizeBytes())
@@ -61,8 +65,8 @@ public class HostSelectionService {
                 .map(replica -> replica.getHost().getId())
                 .collect(Collectors.toSet());
 
-        List<Host> selected = selectionStrategy.selectHosts(
-                replicaCount, chunkSizeBytes, existingHostIds);
+        List<Host> selected = selectionStrategy.selectHostsForUserAndMode(
+                replicaCount, chunkSizeBytes, existingHostIds, userId, mode);
 
         if (selected.size() < replicaCount) {
             log.warn("Only {} hosts available out of {} required for chunk {}",

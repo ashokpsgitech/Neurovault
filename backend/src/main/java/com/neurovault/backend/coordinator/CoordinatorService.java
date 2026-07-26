@@ -43,8 +43,15 @@ public class CoordinatorService {
      * @return list of active online hosts
      */
     public List<Host> selectTargetHosts(int totalChunks) {
-        List<Host> selected = hostSelectionStrategy.selectHosts(
-                totalChunks, 4194304L, Collections.emptySet());
+        return selectTargetHostsForUserAndMode(totalChunks, null, null);
+    }
+
+    /**
+     * Selects target hosts enforcing user ownership (for Private mode) and Public mode availability.
+     */
+    public List<Host> selectTargetHostsForUserAndMode(int totalChunks, UUID userId, Host.Mode mode) {
+        List<Host> selected = hostSelectionStrategy.selectHostsForUserAndMode(
+                totalChunks, 4194304L, Collections.emptySet(), userId, mode);
 
         if (selected.isEmpty()) {
             List<Host> onlineHosts = hostRepository.findAll().stream()
@@ -61,8 +68,8 @@ public class CoordinatorService {
         if (selected.isEmpty()) {
             log.warn("No hosts found in database; returning empty selection for default localhost fallback");
         } else {
-            log.info("Selected {} target host nodes using strategy '{}' for {} chunk allocations",
-                    selected.size(), hostSelectionStrategy.getStrategyName(), totalChunks);
+            log.info("Selected {} target host nodes using strategy '{}' for {} chunk allocations (user={}, mode={})",
+                    selected.size(), hostSelectionStrategy.getStrategyName(), totalChunks, userId, mode);
         }
         return selected;
     }
