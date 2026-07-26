@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../providers/core_providers.dart';
 import '../../../widgets/custom_snackbar.dart';
+import '../../../widgets/debug_console_modal.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../models/dashboard_stats_model.dart';
 import '../providers/dashboard_provider.dart';
@@ -45,6 +46,11 @@ class DashboardScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined, color: Colors.orange),
+            tooltip: 'In-App Debug Logs',
+            onPressed: () => DebugConsoleModal.show(context),
+          ),
           IconButton(
             icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
             tooltip: 'Toggle Theme',

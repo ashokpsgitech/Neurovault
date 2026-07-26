@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/utils/file_download_helper.dart';
 import '../../../widgets/custom_snackbar.dart';
+import '../../../widgets/debug_console_modal.dart';
 import '../models/file_metadata_model.dart';
 import '../models/progress_model.dart';
 import '../providers/file_provider.dart';
@@ -107,6 +108,11 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
       appBar: AppBar(
         title: const Text('Encrypted Vault Files', style: TextStyle(fontWeight: FontWeight.bold)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined, color: Colors.orange),
+            tooltip: 'In-App Debug Logs',
+            onPressed: () => DebugConsoleModal.show(context),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh Vault',

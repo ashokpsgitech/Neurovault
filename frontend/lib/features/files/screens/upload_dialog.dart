@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../widgets/debug_console_modal.dart';
+
 /// Modal dialog for picking files, previewing 4MB chunking, and streaming encrypted uploads.
 class UploadDialog extends StatefulWidget {
   final Future<void> Function(String filename, Uint8List bytes) onUpload;
@@ -66,11 +68,16 @@ class _UploadDialogState extends State<UploadDialog> {
     final chunkCount = size > 0 ? (size / (4 * 1024 * 1024)).ceil() : 0;
 
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.cloud_upload_outlined),
-          SizedBox(width: 12),
-          Text('Upload File to Vault'),
+          const Icon(Icons.cloud_upload_outlined),
+          const SizedBox(width: 12),
+          const Expanded(child: Text('Upload File to Vault')),
+          IconButton(
+            icon: const Icon(Icons.bug_report_outlined, color: Colors.orange),
+            tooltip: 'View In-App Debug Logs',
+            onPressed: () => DebugConsoleModal.show(context),
+          ),
         ],
       ),
       content: SingleChildScrollView(
@@ -93,39 +100,47 @@ class _UploadDialogState extends State<UploadDialog> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: theme.colorScheme.error.withOpacity(0.5)),
                 ),
-                child: Row(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Upload Failed',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.error,
-                            ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.error_outline, color: theme.colorScheme.error, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Upload Failed',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.error,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _errorMessage!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onErrorContainer,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _errorMessage!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onErrorContainer,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Check Logcat / Flutter DevTools Console for full stack trace.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onErrorContainer.withOpacity(0.7),
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                        ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.bug_report_outlined, size: 16),
+                      label: const Text('Inspect Full In-App Debug Logs'),
+                      style: OutlinedButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        foregroundColor: theme.colorScheme.error,
+                        side: BorderSide(color: theme.colorScheme.error.withOpacity(0.5)),
                       ),
+                      onPressed: () => DebugConsoleModal.show(context),
                     ),
                   ],
                 ),

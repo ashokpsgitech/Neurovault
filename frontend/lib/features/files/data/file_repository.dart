@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'dart:developer' as dev;
 import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
 import '../../../core/firebase/firebase_service.dart';
+import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/file_metadata_model.dart';
 import '../models/progress_model.dart';
@@ -11,6 +11,7 @@ import '../models/progress_model.dart';
 /// Repository handling zero-trust AES-256 encryption, 24/7 Firebase storage, and metadata sync.
 class FileRepository extends BaseRepository {
   final FirebaseService _firebaseService;
+  final DebugLogService _logger = DebugLogService();
 
   FileRepository(this._firebaseService);
 
@@ -18,7 +19,7 @@ class FileRepository extends BaseRepository {
     try {
       return await _firebaseService.listUserFiles();
     } catch (e, st) {
-      dev.log('[FileRepository] listFiles error: $e', error: e, stackTrace: st);
+      _logger.error('[FileRepository] listFiles error: $e', e, st);
       return [];
     }
   }
@@ -29,7 +30,7 @@ class FileRepository extends BaseRepository {
     required Uint8List fileBytes,
     required void Function(PipelineProgress progress) onProgress,
   }) async {
-    dev.log('[FileRepository] uploadFile() START: $filename (${fileBytes.length} bytes)');
+    _logger.info('[FileRepository] uploadFile() START: $filename (${fileBytes.length} bytes)');
 
     // Step 1: Generate AES key and encrypt
     onProgress(PipelineProgress(
@@ -46,9 +47,9 @@ class FileRepository extends BaseRepository {
       final symmetricKey = CryptoEngine.generateSymmetricKey();
       encryptedBytes = CryptoEngine.encryptChunk(fileBytes, symmetricKey, 0);
       encodedKey = base64Encode(symmetricKey);
-      dev.log('[FileRepository] AES-256-GCM encryption done. Encrypted size: ${encryptedBytes.length} bytes');
+      _logger.info('[FileRepository] AES-256-GCM encryption done. Encrypted size: ${encryptedBytes.length} bytes');
     } catch (e, st) {
-      dev.log('[FileRepository] ENCRYPTION ERROR: $e', error: e, stackTrace: st);
+      _logger.error('[FileRepository] ENCRYPTION ERROR: $e', e, st);
       rethrow;
     }
 
@@ -63,15 +64,15 @@ class FileRepository extends BaseRepository {
 
     final FileItem uploadedItem;
     try {
-      dev.log('[FileRepository] Calling uploadEncryptedFile on FirebaseService...');
+      _logger.info('[FileRepository] Calling uploadEncryptedFile on FirebaseService...');
       uploadedItem = await _firebaseService.uploadEncryptedFile(
         filename: filename,
         fileBytes: encryptedBytes,
         aesKeyBase64: encodedKey,
       );
-      dev.log('[FileRepository] Upload SUCCESS. File ID: ${uploadedItem.id}');
+      _logger.info('[FileRepository] Upload SUCCESS. File ID: ${uploadedItem.id}');
     } catch (e, st) {
-      dev.log('[FileRepository] FIREBASE UPLOAD ERROR: $e', error: e, stackTrace: st);
+      _logger.error('[FileRepository] FIREBASE UPLOAD ERROR: $e', e, st);
       rethrow;
     }
 
@@ -91,7 +92,7 @@ class FileRepository extends BaseRepository {
     required FileItem fileItem,
     required void Function(PipelineProgress progress) onProgress,
   }) async {
-    dev.log('[FileRepository] downloadFile() START: ${fileItem.filename} (id: ${fileItem.id})');
+    _logger.info('[FileRepository] downloadFile() START: ${fileItem.filename} (id: ${fileItem.id})');
 
     onProgress(PipelineProgress(
       filename: fileItem.filename,
@@ -104,9 +105,9 @@ class FileRepository extends BaseRepository {
     Map<String, dynamic> cloudPayload;
     try {
       cloudPayload = await _firebaseService.downloadEncryptedFile(fileItem.id);
-      dev.log('[FileRepository] Download from Firebase OK.');
+      _logger.info('[FileRepository] Download from Firebase OK.');
     } catch (e, st) {
-      dev.log('[FileRepository] DOWNLOAD ERROR: $e', error: e, stackTrace: st);
+      _logger.error('[FileRepository] DOWNLOAD ERROR: $e', e, st);
       rethrow;
     }
 
@@ -125,22 +126,22 @@ class FileRepository extends BaseRepository {
     if (encryptedAesKey.isNotEmpty) {
       try {
         symmetricKey = base64Decode(encryptedAesKey);
-        dev.log('[FileRepository] AES key decoded successfully.');
+        _logger.info('[FileRepository] AES key decoded successfully.');
       } catch (e) {
-        dev.log('[FileRepository] AES key decode failed, generating fallback key: $e');
+        _logger.warn('[FileRepository] AES key decode failed, generating fallback key: $e');
         symmetricKey = CryptoEngine.generateSymmetricKey();
       }
     } else {
-      dev.log('[FileRepository] AES key is empty, generating fallback key.');
+      _logger.warn('[FileRepository] AES key is empty, generating fallback key.');
       symmetricKey = CryptoEngine.generateSymmetricKey();
     }
 
     Uint8List decryptedBytes;
     try {
       decryptedBytes = CryptoEngine.decryptChunk(encryptedBytes, symmetricKey, 0);
-      dev.log('[FileRepository] Decryption done. Decrypted size: ${decryptedBytes.length} bytes');
+      _logger.info('[FileRepository] Decryption done. Decrypted size: ${decryptedBytes.length} bytes');
     } catch (e, st) {
-      dev.log('[FileRepository] DECRYPTION ERROR (returning raw bytes): $e', error: e, stackTrace: st);
+      _logger.error('[FileRepository] DECRYPTION ERROR (returning raw bytes): $e', e, st);
       decryptedBytes = encryptedBytes;
     }
 

@@ -1,5 +1,5 @@
-import 'dart:developer' as dev;
 import 'dart:typed_data';
+import '../utils/debug_log_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -351,15 +351,19 @@ class FirebaseService {
     required String aesKeyBase64,
   }) async {
     final user = _auth.currentUser;
-    if (user == null) throw Exception('Not authenticated — please sign in before uploading');
+    if (user == null) {
+      const msg = 'Not authenticated — please sign in before uploading';
+      DebugLogService().error('[FirebaseService] $msg');
+      throw Exception(msg);
+    }
 
-    dev.log('[FirebaseService] uploadEncryptedFile: $filename (${fileBytes.length} bytes) for uid=${user.uid}');
+    DebugLogService().info('[FirebaseService] uploadEncryptedFile: $filename (${fileBytes.length} bytes) for uid=${user.uid}');
 
     final fileId = DateTime.now().millisecondsSinceEpoch.toString();
     final storagePath = 'users/${user.uid}/vault/$fileId/$filename.enc';
     final storageRef = _storage.ref().child(storagePath);
 
-    dev.log('[FirebaseService] Firebase Storage path: $storagePath');
+    DebugLogService().info('[FirebaseService] Firebase Storage path: $storagePath');
 
     String downloadUrl;
     try {
@@ -368,9 +372,9 @@ class FirebaseService {
         SettableMetadata(contentType: 'application/octet-stream'),
       );
       downloadUrl = await uploadTask.ref.getDownloadURL();
-      dev.log('[FirebaseService] Storage upload OK. Download URL obtained.');
-    } catch (e) {
-      dev.log('[FirebaseService] STORAGE UPLOAD FAILED: $e');
+      DebugLogService().info('[FirebaseService] Storage upload OK. Download URL obtained.');
+    } catch (e, st) {
+      DebugLogService().error('[FirebaseService] STORAGE UPLOAD FAILED: $e', e, st);
       if (e.toString().contains('unauthorized') || e.toString().contains('permission')) {
         throw Exception('Firebase Storage permission denied.\n'
             'Fix: Go to Firebase Console > Storage > Rules and set:\n'
@@ -395,7 +399,7 @@ class FirebaseService {
       'chunkCount': 1,
     };
 
-    dev.log('[FirebaseService] Writing Firestore metadata document for file: $fileId');
+    DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId');
     try {
       await _firestore
           .collection('users')
@@ -404,9 +408,9 @@ class FirebaseService {
           .doc(fileId)
           .set(fileDoc)
           .timeout(const Duration(seconds: 10));
-      dev.log('[FirebaseService] Firestore write OK.');
-    } catch (e) {
-      dev.log('[FirebaseService] FIRESTORE WRITE FAILED: $e');
+      DebugLogService().info('[FirebaseService] Firestore write OK.');
+    } catch (e, st) {
+      DebugLogService().error('[FirebaseService] FIRESTORE WRITE FAILED: $e', e, st);
       if (e.toString().contains('unavailable')) {
         throw Exception('Firestore unavailable.\nFix: Go to Firebase Console > Firestore Database > Create Database.');
       }
