@@ -356,13 +356,13 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (!isEnabled)
+            if (!isEnabled)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
                   ElevatedButton.icon(
                     icon: const Icon(Icons.add_to_drive_outlined),
-                    label: Text('Allocate ${_reservedGb.round()} GB Container & Activate Host'),
+                    label: Text('Allocate ${_reservedGb.round()} GB Container & Activate Host Node'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,
@@ -374,19 +374,25 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                         : () {
                             ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), _containerPath);
                           },
-                  )
-                else
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.power_settings_new_outlined, color: Colors.red),
-                    label: const Text('Deallocate & Disable Host Node', style: TextStyle(color: Colors.red)),
-                    onPressed: isLoading
-                        ? null
-                        : () {
-                            ref.read(hostProvider.notifier).disableHost();
-                          },
                   ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Colors.green, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Host node is allocated and active 24/7. Available to receive encrypted chunk allocations from clients.',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
