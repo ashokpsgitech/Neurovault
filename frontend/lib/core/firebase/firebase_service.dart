@@ -477,12 +477,14 @@ class FirebaseService {
 
             if (isSelfHost) {
               // Same device — write directly to local container file
+              final String chunkId = '${fileId}_chunk_$i';
               final String? hostContainerPath = targetHostDoc.data()['containerPath']?.toString();
               if (hostContainerPath != null && hostContainerPath.isNotEmpty) {
                 try {
                   await HostRepository().writeChunkToLocalContainer(
                     hostContainerPath,
                     Uint8List.fromList(chunkBytes),
+                    chunkId: chunkId,
                   );
                   DebugLogService().info('[FirebaseService] Stored chunk_$i (${chunkBytes.length} bytes) directly to self-host container at: $hostContainerPath');
                 } catch (e) {
@@ -706,6 +708,7 @@ class FirebaseService {
                   path,
                   chunkIndex,
                   sizeBytes,
+                  chunkId: chunkId,
                 );
                 if (localBytes != null && localBytes.isNotEmpty) {
                   chunkList.add(localBytes);

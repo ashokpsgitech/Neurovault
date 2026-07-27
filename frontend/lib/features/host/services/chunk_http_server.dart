@@ -109,7 +109,7 @@ class ChunkHttpServer {
     }
 
     try {
-      final bytes = await HostRepository().readChunkFromLocalContainer(path, chunkIndex, 0);
+      final bytes = await HostRepository().readChunkFromLocalContainer(path, chunkIndex, 0, chunkId: chunkId);
       if (bytes != null && bytes.isNotEmpty) {
         request.response
           ..statusCode = HttpStatus.ok
@@ -149,7 +149,7 @@ class ChunkHttpServer {
         return;
       }
 
-      await HostRepository().writeChunkToLocalContainer(path, Uint8List.fromList(bodyBytes));
+      await HostRepository().writeChunkToLocalContainer(path, Uint8List.fromList(bodyBytes), chunkId: chunkId);
       request.response
         ..statusCode = HttpStatus.ok
         ..headers.contentType = ContentType.json

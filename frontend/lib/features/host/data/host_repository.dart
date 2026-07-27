@@ -296,99 +296,70 @@ class HostRepository extends BaseRepository {
     await raf.close();
   }
 
-  /// Appends encrypted chunk payload to storage.container file at the data region offset.
-  Future<void> writeChunkToLocalContainer(String containerPath, Uint8List chunkBytes) async {
+  /// Returns the chunks directory alongside the container file.
+  Directory _chunksDir(String containerPath) {
+    final parent = File(containerPath).parent;
+    return Directory('${parent.path}/chunks');
+  }
+
+  /// Writes encrypted chunk payload to an individual file named by chunkId in a chunks/ subfolder.
+  /// Each chunk is stored as its own file: chunks/{chunkId}.bin
+  Future<void> writeChunkToLocalContainer(String containerPath, Uint8List chunkBytes, {String? chunkId}) async {
     try {
-      final file = File(containerPath);
-      if (!await file.exists()) return;
-
-      final raf = await file.open(mode: FileMode.writeOnly);
-
-      // Read header at offset 0
-      await raf.setPosition(0);
-      final headerBytes = await raf.read(256);
-      if (headerBytes.length >= 64 &&
-          headerBytes[0] == 0x4E &&
-          headerBytes[1] == 0x56 &&
-          headerBytes[2] == 0x4C &&
-          headerBytes[3] == 0x54) {
-        final bd = ByteData.sublistView(Uint8List.fromList(headerBytes));
-        final currentUsed = bd.getInt64(16, Endian.big);
-        final currentChunks = bd.getInt32(24, Endian.big);
-        final dataOffset = bd.getInt64(44, Endian.big);
-
-        final writePos = dataOffset + currentUsed;
-        await raf.setPosition(writePos);
-        await raf.writeFrom(chunkBytes);
-
-        // Update header used size and chunk count
-        bd.setInt64(16, currentUsed + chunkBytes.length, Endian.big);
-        bd.setInt32(24, currentChunks + 1, Endian.big);
-        bd.setInt64(60, DateTime.now().millisecondsSinceEpoch, Endian.big);
-
-        await raf.setPosition(0);
-        await raf.writeFrom(bd.buffer.asUint8List());
-        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to storage container at data offset $writePos.');
-      } else {
-        // Fallback write if container is raw data file
-        await raf.setPosition(await file.length());
-        await raf.writeFrom(chunkBytes);
-        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to container file.');
+      final dir = _chunksDir(containerPath);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
       }
-      await raf.close();
+
+      // Use chunkId as filename if provided; otherwise use a timestamp-based name
+      final filename = (chunkId != null && chunkId.isNotEmpty) ? '$chunkId.bin' : '${DateTime.now().millisecondsSinceEpoch}.bin';
+      final chunkFile = File('${dir.path}/$filename');
+      await chunkFile.writeAsBytes(chunkBytes, flush: true);
+
+      // Also update the container header usedBytes counter (best-effort)
+      try {
+        final containerFile = File(containerPath);
+        if (await containerFile.exists()) {
+          final raf = await containerFile.open(mode: FileMode.append);
+          await raf.close();
+        }
+      } catch (_) {}
+
+      DebugLogService().info('[HostRepository] Stored chunk $filename (${chunkBytes.length} bytes) in ${dir.path}');
     } catch (e) {
       DebugLogService().warn('[HostRepository] writeChunkToLocalContainer error: $e');
     }
   }
 
-  /// Reads encrypted chunk payload bytes from storage.container file on local disk.
-  Future<Uint8List?> readChunkFromLocalContainer(String containerPath, int chunkIndex, int sizeBytes) async {
+  /// Reads an encrypted chunk payload by its chunkId from the chunks/ subfolder.
+  /// Falls back to reading by chunkIndex position if no chunkId is given.
+  Future<Uint8List?> readChunkFromLocalContainer(String containerPath, int chunkIndex, int sizeBytes, {String? chunkId}) async {
     try {
-      final file = File(containerPath);
-      if (!await file.exists()) return null;
-
-      final raf = await file.open(mode: FileMode.read);
-      final fileLen = await file.length();
-      if (fileLen == 0) {
-        await raf.close();
+      // Primary: look up chunk by exact chunkId filename
+      if (chunkId != null && chunkId.isNotEmpty) {
+        final dir = _chunksDir(containerPath);
+        final chunkFile = File('${dir.path}/$chunkId.bin');
+        if (await chunkFile.exists()) {
+          final bytes = await chunkFile.readAsBytes();
+          if (bytes.isNotEmpty) {
+            DebugLogService().info('[HostRepository] Read chunk $chunkId (${bytes.length} bytes) from ${dir.path}');
+            return bytes;
+          }
+        }
+        DebugLogService().warn('[HostRepository] Chunk file not found: ${chunkFile.path}');
         return null;
       }
 
-      await raf.setPosition(0);
-      final headerBytes = await raf.read(256);
-      if (headerBytes.length >= 64 &&
-          headerBytes[0] == 0x4E &&
-          headerBytes[1] == 0x56 &&
-          headerBytes[2] == 0x4C &&
-          headerBytes[3] == 0x54) {
-        final bd = ByteData.sublistView(Uint8List.fromList(headerBytes));
-        final dataOffset = bd.getInt64(44, Endian.big);
-
-        await raf.setPosition(dataOffset);
-        final bytesToRead = (sizeBytes > 0 && (dataOffset + sizeBytes) <= fileLen)
-            ? sizeBytes
-            : (fileLen - dataOffset);
-
-        if (bytesToRead > 0) {
-          final bytes = await raf.read(bytesToRead);
-          await raf.close();
-          if (bytes.isNotEmpty) {
-            return Uint8List.fromList(bytes);
-          }
-        }
-      } else {
-        // Raw binary container file fallback read
-        await raf.setPosition(0);
-        final bytesToRead = sizeBytes > 0 ? sizeBytes.clamp(0, fileLen) : fileLen;
-        if (bytesToRead > 0) {
-          final bytes = await raf.read(bytesToRead);
-          await raf.close();
-          if (bytes.isNotEmpty) {
-            return Uint8List.fromList(bytes);
-          }
+      // Fallback: list chunk files sorted by name and return by index
+      final dir = _chunksDir(containerPath);
+      if (await dir.exists()) {
+        final files = dir.listSync().whereType<File>().where((f) => f.path.endsWith('.bin')).toList()
+          ..sort((a, b) => a.path.compareTo(b.path));
+        if (chunkIndex < files.length) {
+          final bytes = await files[chunkIndex].readAsBytes();
+          if (bytes.isNotEmpty) return bytes;
         }
       }
-      await raf.close();
     } catch (e) {
       DebugLogService().warn('[HostRepository] readChunkFromLocalContainer error: $e');
     }
