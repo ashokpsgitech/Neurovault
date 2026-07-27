@@ -86,6 +86,7 @@ class HostRepository extends BaseRepository {
     required double cpuUsagePercent,
     required double ramUsagePercent,
     required int usedCapacityBytes,
+    int? reservedStorageBytes,
   }) async {
     if (_service != null) {
       try {
@@ -100,13 +101,14 @@ class HostRepository extends BaseRepository {
       }
     }
 
-    // Always refresh lastSeen pulse in Cloud Firestore
+    // Always refresh lastSeen pulse and capacity in Cloud Firestore
     try {
       await _firebaseService.updateHostNodeStatus(
         hostId: hostId,
         hostname: 'Host-$hostId',
         status: 'ONLINE',
-        reservedStorageBytes: usedCapacityBytes,
+        reservedStorageBytes: reservedStorageBytes ?? (10 * 1024 * 1024 * 1024),
+        usedStorageBytes: usedCapacityBytes,
       );
     } catch (_) {}
   }
@@ -329,5 +331,43 @@ class HostRepository extends BaseRepository {
     } catch (e) {
       DebugLogService().warn('[HostRepository] writeChunkToLocalContainer error: $e');
     }
+  }
+
+  /// Reads encrypted chunk payload bytes from storage.container file on local disk.
+  Future<Uint8List?> readChunkFromLocalContainer(String containerPath, int chunkIndex, int sizeBytes) async {
+    try {
+      final file = File(containerPath);
+      if (!await file.exists()) return null;
+
+      final raf = await file.open(mode: FileMode.read);
+      await raf.setPosition(0);
+      final headerBytes = await raf.read(256);
+      if (headerBytes.length >= 64 &&
+          headerBytes[0] == 0x4E &&
+          headerBytes[1] == 0x56 &&
+          headerBytes[2] == 0x4C &&
+          headerBytes[3] == 0x54) {
+        final bd = ByteData.sublistView(Uint8List.fromList(headerBytes));
+        final dataOffset = bd.getInt64(44, Endian.big);
+
+        await raf.setPosition(dataOffset);
+        final fileLen = await file.length();
+        final bytesToRead = (sizeBytes > 0 && (dataOffset + sizeBytes) <= fileLen)
+            ? sizeBytes
+            : (fileLen - dataOffset);
+
+        if (bytesToRead > 0) {
+          final bytes = await raf.read(bytesToRead);
+          await raf.close();
+          if (bytes.isNotEmpty) {
+            return Uint8List.fromList(bytes);
+          }
+        }
+      }
+      await raf.close();
+    } catch (e) {
+      DebugLogService().warn('[HostRepository] readChunkFromLocalContainer error: $e');
+    }
+    return null;
   }
 }

@@ -170,6 +170,7 @@ class HostNotifier extends StateNotifier<HostState> {
           cpuUsagePercent: cpuLoad,
           ramUsagePercent: ramLoad,
           usedCapacityBytes: current.usedCapacityBytes,
+          reservedStorageBytes: current.reservedCapacityBytes,
         );
 
         if (mounted && state is HostEnabled) {

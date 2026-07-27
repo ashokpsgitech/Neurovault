@@ -602,34 +602,51 @@ class FirebaseService {
         final dio = Dio();
         for (final chunkDoc in chunksSnap.docs) {
           final chunkData = chunkDoc.data();
-          final String hostIp = chunkData['assignedHostIp']?.toString() ?? '127.0.0.1';
+          final String rawHostIp = chunkData['assignedHostIp']?.toString() ?? '127.0.0.1';
+          String hostIp = rawHostIp.trim();
+          if (hostIp.isEmpty ||
+              hostIp.contains(' ') ||
+              hostIp.toLowerCase().contains('lan') ||
+              hostIp.toLowerCase().contains('mesh')) {
+            hostIp = '127.0.0.1';
+          }
+
           final int chunkIndex = chunkData['chunkIndex'] ?? 0;
           final String chunkId = chunkData['chunkId']?.toString() ?? '${fileId}_chunk_$chunkIndex';
+          final int sizeBytes = chunkData['sizeBytes'] ?? 0;
 
-          final String hostUrl = hostIp != '127.0.0.1' && hostIp.isNotEmpty
+          final String hostUrl = (hostIp != '127.0.0.1' && hostIp != 'localhost')
               ? 'http://$hostIp:8080/api/storage/chunks/$chunkId'
-              : 'http://localhost:8080/api/storage/chunks/$chunkId';
+              : 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
 
+          bool chunkFetched = false;
           try {
             final response = await dio.get<List<int>>(
               hostUrl,
               options: Options(responseType: ResponseType.bytes),
-            ).timeout(const Duration(seconds: 10));
+            ).timeout(const Duration(seconds: 5));
 
             if (response.data != null && response.data!.isNotEmpty) {
               chunkList.add(Uint8List.fromList(response.data!));
+              chunkFetched = true;
               DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) directly from host container: $hostUrl');
             }
           } catch (e) {
-            DebugLogService().warn('[FirebaseService] Direct host container fetch failed for $hostUrl: $e. Attempting coordinator fallback.');
+            DebugLogService().warn('[FirebaseService] Direct host container fetch failed for $hostUrl: $e. Checking local container fallback.');
+          }
+
+          if (!chunkFetched) {
             try {
-              final fallbackUrl = 'http://localhost:8080/api/storage/chunks/$chunkId';
-              final response = await dio.get<List<int>>(
-                fallbackUrl,
-                options: Options(responseType: ResponseType.bytes),
-              ).timeout(const Duration(seconds: 10));
-              if (response.data != null && response.data!.isNotEmpty) {
-                chunkList.add(Uint8List.fromList(response.data!));
+              final containerPath = await HostRepository().getDefaultContainerPath();
+              final localBytes = await HostRepository().readChunkFromLocalContainer(
+                containerPath,
+                chunkIndex,
+                sizeBytes,
+              );
+              if (localBytes != null && localBytes.isNotEmpty) {
+                chunkList.add(localBytes);
+                chunkFetched = true;
+                DebugLogService().info('[FirebaseService] Retrieved chunk payload directly from local host container: $containerPath');
               }
             } catch (_) {}
           }
@@ -777,18 +794,43 @@ class FirebaseService {
     }
   }
 
+  Future<String> _getLocalIpAddress() async {
+    try {
+      final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
+      for (final interface in interfaces) {
+        final name = interface.name.toLowerCase();
+        if (name.contains('loopback') || name == 'lo') continue;
+        for (final addr in interface.addresses) {
+          if (!addr.isLoopback && addr.address.isNotEmpty && !addr.address.startsWith('127.')) {
+            return addr.address;
+          }
+        }
+      }
+    } catch (_) {}
+    return '127.0.0.1';
+  }
+
   /// Registers or updates a host node in Cloud Firestore for network-wide tracking.
   Future<void> updateHostNodeStatus({
     required String hostId,
     required String hostname,
     required String status,
     required int reservedStorageBytes,
+    int? usedStorageBytes,
     String? deviceType,
     String? publicIp,
   }) async {
     try {
       final user = _auth.currentUser;
-      await _firestore.collection('hosts').doc(hostId).set({
+      final String resolvedIp = (publicIp != null &&
+              publicIp.isNotEmpty &&
+              publicIp != '127.0.0.1' &&
+              !publicIp.contains(' ') &&
+              !publicIp.toLowerCase().contains('lan'))
+          ? publicIp
+          : await _getLocalIpAddress();
+
+      final Map<String, dynamic> updateData = {
         'id': hostId,
         'hostname': hostname,
         'status': status,
@@ -797,10 +839,16 @@ class FirebaseService {
         'ownerId': user?.uid ?? 'anonymous',
         'ownerEmail': user?.email ?? (user?.isAnonymous == true ? 'anonymous@neurovault.net' : 'Vault Host'),
         'deviceType': deviceType ?? (Platform.isAndroid ? 'Mobile - Android' : 'Desktop - Windows'),
-        'publicIp': publicIp ?? 'LAN/Cloud Mesh',
+        'publicIp': resolvedIp,
         'lastSeen': FieldValue.serverTimestamp(),
         'lastSeenIso': DateTime.now().toIso8601String(),
-      }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
+      };
+      if (usedStorageBytes != null) {
+        updateData['usedStorageBytes'] = usedStorageBytes;
+      }
+
+      await _firestore.collection('hosts').doc(hostId).set(updateData, SetOptions(merge: true))
+          .timeout(const Duration(seconds: 5));
     } catch (_) {}
   }
 
