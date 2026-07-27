@@ -699,7 +699,7 @@ class FirebaseService {
           lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
         }
 
-        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 3;
+        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inSeconds <= 10;
 
         if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
           if (!uniqueHostsByOwner.containsKey(ownerKey)) {
