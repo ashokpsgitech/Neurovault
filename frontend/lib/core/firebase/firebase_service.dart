@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
@@ -6,7 +5,6 @@ import '../utils/debug_log_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../firebase_options.dart';
@@ -15,7 +13,7 @@ import '../../features/files/models/file_metadata_model.dart';
 import '../crypto/file_chunker.dart';
 
 /// 24/7 Firebase Cloud Backend Service for NeuroVault.
-/// Provides Zero-Trust Cloud Storage, Authentication, and Firestore Metadata sync.
+/// Provides Authentication and Firestore Metadata sync for host chunk locations.
 class FirebaseService {
   static final FirebaseService _instance = FirebaseService._internal();
   factory FirebaseService() => _instance;
@@ -23,7 +21,6 @@ class FirebaseService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseStorage _storage = FirebaseStorage.instance;
 
   User? get currentUser => _auth.currentUser;
 
@@ -396,32 +393,12 @@ class FirebaseService {
     final calculatedChunkCount = dynamicChunks.length;
 
     final fileId = DateTime.now().millisecondsSinceEpoch.toString();
-    final storagePath = 'users/${user.uid}/vault/$fileId/$filename.enc';
-
-    String downloadUrl = '';
-    bool storageSucceeded = false;
-    try {
-      final storageRef = _storage.ref().child(storagePath);
-      final uploadTask = await storageRef.putData(
-        fileBytes,
-        SettableMetadata(contentType: 'application/octet-stream'),
-      );
-      downloadUrl = await uploadTask.ref.getDownloadURL();
-      storageSucceeded = true;
-      DebugLogService().info('[FirebaseService] Storage upload OK. Download URL obtained.');
-    } catch (e) {
-      DebugLogService().warn(
-        '[FirebaseService] Firebase Storage bucket unavailable ($e). Storing encrypted payload in Cloud Firestore document for 100% online sync.'
-      );
-    }
 
     final fileDoc = <String, dynamic>{
       'id': fileId,
       'filename': filename,
       'sizeBytes': fileBytes.length,
       'encryptedAesKey': aesKeyBase64,
-      'downloadUrl': downloadUrl,
-      'storagePath': storageSucceeded ? storagePath : '',
       'ownerId': user.uid,
       'createdAt': FieldValue.serverTimestamp(),
       'createdAtIso': DateTime.now().toIso8601String(),
@@ -438,9 +415,9 @@ class FirebaseService {
           .doc(fileId)
           .set(fileDoc)
           .timeout(const Duration(seconds: 10));
-      DebugLogService().info('[FirebaseService] Firestore file document write OK.');
+      DebugLogService().info('[FirebaseService] Firestore file metadata document write OK.');
 
-      // Store dynamic split chunks across active host container pool & record chunk distribution details for debugging
+      // Record chunk allocation metadata & host locations (NO raw payload bytes stored in Firestore or Firebase)
       for (int i = 0; i < dynamicChunks.length; i++) {
         final chunkBytes = dynamicChunks[i];
         final targetHostDoc = activeHostDocs.isNotEmpty ? activeHostDocs[i % activeHostDocs.length] : null;
@@ -452,7 +429,7 @@ class FirebaseService {
         final targetIp = targetHostData?['publicIp']?.toString() ?? '127.0.0.1';
 
         try {
-          // Record assigned host account and device details under client's file chunk document
+          // Record assigned host location metadata under client's file chunk document
           await _firestore
               .collection('users')
               .doc(user.uid)
@@ -461,6 +438,7 @@ class FirebaseService {
               .collection('chunks')
               .doc('chunk_$i')
               .set({
+            'chunkId': '${fileId}_chunk_$i',
             'chunkIndex': i,
             'sizeBytes': chunkBytes.length,
             'assignedHostId': targetHostId,
@@ -468,7 +446,6 @@ class FirebaseService {
             'assignedHostOwnerEmail': targetOwnerEmail,
             'assignedHostDevice': targetDevice,
             'assignedHostIp': targetIp,
-            'chunkBase64': base64Encode(chunkBytes),
             'createdAt': FieldValue.serverTimestamp(),
           }).timeout(const Duration(seconds: 5));
 
@@ -497,9 +474,9 @@ class FirebaseService {
             }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
           }
 
-          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) on assigned host node: $targetHostname ($targetOwnerEmail).');
+          DebugLogService().info('[FirebaseService] Registered chunk_$i metadata (${chunkBytes.length} bytes) to assigned host node: $targetHostname ($targetOwnerEmail).');
         } catch (e) {
-          DebugLogService().warn('[FirebaseService] Failed to write chunk_$i subcollection: $e');
+          DebugLogService().warn('[FirebaseService] Failed to write chunk_$i metadata: $e');
         }
       }
     } catch (e, st) {
@@ -572,7 +549,7 @@ class FirebaseService {
     }
   }
 
-  /// Downloads encrypted bytes and AES key for a given file ID with multi-tiered cloud fallbacks.
+  /// Downloads encrypted bytes and AES key for a given file ID by querying host chunk location metadata from Firestore and downloading directly from host containers.
   Future<Map<String, dynamic>> downloadEncryptedFile(String fileId) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not authenticated with Firebase');
@@ -594,12 +571,11 @@ class FirebaseService {
 
     final data = docSnap.data()!;
     final String encryptedAesKey = data['encryptedAesKey']?.toString() ?? '';
-    final String storagePath = data['storagePath']?.toString() ?? '';
-    final String downloadUrl = data['downloadUrl']?.toString() ?? '';
 
     Uint8List? encryptedBytes;
+    final List<Uint8List> chunkList = [];
 
-    // Tier 0: Fetch & reassemble dynamic split chunks from Cloud Firestore host container pool
+    // Query chunk host location metadata from Firestore (NO payload stored in Firestore/Firebase)
     try {
       final chunksSnap = await _firestore
           .collection('users')
@@ -612,63 +588,53 @@ class FirebaseService {
           .timeout(const Duration(seconds: 8));
 
       if (chunksSnap.docs.isNotEmpty) {
-        final List<Uint8List> chunkList = [];
+        final dio = Dio();
         for (final chunkDoc in chunksSnap.docs) {
-          final b64 = chunkDoc.data()['chunkBase64']?.toString();
-          if (b64 != null && b64.isNotEmpty) {
-            chunkList.add(base64Decode(b64));
+          final chunkData = chunkDoc.data();
+          final String hostIp = chunkData['assignedHostIp']?.toString() ?? '127.0.0.1';
+          final int chunkIndex = chunkData['chunkIndex'] ?? 0;
+          final String chunkId = chunkData['chunkId']?.toString() ?? '${fileId}_chunk_$chunkIndex';
+
+          final String hostUrl = hostIp != '127.0.0.1' && hostIp.isNotEmpty
+              ? 'http://$hostIp:8080/api/storage/chunks/$chunkId'
+              : 'http://localhost:8080/api/storage/chunks/$chunkId';
+
+          try {
+            final response = await dio.get<List<int>>(
+              hostUrl,
+              options: Options(responseType: ResponseType.bytes),
+            ).timeout(const Duration(seconds: 10));
+
+            if (response.data != null && response.data!.isNotEmpty) {
+              chunkList.add(Uint8List.fromList(response.data!));
+              DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) directly from host container: $hostUrl');
+            }
+          } catch (e) {
+            DebugLogService().warn('[FirebaseService] Direct host container fetch failed for $hostUrl: $e. Attempting coordinator fallback.');
+            try {
+              final fallbackUrl = 'http://localhost:8080/api/storage/chunks/$chunkId';
+              final response = await dio.get<List<int>>(
+                fallbackUrl,
+                options: Options(responseType: ResponseType.bytes),
+              ).timeout(const Duration(seconds: 10));
+              if (response.data != null && response.data!.isNotEmpty) {
+                chunkList.add(Uint8List.fromList(response.data!));
+              }
+            } catch (_) {}
           }
         }
+
         if (chunkList.isNotEmpty) {
           encryptedBytes = FileChunker.reassembleChunks(chunkList);
-          DebugLogService().info('[FirebaseService] Download Tier 0: Successfully reassembled ${chunkList.length} dynamic host chunks from container pool.');
+          DebugLogService().info('[FirebaseService] Successfully reassembled ${chunkList.length} encrypted chunks from host container pool.');
         }
       }
     } catch (e) {
-      DebugLogService().warn('[FirebaseService] Download Tier 0 chunk fetch skipped: $e');
-    }
-
-    // Tier 2: Direct HTTP download URL (Firebase Storage / Host Node endpoint)
-    if (encryptedBytes == null && downloadUrl.isNotEmpty && downloadUrl.startsWith('http')) {
-      try {
-        final dio = Dio();
-        final response = await dio.get<List<int>>(
-          downloadUrl,
-          options: Options(responseType: ResponseType.bytes),
-        ).timeout(const Duration(seconds: 15));
-        if (response.data != null && response.data!.isNotEmpty) {
-          encryptedBytes = Uint8List.fromList(response.data!);
-          DebugLogService().info('[FirebaseService] Download Tier 2: Retrieved payload via direct download URL.');
-        }
-      } catch (e) {
-        DebugLogService().error('[FirebaseService] Download Tier 2 failed: $e');
-      }
-    }
-
-    // Tier 3: Firebase Storage reference path
-    if (encryptedBytes == null && storagePath.isNotEmpty) {
-      try {
-        final storageRef = _storage.ref(storagePath);
-        encryptedBytes = await storageRef.getData(100 * 1024 * 1024);
-        DebugLogService().info('[FirebaseService] Download Tier 3: Retrieved payload from Firebase Storage.');
-      } catch (e) {
-        DebugLogService().error('[FirebaseService] Download Tier 3 failed: $e');
-      }
-    }
-
-    // Tier 4: Storage path fallback search by filename
-    if (encryptedBytes == null) {
-      try {
-        final filename = data['filename']?.toString() ?? 'file.bin';
-        final fallbackPath = 'users/${user.uid}/vault/$fileId/$filename.enc';
-        final storageRef = _storage.ref(fallbackPath);
-        encryptedBytes = await storageRef.getData(100 * 1024 * 1024);
-        DebugLogService().info('[FirebaseService] Download Tier 4: Retrieved payload via fallback path search.');
-      } catch (_) {}
+      DebugLogService().error('[FirebaseService] Host chunk location fetch error: $e');
     }
 
     if (encryptedBytes == null) {
-      throw Exception('Failed to retrieve file content from Cloud Vault.');
+      throw Exception('Failed to retrieve file chunk payloads from host containers.');
     }
 
     return {
