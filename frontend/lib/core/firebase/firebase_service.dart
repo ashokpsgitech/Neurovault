@@ -675,18 +675,19 @@ class FirebaseService {
     };
   }
 
-  /// Returns list of active host snapshots currently online and connected to internet.
+  /// Returns list of active host snapshots currently online and connected to internet (deduplicated by host owner account).
   Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> getActiveHostDocs() async {
     try {
       final now = DateTime.now();
       final snapshot = await _firestore.collection('hosts').get().timeout(const Duration(seconds: 5));
-      final List<QueryDocumentSnapshot<Map<String, dynamic>>> activeDocs = [];
+      final Map<String, QueryDocumentSnapshot<Map<String, dynamic>>> uniqueHostsByOwner = {};
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
         final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
         final int reservedStorageBytes = data['reservedStorageBytes'] ?? 0;
+        final String ownerKey = data['ownerId']?.toString() ?? data['ownerEmail']?.toString() ?? doc.id;
 
         // Must be an allocated host node with > 0 bytes capacity
         if (reservedStorageBytes <= 0) continue;
@@ -701,10 +702,24 @@ class FirebaseService {
         final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 3;
 
         if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
-          activeDocs.add(doc);
+          if (!uniqueHostsByOwner.containsKey(ownerKey)) {
+            uniqueHostsByOwner[ownerKey] = doc;
+          } else {
+            // Keep the document with the most recent lastSeen timestamp
+            final existingData = uniqueHostsByOwner[ownerKey]!.data();
+            DateTime? existingLastSeen;
+            if (existingData['lastSeen'] is Timestamp) {
+              existingLastSeen = (existingData['lastSeen'] as Timestamp).toDate();
+            } else if (existingData['lastSeenIso'] != null) {
+              existingLastSeen = DateTime.tryParse(existingData['lastSeenIso'].toString());
+            }
+            if (lastSeen != null && (existingLastSeen == null || lastSeen.isAfter(existingLastSeen))) {
+              uniqueHostsByOwner[ownerKey] = doc;
+            }
+          }
         }
       }
-      return activeDocs;
+      return uniqueHostsByOwner.values.toList();
     } catch (_) {
       return [];
     }
@@ -718,32 +733,8 @@ class FirebaseService {
 
   /// Real-time stream emitting the active container host node count connected across all client devices.
   Stream<int> streamActiveHostsCount() {
-    return _firestore.collection('hosts').snapshots().map((snapshot) {
-      final now = DateTime.now();
-      int activeCount = 0;
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
-        final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
-        final int reservedStorageBytes = data['reservedStorageBytes'] ?? 0;
-
-        // Strictly exclude non-host clients with zero allocated storage capacity
-        if (reservedStorageBytes <= 0) continue;
-
-        DateTime? lastSeen;
-        if (data['lastSeen'] is Timestamp) {
-          lastSeen = (data['lastSeen'] as Timestamp).toDate();
-        } else if (data['lastSeenIso'] != null) {
-          lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
-        }
-
-        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 3;
-
-        if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
-          activeCount++;
-        }
-      }
-      return activeCount;
+    return _firestore.collection('hosts').snapshots().asyncMap((_) async {
+      return await getActiveHostsCount();
     });
   }
 
@@ -826,6 +817,7 @@ class FirebaseService {
   }) async {
     try {
       final user = _auth.currentUser;
+      final String canonicalHostId = (user != null && user.uid.isNotEmpty) ? 'host_${user.uid}' : hostId;
       final String resolvedIp = (publicIp != null &&
               publicIp.isNotEmpty &&
               publicIp != '127.0.0.1' &&
@@ -835,7 +827,7 @@ class FirebaseService {
           : await _getLocalIpAddress();
 
       final Map<String, dynamic> updateData = {
-        'id': hostId,
+        'id': canonicalHostId,
         'hostname': hostname,
         'status': status,
         'isAvailableForPublic': true,
@@ -851,8 +843,20 @@ class FirebaseService {
         updateData['usedStorageBytes'] = usedStorageBytes;
       }
 
-      await _firestore.collection('hosts').doc(hostId).set(updateData, SetOptions(merge: true))
+      await _firestore.collection('hosts').doc(canonicalHostId).set(updateData, SetOptions(merge: true))
           .timeout(const Duration(seconds: 5));
+
+      // Automatically clean up any legacy duplicate host node documents for this owner
+      if (user != null) {
+        try {
+          final dupes = await _firestore.collection('hosts').where('ownerId', isEqualTo: user.uid).get();
+          for (final d in dupes.docs) {
+            if (d.id != canonicalHostId) {
+              await d.reference.delete();
+            }
+          }
+        } catch (_) {}
+      }
     } catch (_) {}
   }
 

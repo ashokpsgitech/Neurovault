@@ -44,7 +44,10 @@ class HostRepository extends BaseRepository {
     }
 
     if (hostInfo == null) {
-      final hostId = 'local-node-${DateTime.now().millisecondsSinceEpoch}';
+      final currentUser = await _firebaseService.getCurrentUser();
+      final hostId = (currentUser != null && currentUser.id.isNotEmpty)
+          ? 'host_${currentUser.id}'
+          : 'host_local_node';
       final fallbackPath = await getDefaultContainerPath();
       hostInfo = HostInfoModel(
         id: hostId,
