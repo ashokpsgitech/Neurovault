@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
+import '../../../core/firebase/firebase_service.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/loading_overlay.dart';
 import '../models/host_info_model.dart';
@@ -22,6 +23,13 @@ class HostScreen extends ConsumerStatefulWidget {
 class _HostScreenState extends ConsumerState<HostScreen> {
   double _reservedGb = 10.0;
   String _containerPath = 'D:\\NeuroVaultData\\storage.container';
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
 
   @override
   void initState() {
@@ -261,6 +269,10 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                       }
                     },
                   ),
+                  const SizedBox(height: 24),
+
+                  // Hosted Client Chunks & Storage Breakdown Card (Debugging & Transparency)
+                  _buildHostedClientsCard(context),
                 ],
               ),
             ),
@@ -598,6 +610,129 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                 '${hostInfo?.activeChunks ?? 0}',
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHostedClientsCard(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Hosted Client Chunks & Storage Breakdown', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const Icon(Icons.people_alt_outlined, color: Colors.blue),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Real-time debug list of client user accounts and encrypted file chunks stored inside this node container.',
+              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 16),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: FirebaseService().getHostedChunksForCurrentHost(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final hostedList = snapshot.data ?? [];
+                if (hostedList.isEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Text('No client file chunks currently stored in this container pool.', style: TextStyle(fontSize: 13, color: Colors.grey)),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: hostedList.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (context, index) {
+                    final item = hostedList[index];
+                    final String clientEmail = item['clientEmail']?.toString() ?? 'Client Account';
+                    final String filename = item['filename']?.toString() ?? 'chunk.bin';
+                    final int idx = (item['chunkIndex'] ?? 0) + 1;
+                    final int bytes = item['sizeBytes'] ?? 0;
+                    final String timeIso = item['createdAtIso']?.toString() ?? '';
+
+                    return Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: theme.colorScheme.outlineVariant.withOpacity(0.4)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.account_circle_outlined, size: 16, color: Colors.blue),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        clientEmail,
+                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.blue),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '$filename (Chunk #$idx)',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                _formatBytes(bytes),
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.green),
+                              ),
+                              if (timeIso.isNotEmpty)
+                                Text(
+                                  timeIso.length > 10 ? timeIso.substring(0, 10) : timeIso,
+                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),

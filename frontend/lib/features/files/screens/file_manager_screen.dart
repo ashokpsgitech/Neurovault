@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/firebase/firebase_service.dart';
 import '../../../core/utils/file_download_helper.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/debug_console_modal.dart';
@@ -237,27 +238,37 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                         subtitle: Text(
                           '${_formatBytes(item.sizeBytes)}  •  ${item.chunkCount} host chunk(s)  •  ${DateFormat('MMM d, hh:mm a').format(item.createdAt)}',
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.cloud_download_outlined),
-                          tooltip: 'Decrypt & Save File',
-                          onPressed: () async {
-                            CustomSnackbar.showSuccess(context, 'Downloading & decrypting ${item.filename}...');
-                            try {
-                              final bytes = await ref.read(fileProvider.notifier).downloadFile(item);
-                              if (bytes != null && context.mounted) {
-                                // Prompt native OS file save dialog
-                                await _saveDecryptedFileToDisk(item.filename, bytes);
-                                if (context.mounted) {
-                                  final textPreview = utf8.decode(bytes, allowMalformed: true);
-                                  _showFilePreviewModal(context, item.filename, textPreview, bytes);
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.dns_outlined, color: Colors.blue),
+                              tooltip: 'Inspect Target Host Accounts & Devices',
+                              onPressed: () => _showChunkDistributionModal(context, item),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.cloud_download_outlined),
+                              tooltip: 'Decrypt & Save File',
+                              onPressed: () async {
+                                CustomSnackbar.showSuccess(context, 'Downloading & decrypting ${item.filename}...');
+                                try {
+                                  final bytes = await ref.read(fileProvider.notifier).downloadFile(item);
+                                  if (bytes != null && context.mounted) {
+                                    // Prompt native OS file save dialog
+                                    await _saveDecryptedFileToDisk(item.filename, bytes);
+                                    if (context.mounted) {
+                                      final textPreview = utf8.decode(bytes, allowMalformed: true);
+                                      _showFilePreviewModal(context, item.filename, textPreview, bytes);
+                                    }
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    CustomSnackbar.showError(context, 'Download failed: $e');
+                                  }
                                 }
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                CustomSnackbar.showError(context, 'Download failed: $e');
-                              }
-                            }
-                          },
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -265,6 +276,126 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                 );
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showChunkDistributionModal(BuildContext context, FileItem item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.dns_outlined, color: Colors.blue),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Host Node Storage Breakdown',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        content: FutureBuilder<List<Map<String, dynamic>>>(
+          future: FirebaseService().getFileChunkDetails(item.id),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 150,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            final chunks = snapshot.data ?? [];
+            if (chunks.isEmpty) {
+              return const SizedBox(
+                height: 150,
+                child: Center(
+                  child: Text('Chunk storage map initializing or single vault copy stored.'),
+                ),
+              );
+            }
+
+            return SizedBox(
+              width: 500,
+              height: 320,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'File: ${item.filename} (${_formatBytes(item.sizeBytes)}) • ${chunks.length} Chunk Block(s)',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: chunks.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final c = chunks[index];
+                        final int idx = (c['chunkIndex'] ?? index) + 1;
+                        final int size = c['sizeBytes'] ?? 0;
+                        final String hostname = c['assignedHostname']?.toString() ?? 'MicroServer-Node';
+                        final String ownerEmail = c['assignedHostOwnerEmail']?.toString() ?? 'Host Account';
+                        final String device = c['assignedHostDevice']?.toString() ?? 'Host Device';
+                        final String ip = c['assignedHostIp']?.toString() ?? '127.0.0.1';
+
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text('Chunk #$idx', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+                                  Text(_formatBytes(size), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  const Text('Host Account: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                  Expanded(
+                                    child: Text(ownerEmail, style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  const Icon(Icons.devices_outlined, size: 14, color: Colors.grey),
+                                  const SizedBox(width: 4),
+                                  const Text('Device & Node: ', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                                  Expanded(
+                                    child: Text('$hostname • $device ($ip)', style: const TextStyle(fontSize: 11, color: Colors.grey), overflow: TextOverflow.ellipsis),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
           ),
         ],
       ),

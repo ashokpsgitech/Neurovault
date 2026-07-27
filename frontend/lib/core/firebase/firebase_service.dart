@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../utils/debug_log_service.dart';
@@ -439,13 +440,19 @@ class FirebaseService {
           .timeout(const Duration(seconds: 10));
       DebugLogService().info('[FirebaseService] Firestore file document write OK.');
 
-      // Store dynamic split chunks across active host container pool in Cloud Firestore subcollection & update host storage stats
+      // Store dynamic split chunks across active host container pool & record chunk distribution details for debugging
       for (int i = 0; i < dynamicChunks.length; i++) {
         final chunkBytes = dynamicChunks[i];
         final targetHostDoc = activeHostDocs.isNotEmpty ? activeHostDocs[i % activeHostDocs.length] : null;
+        final targetHostData = targetHostDoc?.data();
         final targetHostId = targetHostDoc?.id ?? 'local-container';
+        final targetHostname = targetHostData?['hostname']?.toString() ?? 'MicroServer-Node';
+        final targetOwnerEmail = targetHostData?['ownerEmail']?.toString() ?? targetHostData?['ownerId']?.toString() ?? 'Host Account';
+        final targetDevice = targetHostData?['deviceType']?.toString() ?? 'Host Device';
+        final targetIp = targetHostData?['publicIp']?.toString() ?? '127.0.0.1';
 
         try {
+          // Record assigned host account and device details under client's file chunk document
           await _firestore
               .collection('users')
               .doc(user.uid)
@@ -457,11 +464,32 @@ class FirebaseService {
             'chunkIndex': i,
             'sizeBytes': chunkBytes.length,
             'assignedHostId': targetHostId,
+            'assignedHostname': targetHostname,
+            'assignedHostOwnerEmail': targetOwnerEmail,
+            'assignedHostDevice': targetDevice,
+            'assignedHostIp': targetIp,
             'chunkBase64': base64Encode(chunkBytes),
             'createdAt': FieldValue.serverTimestamp(),
           }).timeout(const Duration(seconds: 5));
 
           if (targetHostDoc != null) {
+            // Record client account and file details under target host's hosted_chunks collection
+            await _firestore
+                .collection('hosts')
+                .doc(targetHostId)
+                .collection('hosted_chunks')
+                .doc('${fileId}_chunk_$i')
+                .set({
+              'fileId': fileId,
+              'filename': filename,
+              'chunkIndex': i,
+              'sizeBytes': chunkBytes.length,
+              'clientUid': user.uid,
+              'clientEmail': user.email ?? (user.isAnonymous ? 'anonymous@neurovault.net' : 'Client User'),
+              'createdAt': FieldValue.serverTimestamp(),
+              'createdAtIso': DateTime.now().toIso8601String(),
+            }).timeout(const Duration(seconds: 5));
+
             await _firestore.collection('hosts').doc(targetHostId).set({
               'usedStorageBytes': FieldValue.increment(chunkBytes.length),
               'activeChunks': FieldValue.increment(1),
@@ -469,7 +497,7 @@ class FirebaseService {
             }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
           }
 
-          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) on assigned host node: $targetHostId.');
+          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) on assigned host node: $targetHostname ($targetOwnerEmail).');
         } catch (e) {
           DebugLogService().warn('[FirebaseService] Failed to write chunk_$i subcollection: $e');
         }
@@ -724,12 +752,54 @@ class FirebaseService {
     return null;
   }
 
+  /// Fetches detailed chunk distribution list for a user's file (showing target host account, node name, device, IP).
+  Future<List<Map<String, dynamic>>> getFileChunkDetails(String fileId) async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .doc(fileId)
+          .collection('chunks')
+          .orderBy('chunkIndex')
+          .get()
+          .timeout(const Duration(seconds: 5));
+      return snap.docs.map((d) => d.data()).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Fetches detailed list of client chunks stored inside the current device's host container (showing client email, file name, byte size).
+  Future<List<Map<String, dynamic>>> getHostedChunksForCurrentHost() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+    try {
+      final hostSnap = await getHostDocByOwner(user.uid);
+      if (hostSnap == null) return [];
+      final chunksSnap = await _firestore
+          .collection('hosts')
+          .doc(hostSnap.id)
+          .collection('hosted_chunks')
+          .orderBy('createdAt', descending: true)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      return chunksSnap.docs.map((d) => d.data()).toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
   /// Registers or updates a host node in Cloud Firestore for network-wide tracking.
   Future<void> updateHostNodeStatus({
     required String hostId,
     required String hostname,
     required String status,
     required int reservedStorageBytes,
+    String? deviceType,
+    String? publicIp,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -740,6 +810,9 @@ class FirebaseService {
         'isAvailableForPublic': true,
         'reservedStorageBytes': reservedStorageBytes,
         'ownerId': user?.uid ?? 'anonymous',
+        'ownerEmail': user?.email ?? (user?.isAnonymous == true ? 'anonymous@neurovault.net' : 'Vault Host'),
+        'deviceType': deviceType ?? (Platform.isAndroid ? 'Mobile - Android' : 'Desktop - Windows'),
+        'publicIp': publicIp ?? 'LAN/Cloud Mesh',
         'lastSeen': FieldValue.serverTimestamp(),
         'lastSeenIso': DateTime.now().toIso8601String(),
       }, SetOptions(merge: true)).timeout(const Duration(seconds: 5));
