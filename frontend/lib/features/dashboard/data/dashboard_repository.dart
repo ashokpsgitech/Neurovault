@@ -30,6 +30,15 @@ class DashboardRepository extends BaseRepository {
         activeHosts = await _firebaseService.getActiveHostsCount();
       } catch (_) {}
 
+      int hostStorageUsed = storageUsed;
+      try {
+        final hostSnap = await _firebaseService.getHostDocByOwner(user.id);
+        if (hostSnap != null && hostSnap.data() != null) {
+          final data = hostSnap.data()!;
+          hostStorageUsed = data['usedStorageBytes'] ?? data['usedCapacityBytes'] ?? storageUsed;
+        }
+      } catch (_) {}
+
       const int storageCapacity = 10 * 1024 * 1024 * 1024; // 10 GB default
       const int reservedCapacity = 5 * 1024 * 1024 * 1024; // 5 GB default
 
@@ -41,7 +50,7 @@ class DashboardRepository extends BaseRepository {
         hostStatus: 'FIREBASE CLOUD 24/7',
         activeHostsCount: activeHosts,
         activeUsersCount: 1,
-        hostStorageUsedBytes: storageUsed,
+        hostStorageUsedBytes: hostStorageUsed,
         totalFiles: files.length,
         recentActivities: files.map((f) => RecentActivityItem(
           id: f.id,

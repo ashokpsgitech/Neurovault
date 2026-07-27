@@ -355,8 +355,21 @@ class FirebaseService {
     }
   }
 
-  /// Logs out user from Firebase Auth.
+  /// Logs out user from Firebase Auth and marks owned host node status OFFLINE in Cloud Firestore.
   Future<void> logout() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final snap = await _firestore.collection('hosts').where('ownerId', isEqualTo: user.uid).get();
+        for (final doc in snap.docs) {
+          await doc.reference.update({
+            'status': 'OFFLINE',
+            'lastSeen': FieldValue.serverTimestamp(),
+            'lastSeenIso': DateTime.now().toIso8601String(),
+          });
+        }
+      } catch (_) {}
+    }
     await _auth.signOut();
   }
 
@@ -375,12 +388,8 @@ class FirebaseService {
 
     DebugLogService().info('[FirebaseService] uploadEncryptedFile: $filename (${fileBytes.length} bytes) for uid=${user.uid}');
 
-    final activeHostCount = await getActiveHostsCount();
-    if (activeHostCount <= 0) {
-      const msg = 'Upload Failed: No active micro-server container hosts available to store file chunks. Please launch at least 1 host node.';
-      DebugLogService().error('[FirebaseService] $msg');
-      throw Exception(msg);
-    }
+    final activeHostDocs = await getActiveHostDocs();
+    final activeHostCount = activeHostDocs.isNotEmpty ? activeHostDocs.length : 1;
 
     final dynamicChunks = FileChunker.splitIntoChunks(fileBytes, activeHostCount: activeHostCount);
     final calculatedChunkCount = dynamicChunks.length;
@@ -416,7 +425,7 @@ class FirebaseService {
       'createdAt': FieldValue.serverTimestamp(),
       'createdAtIso': DateTime.now().toIso8601String(),
       'chunkCount': calculatedChunkCount,
-      'activeHostReplicas': activeHostCount > 0 ? activeHostCount : 1,
+      'activeHostReplicas': activeHostCount,
     };
 
     // If file size is under 850 KB, embed encrypted bytes as Base64 directly in Cloud Firestore document
@@ -425,7 +434,7 @@ class FirebaseService {
       fileDoc['encryptedBytesBase64'] = base64Encode(fileBytes);
     }
 
-    DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId ($calculatedChunkCount chunks across ${activeHostCount > 0 ? activeHostCount : 1} active host replicas)');
+    DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId ($calculatedChunkCount chunks across $activeHostCount active host replicas)');
     try {
       await _firestore
           .collection('users')
@@ -436,9 +445,12 @@ class FirebaseService {
           .timeout(const Duration(seconds: 10));
       DebugLogService().info('[FirebaseService] Firestore file document write OK.');
 
-      // Store dynamic split chunks across active host container pool in Cloud Firestore subcollection
+      // Store dynamic split chunks across active host container pool in Cloud Firestore subcollection & update host storage stats
       for (int i = 0; i < dynamicChunks.length; i++) {
         final chunkBytes = dynamicChunks[i];
+        final targetHostDoc = activeHostDocs.isNotEmpty ? activeHostDocs[i % activeHostDocs.length] : null;
+        final targetHostId = targetHostDoc?.id ?? 'local-container';
+
         try {
           await _firestore
               .collection('users')
@@ -450,10 +462,20 @@ class FirebaseService {
               .set({
             'chunkIndex': i,
             'sizeBytes': chunkBytes.length,
+            'assignedHostId': targetHostId,
             'chunkBase64': base64Encode(chunkBytes),
             'createdAt': FieldValue.serverTimestamp(),
           }).timeout(const Duration(seconds: 5));
-          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) across active host container pool.');
+
+          if (targetHostDoc != null) {
+            await _firestore.collection('hosts').doc(targetHostId).set({
+              'usedStorageBytes': FieldValue.increment(chunkBytes.length),
+              'activeChunks': FieldValue.increment(1),
+              'lastSeen': FieldValue.serverTimestamp(),
+            }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
+          }
+
+          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) on assigned host node: $targetHostId.');
         } catch (e) {
           DebugLogService().warn('[FirebaseService] Failed to write chunk_$i subcollection: $e');
         }
@@ -642,16 +664,13 @@ class FirebaseService {
     };
   }
 
-  /// Returns the count of active container nodes connected to the internet and available for public client file uploads.
-  Future<int> getActiveHostsCount() async {
+  /// Returns list of active host snapshots currently online and connected to internet.
+  Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> getActiveHostDocs() async {
     try {
       final now = DateTime.now();
-      final snapshot = await _firestore
-          .collection('hosts')
-          .get()
-          .timeout(const Duration(seconds: 5));
+      final snapshot = await _firestore.collection('hosts').get().timeout(const Duration(seconds: 5));
+      final List<QueryDocumentSnapshot<Map<String, dynamic>>> activeDocs = [];
 
-      int activePublicContainerNodes = 0;
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
@@ -664,17 +683,22 @@ class FirebaseService {
           lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
         }
 
-        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 15;
+        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 3;
 
         if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
-          activePublicContainerNodes++;
+          activeDocs.add(doc);
         }
       }
-
-      return activePublicContainerNodes;
+      return activeDocs;
     } catch (_) {
-      return 0;
+      return [];
     }
+  }
+
+  /// Returns the count of active container nodes connected to the internet and available for public client file uploads.
+  Future<int> getActiveHostsCount() async {
+    final docs = await getActiveHostDocs();
+    return docs.length;
   }
 
   /// Real-time stream emitting the active container host node count connected across all client devices.
@@ -694,7 +718,7 @@ class FirebaseService {
           lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
         }
 
-        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 15;
+        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 3;
 
         if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
           activeCount++;
@@ -702,6 +726,17 @@ class FirebaseService {
       }
       return activeCount;
     });
+  }
+
+  /// Retrieves host node document from Cloud Firestore owned by a specific user.
+  Future<DocumentSnapshot<Map<String, dynamic>>?> getHostDocByOwner(String ownerUid) async {
+    try {
+      final snap = await _firestore.collection('hosts').where('ownerId', isEqualTo: ownerUid).limit(1).get().timeout(const Duration(seconds: 5));
+      if (snap.docs.isNotEmpty) {
+        return snap.docs.first;
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// Registers or updates a host node in Cloud Firestore for network-wide tracking.

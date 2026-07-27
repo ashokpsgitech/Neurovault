@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/firebase/firebase_service.dart';
 import '../../../core/services/host_background_service.dart';
 import '../../../providers/core_providers.dart';
 import '../data/host_repository.dart';
@@ -32,16 +33,15 @@ class HostNotifier extends StateNotifier<HostState> {
     autoEnableHostOnStartup();
   }
 
-  /// Automatically registers and activates this device as a 24/7 host container node on startup.
+  /// Automatically registers and activates this device as a host container node if user profile role is 'HOST'.
   Future<void> autoEnableHostOnStartup() async {
     try {
-      final defaultPath = await _repository.getDefaultContainerPath();
-      await enableHost(5, defaultPath);
-    } catch (_) {
-      try {
-        await enableHost(5, 'storage.container');
-      } catch (_) {}
-    }
+      final user = await FirebaseService().getCurrentUser();
+      if (user != null && user.role.toUpperCase() == 'HOST') {
+        final defaultPath = await _repository.getDefaultContainerPath();
+        await enableHost(5, defaultPath);
+      }
+    } catch (_) {}
   }
 
   @override
