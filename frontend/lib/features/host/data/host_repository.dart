@@ -273,15 +273,61 @@ class HostRepository extends BaseRepository {
     await raf.setPosition(0);
     await raf.writeFrom(bd.buffer.asUint8List());
 
-    // Write a zero byte at end to pre-allocate at least minimal size on disk
+    // Pre-allocate the full reserved container capacity on disk
     if (totalBytes > 256) {
       try {
-        await raf.setPosition(255);
-        await raf.writeByte(0);
-      } catch (e) {
-        DebugLogService().warn('[HostRepository] Tail byte allocation skipped: $e');
+        await raf.truncate(totalBytes);
+        DebugLogService().info('[HostRepository] Successfully pre-allocated $reservedGb GB container file ($totalBytes bytes) on disk.');
+      } catch (_) {
+        try {
+          await raf.setPosition(totalBytes - 1);
+          await raf.writeByte(0);
+          DebugLogService().info('[HostRepository] Pre-allocated container file ($totalBytes bytes) via tail byte.');
+        } catch (e) {
+          DebugLogService().warn('[HostRepository] Pre-allocation skipped: $e');
+        }
       }
     }
     await raf.close();
+  }
+
+  /// Appends encrypted chunk payload to storage.container file at the data region offset.
+  Future<void> writeChunkToLocalContainer(String containerPath, Uint8List chunkBytes) async {
+    try {
+      final file = File(containerPath);
+      if (!await file.exists()) return;
+
+      final raf = await file.open(mode: FileMode.append);
+
+      // Read header at offset 0
+      await raf.setPosition(0);
+      final headerBytes = await raf.read(256);
+      if (headerBytes.length >= 64 &&
+          headerBytes[0] == 0x4E &&
+          headerBytes[1] == 0x56 &&
+          headerBytes[2] == 0x4C &&
+          headerBytes[3] == 0x54) {
+        final bd = ByteData.sublistView(Uint8List.fromList(headerBytes));
+        final currentUsed = bd.getInt64(16, Endian.big);
+        final currentChunks = bd.getInt32(24, Endian.big);
+        final dataOffset = bd.getInt64(44, Endian.big);
+
+        final writePos = dataOffset + currentUsed;
+        await raf.setPosition(writePos);
+        await raf.writeFrom(chunkBytes);
+
+        // Update header used size and chunk count
+        bd.setInt64(16, currentUsed + chunkBytes.length, Endian.big);
+        bd.setInt32(24, currentChunks + 1, Endian.big);
+        bd.setInt64(60, DateTime.now().millisecondsSinceEpoch, Endian.big);
+
+        await raf.setPosition(0);
+        await raf.writeFrom(bd.buffer.asUint8List());
+        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to storage container at offset $writePos.');
+      }
+      await raf.close();
+    } catch (e) {
+      DebugLogService().warn('[HostRepository] writeChunkToLocalContainer error: $e');
+    }
   }
 }

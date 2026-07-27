@@ -10,6 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../firebase_options.dart';
 import '../../features/authentication/models/user_model.dart';
 import '../../features/files/models/file_metadata_model.dart';
+import '../../features/host/data/host_repository.dart';
 import '../crypto/file_chunker.dart';
 
 /// 24/7 Firebase Cloud Backend Service for NeuroVault.
@@ -466,6 +467,16 @@ class FirebaseService {
               'createdAt': FieldValue.serverTimestamp(),
               'createdAtIso': DateTime.now().toIso8601String(),
             }).timeout(const Duration(seconds: 5));
+
+            final String? hostContainerPath = targetHostDoc.data()['containerPath']?.toString();
+            if (hostContainerPath != null && hostContainerPath.isNotEmpty) {
+              try {
+                await HostRepository().writeChunkToLocalContainer(
+                  hostContainerPath,
+                  Uint8List.fromList(chunkBytes),
+                );
+              } catch (_) {}
+            }
 
             await _firestore.collection('hosts').doc(targetHostId).set({
               'usedStorageBytes': FieldValue.increment(chunkBytes.length),
