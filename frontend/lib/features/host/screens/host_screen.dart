@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,114 +40,6 @@ class _HostScreenState extends ConsumerState<HostScreen> {
         }
       }
     } catch (_) {}
-  }
-
-  Future<void> _selectStorageLocation(TextEditingController controller, StateSetter? dialogSetState) async {
-    try {
-      final selectedDirectory = await FilePicker.platform.getDirectoryPath();
-      if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
-        final isWindows = Platform.isWindows;
-        final sep = isWindows ? '\\' : '/';
-        final formattedDir = isWindows ? selectedDirectory.replaceAll('/', '\\') : selectedDirectory;
-        final fullContainerPath = formattedDir.endsWith(sep)
-            ? '${formattedDir}storage.container'
-            : '$formattedDir${sep}storage.container';
-
-        controller.text = fullContainerPath;
-        setState(() {
-          _containerPath = fullContainerPath;
-        });
-        if (dialogSetState != null) {
-          dialogSetState(() {});
-        }
-        if (mounted) {
-          CustomSnackbar.showSuccess(context, 'Storage location set: $fullContainerPath');
-        }
-        return;
-      }
-    } catch (_) {}
-
-    // Fallback: If FilePicker is not supported or cancelled, show custom location dialog
-    if (mounted) {
-      _showCustomLocationDialog(controller, dialogSetState);
-    }
-  }
-
-  void _showActivationDialog() {
-    final controller = TextEditingController(text: _containerPath);
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.storage_outlined, color: Colors.green),
-              SizedBox(width: 12),
-              Text('Activate Host Node'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Select local disk storage folder and confirm capacity reservation before activating your Micro-Server node.',
-              ),
-              const SizedBox(height: 16),
-              Card(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Reserved Capacity:'),
-                      Text('${_reservedGb.round()} GB', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Storage Container File Path',
-                  hintText: Platform.isWindows ? 'e.g. D:\\NeuroVaultData\\storage.container' : '/storage/emulated/0/Download/storage.container',
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.folder_open),
-                    tooltip: 'Browse Directory',
-                    onPressed: () => _selectStorageLocation(controller, setDialogState),
-                  ),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Activate Node & Allocate Storage'),
-              onPressed: () {
-                final targetPath = controller.text.trim().isNotEmpty
-                    ? controller.text.trim()
-                    : _containerPath;
-
-                setState(() {
-                  _containerPath = targetPath;
-                });
-                Navigator.pop(ctx);
-                ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), targetPath);
-                CustomSnackbar.showSuccess(context, 'Allocating ${_reservedGb.round()} GB disk container at: $targetPath');
-              },
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   void _showCustomLocationDialog([TextEditingController? externalController, StateSetter? dialogSetState]) {
@@ -421,19 +312,24 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               ),
             ),
             const SizedBox(width: 16),
-            Switch(
-              value: isEnabled,
-              activeColor: Colors.green,
-              onChanged: isLoading
-                  ? null
-                  : (value) {
-                      if (value) {
-                        _showActivationDialog();
-                      } else {
-                        ref.read(hostProvider.notifier).disableHost();
-                        CustomSnackbar.showSuccess(context, 'Host Mode Disabled: Offline');
-                      }
-                    },
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.green, width: 1.5),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 18),
+                  SizedBox(width: 6),
+                  Text(
+                    'ALWAYS ACTIVE 24/7',
+                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

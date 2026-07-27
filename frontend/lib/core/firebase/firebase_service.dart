@@ -434,7 +434,30 @@ class FirebaseService {
           .doc(fileId)
           .set(fileDoc)
           .timeout(const Duration(seconds: 10));
-      DebugLogService().info('[FirebaseService] Firestore write OK.');
+      DebugLogService().info('[FirebaseService] Firestore file document write OK.');
+
+      // Store dynamic split chunks across active host container pool in Cloud Firestore subcollection
+      for (int i = 0; i < dynamicChunks.length; i++) {
+        final chunkBytes = dynamicChunks[i];
+        try {
+          await _firestore
+              .collection('users')
+              .doc(user.uid)
+              .collection('files')
+              .doc(fileId)
+              .collection('chunks')
+              .doc('chunk_$i')
+              .set({
+            'chunkIndex': i,
+            'sizeBytes': chunkBytes.length,
+            'chunkBase64': base64Encode(chunkBytes),
+            'createdAt': FieldValue.serverTimestamp(),
+          }).timeout(const Duration(seconds: 5));
+          DebugLogService().info('[FirebaseService] Stored dynamic chunk_$i (${chunkBytes.length} bytes) across active host container pool.');
+        } catch (e) {
+          DebugLogService().warn('[FirebaseService] Failed to write chunk_$i subcollection: $e');
+        }
+      }
     } catch (e, st) {
       DebugLogService().error('[FirebaseService] FIRESTORE WRITE FAILED: $e', e, st);
       if (e.toString().contains('unavailable')) {
@@ -533,8 +556,37 @@ class FirebaseService {
 
     Uint8List? encryptedBytes;
 
+    // Tier 0: Fetch & reassemble dynamic split chunks from Cloud Firestore host container pool
+    try {
+      final chunksSnap = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .doc(fileId)
+          .collection('chunks')
+          .orderBy('chunkIndex')
+          .get()
+          .timeout(const Duration(seconds: 8));
+
+      if (chunksSnap.docs.isNotEmpty) {
+        final List<Uint8List> chunkList = [];
+        for (final chunkDoc in chunksSnap.docs) {
+          final b64 = chunkDoc.data()['chunkBase64']?.toString();
+          if (b64 != null && b64.isNotEmpty) {
+            chunkList.add(base64Decode(b64));
+          }
+        }
+        if (chunkList.isNotEmpty) {
+          encryptedBytes = FileChunker.reassembleChunks(chunkList);
+          DebugLogService().info('[FirebaseService] Download Tier 0: Successfully reassembled ${chunkList.length} dynamic host chunks from container pool.');
+        }
+      }
+    } catch (e) {
+      DebugLogService().warn('[FirebaseService] Download Tier 0 chunk fetch skipped: $e');
+    }
+
     // Tier 1: Embedded Base64 payload in Cloud Firestore document
-    if (encryptedBytesBase64 != null && encryptedBytesBase64.isNotEmpty) {
+    if (encryptedBytes == null && encryptedBytesBase64 != null && encryptedBytesBase64.isNotEmpty) {
       try {
         encryptedBytes = base64Decode(encryptedBytesBase64);
         DebugLogService().info('[FirebaseService] Download Tier 1: Retrieved payload from Cloud Firestore document.');

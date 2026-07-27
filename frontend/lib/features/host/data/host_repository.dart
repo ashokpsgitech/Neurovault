@@ -39,7 +39,7 @@ class HostRepository extends BaseRepository {
     } catch (e) {
       DebugLogService().warn('[HostRepository] Coordinator registration failed ($e). Operating in offline local fallback mode.');
       final hostId = 'local-node-${DateTime.now().millisecondsSinceEpoch}';
-      final fallbackPath = await _getDefaultContainerPath();
+      final fallbackPath = await getDefaultContainerPath();
       hostInfo = HostInfoModel(
         id: hostId,
         name: name,
@@ -176,7 +176,7 @@ class HostRepository extends BaseRepository {
   }
 
   /// Returns the platform-appropriate default container path.
-  Future<String> _getDefaultContainerPath() async {
+  Future<String> getDefaultContainerPath() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       return '${dir.path}/storage.container';

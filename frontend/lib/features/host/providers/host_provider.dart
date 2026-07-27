@@ -29,7 +29,19 @@ class HostNotifier extends StateNotifier<HostState> {
   Timer? _heartbeatTimer;
 
   HostNotifier(this._repository) : super(const HostInitial()) {
-    checkHostStatus();
+    autoEnableHostOnStartup();
+  }
+
+  /// Automatically registers and activates this device as a 24/7 host container node on startup.
+  Future<void> autoEnableHostOnStartup() async {
+    try {
+      final defaultPath = await _repository.getDefaultContainerPath();
+      await enableHost(5, defaultPath);
+    } catch (_) {
+      try {
+        await enableHost(5, 'storage.container');
+      } catch (_) {}
+    }
   }
 
   @override
