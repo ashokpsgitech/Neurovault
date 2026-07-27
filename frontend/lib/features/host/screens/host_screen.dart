@@ -288,60 +288,104 @@ class _HostScreenState extends ConsumerState<HostScreen> {
       elevation: 2,
       child: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Row(
+        child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isEnabled ? Colors.green.withOpacity(0.15) : theme.colorScheme.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.storage_outlined,
-                size: 36,
-                color: isEnabled ? Colors.green : theme.colorScheme.primary,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Micro-Server Host Mode',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: isEnabled ? Colors.green.withOpacity(0.15) : theme.colorScheme.primary.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isEnabled
-                        ? 'Active node contributing storage to NeuroVault mesh network'
-                        : 'Enable to contribute storage capacity as a decentralized node',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  child: Icon(
+                    Icons.storage_outlined,
+                    size: 36,
+                    color: isEnabled ? Colors.green : theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Micro-Server Host Container',
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isEnabled
+                            ? 'Container allocated & node active 24/7 in mesh storage network'
+                            : 'Specify custom size & location to allocate disk container and activate host node 24/7',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isEnabled ? Colors.green.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isEnabled ? Colors.green : Colors.amber, width: 1.5),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        isEnabled ? Icons.check_circle : Icons.offline_bolt_outlined,
+                        color: isEnabled ? Colors.green : Colors.amber.shade800,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        isEnabled ? 'ALWAYS ACTIVE 24/7' : 'READY TO ALLOCATE',
+                        style: TextStyle(
+                          color: isEnabled ? Colors.green : Colors.amber.shade900,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (!isEnabled)
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add_to_drive_outlined),
+                    label: Text('Allocate ${_reservedGb.round()} GB Container & Activate Host'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                      textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            ref.read(hostProvider.notifier).enableHost(_reservedGb.round(), _containerPath);
+                          },
+                  )
+                else
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.power_settings_new_outlined, color: Colors.red),
+                    label: const Text('Deallocate & Disable Host Node', style: TextStyle(color: Colors.red)),
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            ref.read(hostProvider.notifier).disableHost();
+                          },
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.green, width: 1.5),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 18),
-                  SizedBox(width: 6),
-                  Text(
-                    'ALWAYS ACTIVE 24/7',
-                    style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ],
-              ),
+              ],
             ),
           ],
         ),
@@ -361,7 +405,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Storage Reservation Limit',
+                  'Custom Storage Allocation Size',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Chip(
@@ -375,7 +419,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Select how much disk space your node pre-allocates for encrypted chunk blocks.',
+              'Specify how much disk space your micro-server node pre-allocates for encrypted chunk blocks.',
               style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
@@ -385,13 +429,11 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               max: 100.0,
               divisions: 99,
               label: '${_reservedGb.round()} GB',
-              onChanged: isEnabled
-                  ? null
-                  : (value) {
-                      setState(() {
-                        _reservedGb = value;
-                      });
-                    },
+              onChanged: (value) {
+                setState(() {
+                  _reservedGb = value;
+                });
+              },
             ),
             const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

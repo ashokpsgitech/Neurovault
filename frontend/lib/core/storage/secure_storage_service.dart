@@ -31,6 +31,33 @@ class SecureStorageService {
     return await _storage.read(key: AppConstants.keyUserEmail);
   }
 
+  Future<void> saveHostContainerPath(String path) async {
+    await _storage.write(key: 'host_container_path', value: path);
+  }
+
+  Future<String?> getHostContainerPath() async {
+    return await _storage.read(key: 'host_container_path');
+  }
+
+  Future<void> saveHostContainerSizeGb(int sizeGb) async {
+    await _storage.write(key: 'host_container_size_gb', value: sizeGb.toString());
+  }
+
+  Future<int?> getHostContainerSizeGb() async {
+    final str = await _storage.read(key: 'host_container_size_gb');
+    if (str != null) return int.tryParse(str);
+    return null;
+  }
+
+  Future<void> saveHostAllocated(bool isAllocated) async {
+    await _storage.write(key: 'host_is_allocated', value: isAllocated ? 'true' : 'false');
+  }
+
+  Future<bool> isHostAllocated() async {
+    final val = await _storage.read(key: 'host_is_allocated');
+    return val == 'true';
+  }
+
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }

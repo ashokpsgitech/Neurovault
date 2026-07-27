@@ -10,11 +10,12 @@ import '../services/host_service.dart';
 
 /// Repository wrapping HostService calls with exception handling, local disk allocation, and network fallback.
 class HostRepository extends BaseRepository {
-  final HostService _service;
+  final HostService? _service;
   final FirebaseService _firebaseService;
 
-  HostRepository(this._service, [FirebaseService? firebaseService])
-      : _firebaseService = firebaseService ?? FirebaseService();
+  HostRepository([HostService? service, FirebaseService? firebaseService])
+      : _service = service,
+        _firebaseService = firebaseService ?? FirebaseService();
 
   Future<HostInfoModel> registerHost({
     required String name,
@@ -24,20 +25,25 @@ class HostRepository extends BaseRepository {
     required int totalCapacityBytes,
     required int reservedCapacityBytes,
   }) async {
-    HostInfoModel hostInfo;
-    try {
-      hostInfo = await safeApiCall(() async {
-        return await _service.registerHost(
-          name: name,
-          deviceType: deviceType,
-          operatingSystem: operatingSystem,
-          publicIp: publicIp,
-          totalCapacityBytes: totalCapacityBytes,
-          reservedCapacityBytes: reservedCapacityBytes,
-        );
-      });
-    } catch (e) {
-      DebugLogService().warn('[HostRepository] Coordinator registration failed ($e). Operating in offline local fallback mode.');
+    HostInfoModel? hostInfo;
+    if (_service != null) {
+      try {
+        hostInfo = await safeApiCall(() async {
+          return await _service!.registerHost(
+            name: name,
+            deviceType: deviceType,
+            operatingSystem: operatingSystem,
+            publicIp: publicIp,
+            totalCapacityBytes: totalCapacityBytes,
+            reservedCapacityBytes: reservedCapacityBytes,
+          );
+        });
+      } catch (e) {
+        DebugLogService().warn('[HostRepository] Coordinator registration failed ($e). Operating in offline local fallback mode.');
+      }
+    }
+
+    if (hostInfo == null) {
       final hostId = 'local-node-${DateTime.now().millisecondsSinceEpoch}';
       final fallbackPath = await getDefaultContainerPath();
       hostInfo = HostInfoModel(
@@ -81,15 +87,17 @@ class HostRepository extends BaseRepository {
     required double ramUsagePercent,
     required int usedCapacityBytes,
   }) async {
-    try {
-      await _service.sendHeartbeat(
-        hostId: hostId,
-        cpuUsagePercent: cpuUsagePercent,
-        ramUsagePercent: ramUsagePercent,
-        usedCapacityBytes: usedCapacityBytes,
-      );
-    } catch (e) {
-      DebugLogService().warn('[HostRepository] Backend sendHeartbeat offline: $e');
+    if (_service != null) {
+      try {
+        await _service!.sendHeartbeat(
+          hostId: hostId,
+          cpuUsagePercent: cpuUsagePercent,
+          ramUsagePercent: ramUsagePercent,
+          usedCapacityBytes: usedCapacityBytes,
+        );
+      } catch (e) {
+        DebugLogService().warn('[HostRepository] Backend sendHeartbeat offline: $e');
+      }
     }
 
     // Always refresh lastSeen pulse in Cloud Firestore
@@ -118,12 +126,14 @@ class HostRepository extends BaseRepository {
   }
 
   Future<HostInfoModel?> getHostStatus() async {
-    try {
-      return await _service.getHostStatus();
-    } catch (e) {
-      DebugLogService().error('[HostRepository] getHostStatus failed: $e');
-      return null;
+    if (_service != null) {
+      try {
+        return await _service!.getHostStatus();
+      } catch (e) {
+        DebugLogService().error('[HostRepository] getHostStatus failed: $e');
+      }
     }
+    return null;
   }
 
   /// Creates a pre-allocated binary disk container at the specified path with the chosen reservation size.
@@ -151,14 +161,16 @@ class HostRepository extends BaseRepository {
       reservationEnum = 'GB_20';
     }
 
-    try {
-      await _service.createStorageContainer(
-        hostId: hostId,
-        containerPath: resolvedPath,
-        reservationSize: reservationEnum,
-      );
-    } catch (e) {
-      DebugLogService().warn('[HostRepository] Backend container registration offline: $e');
+    if (_service != null) {
+      try {
+        await _service!.createStorageContainer(
+          hostId: hostId,
+          containerPath: resolvedPath,
+          reservationSize: reservationEnum,
+        );
+      } catch (e) {
+        DebugLogService().warn('[HostRepository] Backend container registration offline: $e');
+      }
     }
   }
 

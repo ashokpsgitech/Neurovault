@@ -4,42 +4,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/firebase/firebase_service.dart';
 import '../../../core/services/host_background_service.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../providers/core_providers.dart';
 import '../data/host_repository.dart';
-import '../services/host_service.dart';
 import 'host_state.dart';
 
-final hostServiceProvider = Provider<HostService>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return HostService(dioClient);
-});
-
 final hostRepositoryProvider = Provider<HostRepository>((ref) {
-  final service = ref.watch(hostServiceProvider);
-  return HostRepository(service);
+  return HostRepository();
 });
 
 final hostProvider = StateNotifierProvider<HostNotifier, HostState>((ref) {
   final repo = ref.watch(hostRepositoryProvider);
-  return HostNotifier(repo);
+  final storage = ref.watch(secureStorageProvider);
+  return HostNotifier(repo, storage);
 });
 
-/// Riverpod StateNotifier managing Host Mode lifecycle, 24/7 Foreground Service, and heartbeat daemon.
+/// Riverpod StateNotifier managing Host Mode lifecycle, container allocation, and 24/7 heartbeat daemon.
 class HostNotifier extends StateNotifier<HostState> {
   final HostRepository _repository;
+  final SecureStorageService _storage;
   Timer? _heartbeatTimer;
 
-  HostNotifier(this._repository) : super(const HostInitial()) {
+  HostNotifier(this._repository, this._storage) : super(const HostInitial()) {
     autoEnableHostOnStartup();
   }
 
-  /// Automatically registers and activates this device as a host container node if user profile role is 'HOST'.
+  /// Automatically activates container host node on startup if previously allocated.
   Future<void> autoEnableHostOnStartup() async {
     try {
+      final isAllocated = await _storage.isHostAllocated();
       final user = await FirebaseService().getCurrentUser();
-      if (user != null && user.role.toUpperCase() == 'HOST') {
-        final defaultPath = await _repository.getDefaultContainerPath();
-        await enableHost(5, defaultPath);
+      final isHostUser = user != null && user.role.toUpperCase() == 'HOST';
+
+      if (isAllocated || isHostUser) {
+        final savedPath = await _storage.getHostContainerPath() ?? await _repository.getDefaultContainerPath();
+        final savedGb = await _storage.getHostContainerSizeGb() ?? 10;
+        await enableHost(savedGb, savedPath);
       }
     } catch (_) {}
   }
@@ -50,7 +50,6 @@ class HostNotifier extends StateNotifier<HostState> {
     super.dispose();
   }
 
-  /// Queries existing host status from backend.
   Future<void> checkHostStatus() async {
     state = const HostLoading();
     try {
@@ -66,7 +65,6 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Resolves the primary local LAN IPv4 address of this device.
   Future<String> _getLocalIpAddress() async {
     try {
       final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
@@ -83,7 +81,8 @@ class HostNotifier extends StateNotifier<HostState> {
     return '127.0.0.1';
   }
 
-  /// Enables host node: registers with coordinator, creates disk container, starts foreground background service, and starts heartbeat.
+  /// Allocates storage container on local disk at specified custom location with specified size in GB,
+  /// then activates 24/7 foreground background service and heartbeat pulse daemon.
   Future<void> enableHost(int reservedGb, String containerPath) async {
     state = const HostLoading();
     try {
@@ -95,7 +94,7 @@ class HostNotifier extends StateNotifier<HostState> {
           ? 'Node-${Platform.localHostname}'
           : 'MicroServer-Node';
 
-      // Step 1: Register this device as a host node with the coordinator
+      // 1. Create binary disk container file at custom path
       final info = await _repository.registerHost(
         name: nodeName,
         deviceType: Platform.isAndroid ? 'Mobile' : 'Desktop',
@@ -105,16 +104,20 @@ class HostNotifier extends StateNotifier<HostState> {
         reservedCapacityBytes: reservedBytes,
       );
 
-      // Step 2: Create pre-allocated binary storage container on disk
       await _repository.createStorageContainer(info.id, reservedGb, containerPath);
 
-      // Step 3: Start 24/7 Android Foreground Service
+      // 2. Persist container allocation settings so host is ALWAYS ACTIVE
+      await _storage.saveHostContainerPath(containerPath);
+      await _storage.saveHostContainerSizeGb(reservedGb);
+      await _storage.saveHostAllocated(true);
+
+      // 3. Start 24/7 Android Foreground Service
       await HostBackgroundService.startHostService(
         reservedGb: reservedGb,
         containerPath: containerPath,
       );
 
-      // Step 4: Update state to HostEnabled
+      // 4. Set state to HostEnabled & start 30s heartbeat pulse daemon
       final updatedInfo = info.copyWith(
         status: 'ONLINE',
         containerCreated: true,
@@ -125,17 +128,16 @@ class HostNotifier extends StateNotifier<HostState> {
       state = HostEnabled(updatedInfo);
       _startHeartbeatDaemon(updatedInfo.id);
     } catch (e) {
-      state = HostError('Container creation failed: ${e.toString()}');
+      state = HostError('Container allocation failed: ${e.toString()}');
     }
   }
 
-  /// Disables host mode, stops background service, and cancels heartbeat daemon.
   Future<void> disableHost() async {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
 
-    // Stop 24/7 Android Foreground Service
     await HostBackgroundService.stopHostService();
+    await _storage.saveHostAllocated(false);
 
     if (state is HostEnabled) {
       final current = (state as HostEnabled).info;
@@ -147,7 +149,6 @@ class HostNotifier extends StateNotifier<HostState> {
     }
   }
 
-  /// Starts periodic 30-second heartbeat daemon and fires an immediate heartbeat pulse.
   void _startHeartbeatDaemon(String hostId) {
     _heartbeatTimer?.cancel();
     _sendHeartbeatPulse(hostId);
