@@ -1,4 +1,5 @@
 import '../../../core/firebase/firebase_service.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../../authentication/models/user_model.dart';
 import '../../files/models/file_metadata_model.dart';
@@ -31,16 +32,27 @@ class DashboardRepository extends BaseRepository {
       } catch (_) {}
 
       int hostStorageUsed = storageUsed;
+      int reservedCapacity = 10 * 1024 * 1024 * 1024; // 10 GB initial fallback
       try {
         final hostSnap = await _firebaseService.getHostDocByOwner(user.id);
         if (hostSnap != null && hostSnap.data() != null) {
           final data = hostSnap.data()!;
           hostStorageUsed = data['usedStorageBytes'] ?? data['usedCapacityBytes'] ?? storageUsed;
+          if (data['reservedStorageBytes'] != null && (data['reservedStorageBytes'] as int) > 0) {
+            reservedCapacity = data['reservedStorageBytes'];
+          }
         }
       } catch (_) {}
 
-      const int storageCapacity = 10 * 1024 * 1024 * 1024; // 10 GB default
-      const int reservedCapacity = 5 * 1024 * 1024 * 1024; // 5 GB default
+      // Fall back to saved container size in SecureStorageService if Firestore snap not set yet
+      try {
+        final savedGb = await SecureStorageService().getHostContainerSizeGb();
+        if (savedGb != null && savedGb > 0) {
+          reservedCapacity = savedGb * 1024 * 1024 * 1024;
+        }
+      } catch (_) {}
+
+      final int storageCapacity = reservedCapacity;
 
       return DashboardStatsModel(
         user: user,

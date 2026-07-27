@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import '../storage/secure_storage_service.dart';
 import '../utils/debug_log_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -637,7 +638,8 @@ class FirebaseService {
 
           if (!chunkFetched) {
             try {
-              final containerPath = await HostRepository().getDefaultContainerPath();
+              final String containerPath = await SecureStorageService().getHostContainerPath() ??
+                  await HostRepository().getDefaultContainerPath();
               final localBytes = await HostRepository().readChunkFromLocalContainer(
                 containerPath,
                 chunkIndex,
@@ -648,7 +650,9 @@ class FirebaseService {
                 chunkFetched = true;
                 DebugLogService().info('[FirebaseService] Retrieved chunk payload directly from local host container: $containerPath');
               }
-            } catch (_) {}
+            } catch (e) {
+              DebugLogService().warn('[FirebaseService] Local container fallback check error: $e');
+            }
           }
         }
 
