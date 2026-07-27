@@ -625,6 +625,33 @@ class FirebaseService {
     }
   }
 
+  /// Real-time stream emitting the active container host node count connected across all client devices.
+  Stream<int> streamActiveHostsCount() {
+    return _firestore.collection('hosts').snapshots().map((snapshot) {
+      final now = DateTime.now();
+      int activeCount = 0;
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
+        final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
+
+        DateTime? lastSeen;
+        if (data['lastSeen'] is Timestamp) {
+          lastSeen = (data['lastSeen'] as Timestamp).toDate();
+        } else if (data['lastSeenIso'] != null) {
+          lastSeen = DateTime.tryParse(data['lastSeenIso'].toString());
+        }
+
+        final bool isRecentlyActive = lastSeen == null || now.difference(lastSeen).inMinutes <= 15;
+
+        if ((status == 'ONLINE' || status == 'ACTIVE') && isAvailableForPublic && isRecentlyActive) {
+          activeCount++;
+        }
+      }
+      return activeCount;
+    });
+  }
+
   /// Registers or updates a host node in Cloud Firestore for network-wide tracking.
   Future<void> updateHostNodeStatus({
     required String hostId,

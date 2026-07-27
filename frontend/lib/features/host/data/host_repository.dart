@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../../../core/firebase/firebase_service.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/host_info_model.dart';
@@ -10,8 +11,10 @@ import '../services/host_service.dart';
 /// Repository wrapping HostService calls with exception handling, local disk allocation, and network fallback.
 class HostRepository extends BaseRepository {
   final HostService _service;
+  final FirebaseService _firebaseService;
 
-  HostRepository(this._service);
+  HostRepository(this._service, [FirebaseService? firebaseService])
+      : _firebaseService = firebaseService ?? FirebaseService();
 
   Future<HostInfoModel> registerHost({
     required String name,
@@ -21,8 +24,9 @@ class HostRepository extends BaseRepository {
     required int totalCapacityBytes,
     required int reservedCapacityBytes,
   }) async {
+    HostInfoModel hostInfo;
     try {
-      return await safeApiCall(() async {
+      hostInfo = await safeApiCall(() async {
         return await _service.registerHost(
           name: name,
           deviceType: deviceType,
@@ -36,7 +40,7 @@ class HostRepository extends BaseRepository {
       DebugLogService().warn('[HostRepository] Coordinator registration failed ($e). Operating in offline local fallback mode.');
       final hostId = 'local-node-${DateTime.now().millisecondsSinceEpoch}';
       final fallbackPath = await _getDefaultContainerPath();
-      return HostInfoModel(
+      hostInfo = HostInfoModel(
         id: hostId,
         name: name,
         deviceType: deviceType,
@@ -45,7 +49,7 @@ class HostRepository extends BaseRepository {
         totalCapacityBytes: totalCapacityBytes,
         reservedCapacityBytes: reservedCapacityBytes,
         usedCapacityBytes: 0,
-        status: 'OFFLINE_LOCAL',
+        status: 'ONLINE',
         cpuUsagePercent: 0.0,
         ramUsagePercent: 0.0,
         containerPath: fallbackPath,
@@ -54,6 +58,21 @@ class HostRepository extends BaseRepository {
         lastHeartbeat: DateTime.now(),
       );
     }
+
+    // Always publish host status to Firebase Cloud Firestore for network-wide real-time tracking
+    try {
+      await _firebaseService.updateHostNodeStatus(
+        hostId: hostInfo.id,
+        hostname: name,
+        status: 'ONLINE',
+        reservedStorageBytes: reservedCapacityBytes,
+      );
+      DebugLogService().info('[HostRepository] Published ONLINE host status to Cloud Firestore for host: ${hostInfo.id}');
+    } catch (e) {
+      DebugLogService().error('[HostRepository] Failed to publish ONLINE host status to Cloud Firestore: $e');
+    }
+
+    return hostInfo;
   }
 
   Future<void> sendHeartbeat({
@@ -70,8 +89,31 @@ class HostRepository extends BaseRepository {
         usedCapacityBytes: usedCapacityBytes,
       );
     } catch (e) {
-      DebugLogService().error('[HostRepository] sendHeartbeat failed for host $hostId: $e');
-      rethrow;
+      DebugLogService().warn('[HostRepository] Backend sendHeartbeat offline: $e');
+    }
+
+    // Always refresh lastSeen pulse in Cloud Firestore
+    try {
+      await _firebaseService.updateHostNodeStatus(
+        hostId: hostId,
+        hostname: 'Host-$hostId',
+        status: 'ONLINE',
+        reservedStorageBytes: usedCapacityBytes,
+      );
+    } catch (_) {}
+  }
+
+  Future<void> disableHostNode(String hostId, String hostname) async {
+    try {
+      await _firebaseService.updateHostNodeStatus(
+        hostId: hostId,
+        hostname: hostname,
+        status: 'OFFLINE',
+        reservedStorageBytes: 0,
+      );
+      DebugLogService().info('[HostRepository] Published OFFLINE host status to Cloud Firestore for host: $hostId');
+    } catch (e) {
+      DebugLogService().error('[HostRepository] disableHostNode error: $e');
     }
   }
 

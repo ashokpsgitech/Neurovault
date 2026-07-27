@@ -127,6 +127,7 @@ class HostNotifier extends StateNotifier<HostState> {
 
     if (state is HostEnabled) {
       final current = (state as HostEnabled).info;
+      await _repository.disableHostNode(current.id, current.name);
       final offline = current.copyWith(status: 'OFFLINE');
       state = HostDisabled(offline);
     } else {
