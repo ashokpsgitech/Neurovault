@@ -375,6 +375,16 @@ class FirebaseService {
 
     DebugLogService().info('[FirebaseService] uploadEncryptedFile: $filename (${fileBytes.length} bytes) for uid=${user.uid}');
 
+    final activeHostCount = await getActiveHostsCount();
+    if (activeHostCount <= 0) {
+      const msg = 'Upload Failed: No active micro-server container hosts available to store file chunks. Please launch at least 1 host node.';
+      DebugLogService().error('[FirebaseService] $msg');
+      throw Exception(msg);
+    }
+
+    final dynamicChunks = FileChunker.splitIntoChunks(fileBytes, activeHostCount: activeHostCount);
+    final calculatedChunkCount = dynamicChunks.length;
+
     final fileId = DateTime.now().millisecondsSinceEpoch.toString();
     final storagePath = 'users/${user.uid}/vault/$fileId/$filename.enc';
 
@@ -394,10 +404,6 @@ class FirebaseService {
         '[FirebaseService] Firebase Storage bucket unavailable ($e). Storing encrypted payload in Cloud Firestore document for 100% online sync.'
       );
     }
-
-    final activeHostCount = await getActiveHostsCount();
-    final dynamicChunks = FileChunker.splitIntoChunks(fileBytes, activeHostCount: activeHostCount);
-    final calculatedChunkCount = dynamicChunks.length;
 
     final fileDoc = <String, dynamic>{
       'id': fileId,

@@ -39,6 +39,13 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  msix: ^3.16.7
+
+msix_config:
+  display_name: NeuroVault
+  publisher_display_name: NeuroVault Team
+  identity_name: com.neurovault.app
+  msix_version: 1.0.0.0
 
 flutter:
   uses-material-design: true
