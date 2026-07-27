@@ -302,7 +302,7 @@ class HostRepository extends BaseRepository {
       final file = File(containerPath);
       if (!await file.exists()) return;
 
-      final raf = await file.open(mode: FileMode.append);
+      final raf = await file.open(mode: FileMode.writeOnly);
 
       // Read header at offset 0
       await raf.setPosition(0);
@@ -328,7 +328,12 @@ class HostRepository extends BaseRepository {
 
         await raf.setPosition(0);
         await raf.writeFrom(bd.buffer.asUint8List());
-        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to storage container at offset $writePos.');
+        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to storage container at data offset $writePos.');
+      } else {
+        // Fallback write if container is raw data file
+        await raf.setPosition(await file.length());
+        await raf.writeFrom(chunkBytes);
+        DebugLogService().info('[HostRepository] Appended ${chunkBytes.length} bytes to container file.');
       }
       await raf.close();
     } catch (e) {
@@ -343,6 +348,12 @@ class HostRepository extends BaseRepository {
       if (!await file.exists()) return null;
 
       final raf = await file.open(mode: FileMode.read);
+      final fileLen = await file.length();
+      if (fileLen == 0) {
+        await raf.close();
+        return null;
+      }
+
       await raf.setPosition(0);
       final headerBytes = await raf.read(256);
       if (headerBytes.length >= 64 &&
@@ -354,11 +365,21 @@ class HostRepository extends BaseRepository {
         final dataOffset = bd.getInt64(44, Endian.big);
 
         await raf.setPosition(dataOffset);
-        final fileLen = await file.length();
         final bytesToRead = (sizeBytes > 0 && (dataOffset + sizeBytes) <= fileLen)
             ? sizeBytes
             : (fileLen - dataOffset);
 
+        if (bytesToRead > 0) {
+          final bytes = await raf.read(bytesToRead);
+          await raf.close();
+          if (bytes.isNotEmpty) {
+            return Uint8List.fromList(bytes);
+          }
+        }
+      } else {
+        // Raw binary container file fallback read
+        await raf.setPosition(0);
+        final bytesToRead = sizeBytes > 0 ? sizeBytes.clamp(0, fileLen) : fileLen;
         if (bytesToRead > 0) {
           final bytes = await raf.read(bytesToRead);
           await raf.close();

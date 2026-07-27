@@ -150,7 +150,7 @@ class HostNotifier extends StateNotifier<HostState> {
   void _startHeartbeatDaemon(String hostId) {
     _heartbeatTimer?.cancel();
     _sendHeartbeatPulse(hostId);
-    _heartbeatTimer = Timer.periodic(const Duration(milliseconds: 500), (_) async {
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
       _sendHeartbeatPulse(hostId);
     });
   }

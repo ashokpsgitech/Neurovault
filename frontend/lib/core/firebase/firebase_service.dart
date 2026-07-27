@@ -616,42 +616,73 @@ class FirebaseService {
           final String chunkId = chunkData['chunkId']?.toString() ?? '${fileId}_chunk_$chunkIndex';
           final int sizeBytes = chunkData['sizeBytes'] ?? 0;
 
-          final String hostUrl = (hostIp != '127.0.0.1' && hostIp != 'localhost')
-              ? 'http://$hostIp:8080/api/storage/chunks/$chunkId'
-              : 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
-
           bool chunkFetched = false;
-          try {
-            final response = await dio.get<List<int>>(
-              hostUrl,
-              options: Options(responseType: ResponseType.bytes),
-            ).timeout(const Duration(seconds: 5));
 
-            if (response.data != null && response.data!.isNotEmpty) {
-              chunkList.add(Uint8List.fromList(response.data!));
-              chunkFetched = true;
-              DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) directly from host container: $hostUrl');
-            }
-          } catch (e) {
-            DebugLogService().warn('[FirebaseService] Direct host container fetch failed for $hostUrl: $e. Checking local container fallback.');
-          }
-
-          if (!chunkFetched) {
+          // 1. Primary host IP attempt (fast 2-second timeout)
+          if (hostIp != '127.0.0.1' && hostIp != 'localhost') {
+            final String primaryUrl = 'http://$hostIp:8080/api/storage/chunks/$chunkId';
             try {
-              final String containerPath = await SecureStorageService().getHostContainerPath() ??
-                  await HostRepository().getDefaultContainerPath();
-              final localBytes = await HostRepository().readChunkFromLocalContainer(
-                containerPath,
-                chunkIndex,
-                sizeBytes,
-              );
-              if (localBytes != null && localBytes.isNotEmpty) {
-                chunkList.add(localBytes);
+              final response = await dio.get<List<int>>(
+                primaryUrl,
+                options: Options(responseType: ResponseType.bytes),
+              ).timeout(const Duration(milliseconds: 2000));
+
+              if (response.data != null && response.data!.isNotEmpty) {
+                chunkList.add(Uint8List.fromList(response.data!));
                 chunkFetched = true;
-                DebugLogService().info('[FirebaseService] Retrieved chunk payload directly from local host container: $containerPath');
+                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) directly from primary host container: $primaryUrl');
               }
             } catch (e) {
-              DebugLogService().warn('[FirebaseService] Local container fallback check error: $e');
+              DebugLogService().warn('[FirebaseService] Primary host container fetch failed for $primaryUrl: $e. Trying loopback and local fallback.');
+            }
+          }
+
+          // 2. Loopback 127.0.0.1 HTTP attempt (fast 1.5-second timeout)
+          if (!chunkFetched) {
+            final String loopbackUrl = 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
+            try {
+              final response = await dio.get<List<int>>(
+                loopbackUrl,
+                options: Options(responseType: ResponseType.bytes),
+              ).timeout(const Duration(milliseconds: 1500));
+
+              if (response.data != null && response.data!.isNotEmpty) {
+                chunkList.add(Uint8List.fromList(response.data!));
+                chunkFetched = true;
+                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) via loopback host endpoint: $loopbackUrl');
+              }
+            } catch (_) {}
+          }
+
+          // 3. Multi-Path Local Storage Container Fallback
+          if (!chunkFetched) {
+            final candidatePaths = <String>{};
+            try {
+              final savedPath = await SecureStorageService().getHostContainerPath();
+              if (savedPath != null && savedPath.isNotEmpty) candidatePaths.add(savedPath);
+            } catch (_) {}
+
+            try {
+              final defaultPath = await HostRepository().getDefaultContainerPath();
+              candidatePaths.add(defaultPath);
+            } catch (_) {}
+
+            for (final path in candidatePaths) {
+              try {
+                final localBytes = await HostRepository().readChunkFromLocalContainer(
+                  path,
+                  chunkIndex,
+                  sizeBytes,
+                );
+                if (localBytes != null && localBytes.isNotEmpty) {
+                  chunkList.add(localBytes);
+                  chunkFetched = true;
+                  DebugLogService().info('[FirebaseService] Retrieved chunk payload directly from local storage container: $path');
+                  break;
+                }
+              } catch (e) {
+                DebugLogService().warn('[FirebaseService] Local container fallback read error for path $path: $e');
+              }
             }
           }
         }
