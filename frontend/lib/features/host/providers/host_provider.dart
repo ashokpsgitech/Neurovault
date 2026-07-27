@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/firebase/firebase_service.dart';
 import '../../../core/services/host_background_service.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../../../providers/core_providers.dart';
@@ -29,17 +28,16 @@ class HostNotifier extends StateNotifier<HostState> {
     autoEnableHostOnStartup();
   }
 
-  /// Automatically activates container host node on startup if previously allocated.
+  /// Automatically activates container host node on startup ONLY IF explicitly allocated previously by the host.
   Future<void> autoEnableHostOnStartup() async {
     try {
       final isAllocated = await _storage.isHostAllocated();
-      final user = await FirebaseService().getCurrentUser();
-      final isHostUser = user != null && user.role.toUpperCase() == 'HOST';
-
-      if (isAllocated || isHostUser) {
-        final savedPath = await _storage.getHostContainerPath() ?? await _repository.getDefaultContainerPath();
-        final savedGb = await _storage.getHostContainerSizeGb() ?? 10;
-        await enableHost(savedGb, savedPath);
+      if (isAllocated) {
+        final savedPath = await _storage.getHostContainerPath();
+        final savedGb = await _storage.getHostContainerSizeGb();
+        if (savedPath != null && savedPath.isNotEmpty && savedGb != null) {
+          await enableHost(savedGb, savedPath);
+        }
       }
     } catch (_) {}
   }
