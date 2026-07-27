@@ -821,15 +821,40 @@ class FirebaseService {
   }
 
   Future<String> _getLocalIpAddress() async {
+    bool isTailscaleRange(String ip) {
+      try {
+        final parts = ip.split('.');
+        if (parts.length != 4) return false;
+        final second = int.parse(parts[1]);
+        return second >= 64 && second <= 127;
+      } catch (_) { return false; }
+    }
+
     try {
       final interfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
-      for (final interface in interfaces) {
-        final name = interface.name.toLowerCase();
-        if (name.contains('loopback') || name == 'lo') continue;
-        for (final addr in interface.addresses) {
-          if (!addr.isLoopback && addr.address.isNotEmpty && !addr.address.startsWith('127.')) {
-            return addr.address;
+      // Priority: prefer standard LAN ranges (192.168.x.x, 10.x.x.x, 172.x.x.x)
+      for (final iface in interfaces) {
+        final name = iface.name.toLowerCase();
+        if (name.contains('loopback') || name == 'lo' || name.contains('tailscale') || name.contains('tun')) continue;
+        for (final addr in iface.addresses) {
+          if (addr.isLoopback) continue;
+          final ip = addr.address;
+          if (ip.startsWith('100.') && isTailscaleRange(ip)) continue;
+          if (ip.startsWith('169.254.')) continue;
+          if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+            return ip;
           }
+        }
+      }
+      // Fallback: any non-loopback, non-Tailscale IP
+      for (final iface in interfaces) {
+        final name = iface.name.toLowerCase();
+        if (name.contains('loopback') || name == 'lo') continue;
+        for (final addr in iface.addresses) {
+          if (addr.isLoopback) continue;
+          final ip = addr.address;
+          if (ip.startsWith('100.64.') || ip.startsWith('169.254.')) continue;
+          if (!ip.startsWith('127.') && ip.isNotEmpty) return ip;
         }
       }
     } catch (_) {}
