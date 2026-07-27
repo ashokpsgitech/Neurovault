@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -50,104 +51,153 @@ class _HostScreenState extends ConsumerState<HostScreen> {
     } catch (_) {}
   }
 
+  Future<void> _pickContainerDirectory([TextEditingController? controller, StateSetter? dialogSetState]) async {
+    try {
+      final selectedDirectory = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select Target Folder for Host Storage Container',
+      );
+      if (selectedDirectory != null && selectedDirectory.isNotEmpty) {
+        final path = '$selectedDirectory/storage.container';
+        if (controller != null) {
+          controller.text = path;
+        }
+        setState(() {
+          _containerPath = path;
+        });
+        if (dialogSetState != null) {
+          dialogSetState(() {});
+        }
+        if (mounted) {
+          CustomSnackbar.showSuccess(context, 'Selected container folder:\n$path');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomSnackbar.showError(context, 'Folder navigation error: $e');
+      }
+    }
+  }
+
   void _showCustomLocationDialog([TextEditingController? externalController, StateSetter? dialogSetState]) {
     final controller = TextEditingController(text: externalController?.text ?? _containerPath);
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.folder_open_outlined),
-            SizedBox(width: 12),
-            Text('Set Container Storage Location'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Specify the target directory or path for pre-allocated binary storage.',
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: 'Container File Path',
-                hintText: Platform.isWindows ? 'e.g. D:\\NeuroVaultData\\storage.container' : '/storage/emulated/0/Download/storage.container',
-                border: const OutlineInputBorder(),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.folder_open_outlined),
+              SizedBox(width: 12),
+              Text('Navigate & Select Storage Folder'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Navigate system folders to select your preferred host storage directory.',
               ),
-            ),
-            const SizedBox(height: 12),
-            const Text('Quick Presets:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ActionChip(
-                  avatar: const Icon(Icons.folder_special_outlined, size: 16),
-                  label: const Text('App Private Storage', style: TextStyle(fontSize: 11)),
-                  onPressed: () async {
-                    try {
-                      final docs = await getApplicationDocumentsDirectory();
-                      controller.text = '${docs.path}/storage.container';
-                    } catch (_) {}
-                  },
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.folder_open),
+                  label: const Text('Browse Folders (Navigate Directory)', style: TextStyle(fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+                    foregroundColor: Theme.of(context).colorScheme.onSecondaryContainer,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () => _pickContainerDirectory(controller, setDialogState),
                 ),
-                if (Platform.isAndroid)
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: 'Selected Storage Container File Path',
+                  hintText: Platform.isWindows ? 'e.g. D:\\NeuroVaultData\\storage.container' : '/storage/emulated/0/Download/storage.container',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.folder_special_outlined),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text('Quick Presets:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
                   ActionChip(
-                    avatar: const Icon(Icons.download_outlined, size: 16),
-                    label: const Text('Downloads Folder', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      controller.text = '/storage/emulated/0/Download/storage.container';
+                    avatar: const Icon(Icons.folder_special_outlined, size: 16),
+                    label: const Text('App Private Storage', style: TextStyle(fontSize: 11)),
+                    onPressed: () async {
+                      try {
+                        final docs = await getApplicationDocumentsDirectory();
+                        controller.text = '${docs.path}/storage.container';
+                        setDialogState(() {});
+                      } catch (_) {}
                     },
                   ),
-                if (Platform.isWindows) ...[
-                  ActionChip(
-                    avatar: const Icon(Icons.sd_storage_outlined, size: 16),
-                    label: const Text('D:\\ Drive', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      controller.text = 'D:\\NeuroVaultData\\storage.container';
-                    },
-                  ),
-                  ActionChip(
-                    avatar: const Icon(Icons.computer_outlined, size: 16),
-                    label: const Text('C:\\ Drive', style: TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      controller.text = 'C:\\NeuroVaultData\\storage.container';
-                    },
-                  ),
+                  if (Platform.isAndroid)
+                    ActionChip(
+                      avatar: const Icon(Icons.download_outlined, size: 16),
+                      label: const Text('Downloads Folder', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        controller.text = '/storage/emulated/0/Download/storage.container';
+                        setDialogState(() {});
+                      },
+                    ),
+                  if (Platform.isWindows) ...[
+                    ActionChip(
+                      avatar: const Icon(Icons.sd_storage_outlined, size: 16),
+                      label: const Text('D:\\ Drive', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        controller.text = 'D:\\NeuroVaultData\\storage.container';
+                        setDialogState(() {});
+                      },
+                    ),
+                    ActionChip(
+                      avatar: const Icon(Icons.computer_outlined, size: 16),
+                      label: const Text('C:\\ Drive', style: TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        controller.text = 'C:\\NeuroVaultData\\storage.container';
+                        setDialogState(() {});
+                      },
+                    ),
+                  ],
                 ],
-              ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  final selectedPath = controller.text.trim();
+                  if (externalController != null) {
+                    externalController.text = selectedPath;
+                  }
+                  setState(() {
+                    _containerPath = selectedPath;
+                  });
+                  if (dialogSetState != null) {
+                    dialogSetState(() {});
+                  }
+                  Navigator.pop(ctx);
+                  CustomSnackbar.showSuccess(context, 'Storage location updated: $selectedPath');
+                }
+              },
+              child: const Text('Confirm Location'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                final selectedPath = controller.text.trim();
-                if (externalController != null) {
-                  externalController.text = selectedPath;
-                }
-                setState(() {
-                  _containerPath = selectedPath;
-                });
-                if (dialogSetState != null) {
-                  dialogSetState(() {});
-                }
-                Navigator.pop(ctx);
-                CustomSnackbar.showSuccess(context, 'Storage location updated: $selectedPath');
-              }
-            },
-            child: const Text('Save Location'),
-          ),
-        ],
       ),
     );
   }
@@ -396,12 +446,14 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 ElevatedButton.icon(
-                  icon: const Icon(Icons.edit_location_alt_outlined, size: 16),
-                  label: const Text('Change Path', style: TextStyle(fontSize: 12)),
+                  icon: const Icon(Icons.folder_open_outlined, size: 16),
+                  label: const Text('Browse Folders', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    backgroundColor: theme.colorScheme.secondaryContainer,
+                    foregroundColor: theme.colorScheme.onSecondaryContainer,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   ),
-                  onPressed: isEnabled ? null : () => _showCustomLocationDialog(),
+                  onPressed: isEnabled ? null : () => _pickContainerDirectory(),
                 ),
               ],
             ),

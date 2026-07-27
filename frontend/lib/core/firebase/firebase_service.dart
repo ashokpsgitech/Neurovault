@@ -665,6 +665,10 @@ class FirebaseService {
         final data = doc.data();
         final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
         final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
+        final int reservedStorageBytes = data['reservedStorageBytes'] ?? 0;
+
+        // Must be an allocated host node with > 0 bytes capacity
+        if (reservedStorageBytes <= 0) continue;
 
         DateTime? lastSeen;
         if (data['lastSeen'] is Timestamp) {
@@ -700,6 +704,10 @@ class FirebaseService {
         final data = doc.data();
         final String status = data['status']?.toString().toUpperCase() ?? 'OFFLINE';
         final bool isAvailableForPublic = data['isAvailableForPublic'] ?? true;
+        final int reservedStorageBytes = data['reservedStorageBytes'] ?? 0;
+
+        // Strictly exclude non-host clients with zero allocated storage capacity
+        if (reservedStorageBytes <= 0) continue;
 
         DateTime? lastSeen;
         if (data['lastSeen'] is Timestamp) {
