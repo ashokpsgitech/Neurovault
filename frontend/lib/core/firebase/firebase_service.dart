@@ -469,14 +469,47 @@ class FirebaseService {
               'createdAtIso': DateTime.now().toIso8601String(),
             }).timeout(const Duration(seconds: 5));
 
-            final String? hostContainerPath = targetHostDoc.data()['containerPath']?.toString();
-            if (hostContainerPath != null && hostContainerPath.isNotEmpty) {
+            // Deliver chunk payload to host:
+            // Strategy A: If THIS device IS the assigned host → write directly to local container
+            // Strategy B: Remote host → POST the chunk bytes to host's built-in HTTP chunk server
+            final String canonicalSelfHostId = _auth.currentUser != null ? 'host_${_auth.currentUser!.uid}' : '';
+            final bool isSelfHost = canonicalSelfHostId.isNotEmpty && targetHostId == canonicalSelfHostId;
+
+            if (isSelfHost) {
+              // Same device — write directly to local container file
+              final String? hostContainerPath = targetHostDoc.data()['containerPath']?.toString();
+              if (hostContainerPath != null && hostContainerPath.isNotEmpty) {
+                try {
+                  await HostRepository().writeChunkToLocalContainer(
+                    hostContainerPath,
+                    Uint8List.fromList(chunkBytes),
+                  );
+                  DebugLogService().info('[FirebaseService] Stored chunk_$i (${chunkBytes.length} bytes) directly to self-host container at: $hostContainerPath');
+                } catch (e) {
+                  DebugLogService().warn('[FirebaseService] Self-host local write error: $e');
+                }
+              }
+            } else {
+              // Remote host — POST the chunk bytes to host's built-in HTTP chunk server
+              final String chunkId = '${fileId}_chunk_$i';
+              final String postUrl = 'http://$targetIp:8080/api/storage/chunks/$chunkId';
               try {
-                await HostRepository().writeChunkToLocalContainer(
-                  hostContainerPath,
-                  Uint8List.fromList(chunkBytes),
-                );
-              } catch (_) {}
+                final dio = Dio();
+                await dio.post(
+                  postUrl,
+                  data: Stream.fromIterable([Uint8List.fromList(chunkBytes)]),
+                  options: Options(
+                    headers: {
+                      'Content-Type': 'application/octet-stream',
+                      'Content-Length': chunkBytes.length,
+                    },
+                    responseType: ResponseType.json,
+                  ),
+                ).timeout(const Duration(seconds: 30));
+                DebugLogService().info('[FirebaseService] Posted chunk_$i (${chunkBytes.length} bytes) to remote host chunk server: $postUrl');
+              } catch (e) {
+                DebugLogService().warn('[FirebaseService] Failed to POST chunk_$i to host HTTP server $postUrl: $e. Chunk will be re-fetched on download via fallback.');
+              }
             }
 
             await _firestore.collection('hosts').doc(targetHostId).set({
