@@ -428,12 +428,6 @@ class FirebaseService {
       'activeHostReplicas': activeHostCount,
     };
 
-    // If file size is under 850 KB, embed encrypted bytes as Base64 directly in Cloud Firestore document
-    // so it functions 100% online even if Firebase Storage bucket is unconfigured in Console.
-    if (fileBytes.length < 850 * 1024) {
-      fileDoc['encryptedBytesBase64'] = base64Encode(fileBytes);
-    }
-
     DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId ($calculatedChunkCount chunks across $activeHostCount active host replicas)');
     try {
       await _firestore
@@ -574,7 +568,6 @@ class FirebaseService {
     final String encryptedAesKey = data['encryptedAesKey']?.toString() ?? '';
     final String storagePath = data['storagePath']?.toString() ?? '';
     final String downloadUrl = data['downloadUrl']?.toString() ?? '';
-    final String? encryptedBytesBase64 = data['encryptedBytesBase64']?.toString();
 
     Uint8List? encryptedBytes;
 
@@ -605,14 +598,6 @@ class FirebaseService {
       }
     } catch (e) {
       DebugLogService().warn('[FirebaseService] Download Tier 0 chunk fetch skipped: $e');
-    }
-
-    // Tier 1: Embedded Base64 payload in Cloud Firestore document
-    if (encryptedBytes == null && encryptedBytesBase64 != null && encryptedBytesBase64.isNotEmpty) {
-      try {
-        encryptedBytes = base64Decode(encryptedBytesBase64);
-        DebugLogService().info('[FirebaseService] Download Tier 1: Retrieved payload from Cloud Firestore document.');
-      } catch (_) {}
     }
 
     // Tier 2: Direct HTTP download URL (Firebase Storage / Host Node endpoint)
