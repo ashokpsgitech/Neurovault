@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/firebase/firebase_service.dart';
 import '../../../core/utils/file_download_helper.dart';
@@ -165,8 +166,8 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
     String? resolvedDir;
     if (chosenDir == '/app_private') {
       try {
-        final appDir = await FilePicker.platform.getDirectoryPath();
-        resolvedDir = appDir;
+        final docs = await getApplicationDocumentsDirectory();
+        resolvedDir = docs.path;
       } catch (_) {
         resolvedDir = null;
       }
