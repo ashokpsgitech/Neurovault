@@ -474,10 +474,12 @@ class FirebaseService {
             // Strategy B: Remote host → POST the chunk bytes to host's built-in HTTP chunk server
             final String canonicalSelfHostId = _auth.currentUser != null ? 'host_${_auth.currentUser!.uid}' : '';
             final bool isSelfHost = canonicalSelfHostId.isNotEmpty && targetHostId == canonicalSelfHostId;
+            final String chunkId = '${fileId}_chunk_$i';
+
+            bool chunkWritten = false;
 
             if (isSelfHost) {
-              // Same device — write directly to local container file
-              final String chunkId = '${fileId}_chunk_$i';
+              // Same device: try 1 → saved container path from Firestore
               final String? hostContainerPath = targetHostDoc.data()['containerPath']?.toString();
               if (hostContainerPath != null && hostContainerPath.isNotEmpty) {
                 try {
@@ -486,14 +488,53 @@ class FirebaseService {
                     Uint8List.fromList(chunkBytes),
                     chunkId: chunkId,
                   );
-                  DebugLogService().info('[FirebaseService] Stored chunk_$i (${chunkBytes.length} bytes) directly to self-host container at: $hostContainerPath');
+                  chunkWritten = true;
+                  DebugLogService().info('[FirebaseService] Stored chunk_$i (${chunkBytes.length} bytes) to self-host container: $hostContainerPath');
                 } catch (e) {
-                  DebugLogService().warn('[FirebaseService] Self-host local write error: $e');
+                  DebugLogService().warn('[FirebaseService] Self-host Firestore path write failed: $e');
                 }
+              }
+              // Same device: try 2 → saved path from SecureStorage (most reliable)
+              if (!chunkWritten) {
+                try {
+                  final savedPath = await SecureStorageService().getHostContainerPath();
+                  if (savedPath != null && savedPath.isNotEmpty) {
+                    await HostRepository().writeChunkToLocalContainer(
+                      savedPath,
+                      Uint8List.fromList(chunkBytes),
+                      chunkId: chunkId,
+                    );
+                    chunkWritten = true;
+                    DebugLogService().info('[FirebaseService] Stored chunk_$i via SecureStorage path: $savedPath');
+                  }
+                } catch (e) {
+                  DebugLogService().warn('[FirebaseService] Self-host SecureStorage path write failed: $e');
+                }
+              }
+              // Same device: try 3 → loopback HTTP POST to running ChunkHttpServer
+              if (!chunkWritten) {
+                try {
+                  final postUrl = 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
+                  final dio = Dio();
+                  await dio.post(
+                    postUrl,
+                    data: Stream.fromIterable([Uint8List.fromList(chunkBytes)]),
+                    options: Options(
+                      headers: {'Content-Type': 'application/octet-stream', 'Content-Length': chunkBytes.length},
+                      responseType: ResponseType.json,
+                    ),
+                  ).timeout(const Duration(seconds: 30));
+                  chunkWritten = true;
+                  DebugLogService().info('[FirebaseService] Stored chunk_$i via loopback POST to self-host server');
+                } catch (e) {
+                  DebugLogService().warn('[FirebaseService] Self-host loopback POST failed: $e');
+                }
+              }
+              if (!chunkWritten) {
+                DebugLogService().warn('[FirebaseService] WARNING: chunk_$i could not be stored — host may not be enabled or path is unavailable');
               }
             } else {
               // Remote host — POST the chunk bytes to host's built-in HTTP chunk server
-              final String chunkId = '${fileId}_chunk_$i';
               final String postUrl = 'http://$targetIp:8080/api/storage/chunks/$chunkId';
               try {
                 final dio = Dio();
@@ -510,7 +551,7 @@ class FirebaseService {
                 ).timeout(const Duration(seconds: 30));
                 DebugLogService().info('[FirebaseService] Posted chunk_$i (${chunkBytes.length} bytes) to remote host chunk server: $postUrl');
               } catch (e) {
-                DebugLogService().warn('[FirebaseService] Failed to POST chunk_$i to host HTTP server $postUrl: $e. Chunk will be re-fetched on download via fallback.');
+                DebugLogService().warn('[FirebaseService] Failed to POST chunk_$i to host HTTP server $postUrl: $e');
               }
             }
 
@@ -653,56 +694,21 @@ class FirebaseService {
 
           bool chunkFetched = false;
 
-          // 1. Primary host IP attempt (fast 2-second timeout)
-          if (hostIp != '127.0.0.1' && hostIp != 'localhost') {
-            final String primaryUrl = 'http://$hostIp:8080/api/storage/chunks/$chunkId';
-            try {
-              final response = await dio.get<List<int>>(
-                primaryUrl,
-                options: Options(responseType: ResponseType.bytes),
-              ).timeout(const Duration(milliseconds: 2000));
-
-              if (response.data != null && response.data!.isNotEmpty) {
-                chunkList.add(Uint8List.fromList(response.data!));
-                chunkFetched = true;
-                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) directly from primary host container: $primaryUrl');
-              }
-            } catch (e) {
-              DebugLogService().warn('[FirebaseService] Primary host container fetch failed for $primaryUrl: $e. Trying loopback and local fallback.');
-            }
-          }
-
-          // 2. Loopback 127.0.0.1 HTTP attempt (fast 1.5-second timeout)
-          if (!chunkFetched) {
-            final String loopbackUrl = 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
-            try {
-              final response = await dio.get<List<int>>(
-                loopbackUrl,
-                options: Options(responseType: ResponseType.bytes),
-              ).timeout(const Duration(milliseconds: 1500));
-
-              if (response.data != null && response.data!.isNotEmpty) {
-                chunkList.add(Uint8List.fromList(response.data!));
-                chunkFetched = true;
-                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) via loopback host endpoint: $loopbackUrl');
-              }
-            } catch (_) {}
-          }
-
-          // 3. Multi-Path Local Storage Container Fallback
-          if (!chunkFetched) {
+          // 1. LOCAL CONTAINER FIRST (fastest for self-hosted single device)
+          // Try all known local container paths before hitting the network
+          {
             final candidatePaths = <String>{};
             try {
               final savedPath = await SecureStorageService().getHostContainerPath();
               if (savedPath != null && savedPath.isNotEmpty) candidatePaths.add(savedPath);
             } catch (_) {}
-
             try {
               final defaultPath = await HostRepository().getDefaultContainerPath();
               candidatePaths.add(defaultPath);
             } catch (_) {}
 
             for (final path in candidatePaths) {
+              if (chunkFetched) break;
               try {
                 final localBytes = await HostRepository().readChunkFromLocalContainer(
                   path,
@@ -713,13 +719,52 @@ class FirebaseService {
                 if (localBytes != null && localBytes.isNotEmpty) {
                   chunkList.add(localBytes);
                   chunkFetched = true;
-                  DebugLogService().info('[FirebaseService] Retrieved chunk payload directly from local storage container: $path');
-                  break;
+                  DebugLogService().info('[FirebaseService] Retrieved chunk $chunkId from local container: $path');
                 }
               } catch (e) {
-                DebugLogService().warn('[FirebaseService] Local container fallback read error for path $path: $e');
+                DebugLogService().warn('[FirebaseService] Local container read error for $path: $e');
               }
             }
+          }
+
+          // 2. Primary host IP HTTP attempt (15s timeout to handle large chunks)
+          if (!chunkFetched && hostIp != '127.0.0.1' && hostIp != 'localhost') {
+            final String primaryUrl = 'http://$hostIp:8080/api/storage/chunks/$chunkId';
+            try {
+              final response = await dio.get<List<int>>(
+                primaryUrl,
+                options: Options(responseType: ResponseType.bytes),
+              ).timeout(const Duration(seconds: 15));
+
+              if (response.data != null && response.data!.isNotEmpty) {
+                chunkList.add(Uint8List.fromList(response.data!));
+                chunkFetched = true;
+                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) from host: $primaryUrl');
+              }
+            } catch (e) {
+              DebugLogService().warn('[FirebaseService] Primary host fetch failed for $primaryUrl: $e. Trying loopback.');
+            }
+          }
+
+          // 3. Loopback 127.0.0.1 HTTP attempt (self-host running on same device)
+          if (!chunkFetched) {
+            final String loopbackUrl = 'http://127.0.0.1:8080/api/storage/chunks/$chunkId';
+            try {
+              final response = await dio.get<List<int>>(
+                loopbackUrl,
+                options: Options(responseType: ResponseType.bytes),
+              ).timeout(const Duration(seconds: 10));
+
+              if (response.data != null && response.data!.isNotEmpty) {
+                chunkList.add(Uint8List.fromList(response.data!));
+                chunkFetched = true;
+                DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) via loopback: $loopbackUrl');
+              }
+            } catch (_) {}
+          }
+
+          if (!chunkFetched) {
+            DebugLogService().warn('[FirebaseService] All fetch strategies failed for chunk: $chunkId');
           }
         }
 

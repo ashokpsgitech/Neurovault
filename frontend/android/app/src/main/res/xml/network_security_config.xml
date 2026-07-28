@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    NeuroVault Network Security Config
+    Cleartext HTTP is permitted globally because ALL data transmitted over HTTP
+    is already AES-256-GCM encrypted at the application layer before transmission.
+    Raw file bytes NEVER travel in cleartext — only opaque encrypted binary chunks do.
+-->
 <network-security-config>
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="false">localhost</domain>
-        <domain includeSubdomains="false">127.0.0.1</domain>
-        <domain includeSubdomains="false">10.0.2.2</domain>
-    </domain-config>
-    <base-config cleartextTrafficPermitted="false"/>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
 </network-security-config>
