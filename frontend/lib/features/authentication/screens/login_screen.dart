@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/config/env_config.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/loading_overlay.dart';
+import '../../../widgets/role_selection_dialog.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
 
@@ -95,10 +96,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final authState = ref.watch(authStateProvider);
     final isLoading = authState is AuthLoading;
 
-    ref.listen<AuthState>(authStateProvider, (previous, next) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) async {
       if (next is Authenticated) {
-        CustomSnackbar.showSuccess(context, 'Welcome back, ${next.user.username}!');
-        context.go('/dashboard');
+        if (next.user.role == 'UNSELECTED' || next.user.role.isEmpty) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => const RoleSelectionDialog(),
+          );
+        }
+        if (context.mounted) {
+          CustomSnackbar.showSuccess(context, 'Welcome, ${next.user.username}!');
+          context.go('/dashboard');
+        }
       } else if (next is AuthError) {
         CustomSnackbar.showError(context, next.message);
       }

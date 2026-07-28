@@ -74,9 +74,27 @@ class FirebaseService {
           'id': user.uid,
           'username': username,
           'email': email,
-          'role': 'CLIENT',
+          'role': 'UNSELECTED',
+          'mode': 'PRIVATE',
+          'isFirstTime': true,
           'createdAt': FieldValue.serverTimestamp(),
         }).timeout(const Duration(seconds: 5));
+        return UserModel(
+          id: user.uid,
+          username: username,
+          email: email,
+          role: 'UNSELECTED',
+          mode: 'PRIVATE',
+        );
+      } else if (docSnap.data() != null) {
+        final data = docSnap.data()!;
+        return UserModel(
+          id: user.uid,
+          username: data['username']?.toString() ?? username,
+          email: email,
+          role: data['role']?.toString() ?? 'CLIENT',
+          mode: data['mode']?.toString() ?? 'PRIVATE',
+        );
       }
     } catch (_) {
       // Proceed gracefully if Firestore is unavailable or database is pending setup
@@ -87,6 +105,7 @@ class FirebaseService {
       username: username,
       email: email,
       role: 'CLIENT',
+      mode: 'PRIVATE',
     );
   }
 

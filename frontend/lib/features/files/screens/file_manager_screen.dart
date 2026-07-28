@@ -381,7 +381,24 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
                                     // Prompt native OS file save dialog
                                     await _saveDecryptedFileToDisk(item.filename, bytes);
                                     if (context.mounted) {
-                                      final textPreview = utf8.decode(bytes, allowMalformed: true);
+                                      // Safely check if printable text (max 2048 bytes) to avoid UI freeze on large binary files
+                                      String textPreview = '';
+                                      if (bytes.length <= 2048 * 1024) {
+                                        final sampleLength = bytes.length < 2048 ? bytes.length : 2048;
+                                        final sample = bytes.sublist(0, sampleLength);
+                                        // Check if contains non-printable binary characters
+                                        bool isBinary = sample.any((b) => b < 9 || (b > 13 && b < 32 && b != 27));
+                                        if (!isBinary) {
+                                          textPreview = utf8.decode(sample, allowMalformed: true);
+                                          if (bytes.length > 2048) {
+                                            textPreview += '\n\n... [Preview truncated: file size ${_formatBytes(bytes.length)}]';
+                                          }
+                                        } else {
+                                          textPreview = '[Binary payload — ${_formatBytes(bytes.length)} saved to disk successfully]';
+                                        }
+                                      } else {
+                                        textPreview = '[Large payload — ${_formatBytes(bytes.length)} saved to disk successfully]';
+                                      }
                                       _showFilePreviewModal(context, item.filename, textPreview, bytes);
                                     }
                                   }

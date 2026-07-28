@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/loading_overlay.dart';
+import '../../../widgets/role_selection_dialog.dart';
 import '../providers/auth_provider.dart';
 import '../providers/auth_state.dart';
 
@@ -100,14 +101,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final authState = ref.watch(authStateProvider);
     final isLoading = authState is AuthLoading;
 
-    ref.listen<AuthState>(authStateProvider, (previous, next) {
+    ref.listen<AuthState>(authStateProvider, (previous, next) async {
       if (next is Authenticated) {
+        if (next.user.role == 'UNSELECTED' || next.user.role.isEmpty) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => const RoleSelectionDialog(),
+          );
+          if (context.mounted) {
+            context.go('/dashboard');
+          }
+          return;
+        }
         if (!_showVerificationStep) {
           setState(() {
             _showVerificationStep = true;
           });
           _startVerificationCheckTimer();
-          // Try to send verification email \u2014 capture context-dependent objects before async gap
+          // Try to send verification email — capture context-dependent objects before async gap
           final messenger = ScaffoldMessenger.of(context);
           final email = _emailController.text.trim();
           Future.delayed(const Duration(milliseconds: 500), () async {

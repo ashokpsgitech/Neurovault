@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../providers/core_providers.dart';
 import '../../../widgets/custom_snackbar.dart';
 import '../../../widgets/debug_console_modal.dart';
+import '../../../widgets/role_selection_dialog.dart';
 import '../../authentication/models/user_model.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../../host/providers/host_provider.dart';
@@ -35,6 +36,13 @@ class DashboardScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     final dashboardState = ref.watch(dashboardProvider);
+
+    // Check if first-time Google Sign-In user needs role selection
+    Future.microtask(() {
+      if (context.mounted) {
+        RoleSelectionDialog.showIfNeeded(context, ref);
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
