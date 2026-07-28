@@ -342,6 +342,7 @@ class _HostScreenState extends ConsumerState<HostScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -373,32 +374,32 @@ class _HostScreenState extends ConsumerState<HostScreen> {
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: isEnabled ? Colors.green.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isEnabled ? Colors.green : Colors.amber, width: 1.5),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        isEnabled ? Icons.check_circle : Icons.offline_bolt_outlined,
-                        color: isEnabled ? Colors.green : Colors.amber.shade800,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        isEnabled ? 'ALWAYS ACTIVE 24/7' : 'NOT YET ALLOCATED',
-                        style: TextStyle(
-                          color: isEnabled ? Colors.green : Colors.amber.shade900,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isEnabled ? Colors.green.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: isEnabled ? Colors.green : Colors.amber, width: 1.5),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isEnabled ? Icons.check_circle : Icons.offline_bolt_outlined,
+                              color: isEnabled ? Colors.green : Colors.amber.shade800,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isEnabled ? 'ALWAYS ACTIVE 24/7' : 'NOT YET ALLOCATED',
+                              style: TextStyle(
+                                color: isEnabled ? Colors.green : Colors.amber.shade900,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -438,22 +439,27 @@ class _HostScreenState extends ConsumerState<HostScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Section 1 header: title + Browse button stacked to avoid overflow
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '1. Container File Storage Location',
                   style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.folder_open_outlined, size: 16),
-                  label: const Text('Browse Folders', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.secondaryContainer,
-                    foregroundColor: theme.colorScheme.onSecondaryContainer,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.folder_open_outlined, size: 16),
+                    label: const Text('Browse Folders', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.secondaryContainer,
+                      foregroundColor: theme.colorScheme.onSecondaryContainer,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    ),
+                    onPressed: isEnabled ? null : () => _pickContainerDirectory(),
                   ),
-                  onPressed: isEnabled ? null : () => _pickContainerDirectory(),
                 ),
               ],
             ),
@@ -479,19 +485,27 @@ class _HostScreenState extends ConsumerState<HostScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Section 2 header: title on its own line, GB chip below
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '2. Custom Storage Reservation Capacity',
-                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                Chip(
-                  label: Text(
-                    '${_reservedGb.round()} GB',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '2. Custom Storage Reservation Capacity',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Chip(
+                      label: Text(
+                        '${_reservedGb.round()} GB',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+                    ),
+                  ],
                 ),
               ],
             ),

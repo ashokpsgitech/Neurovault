@@ -50,50 +50,174 @@ class _FileManagerScreenState extends ConsumerState<FileManagerScreen> {
   }
 
   Future<void> _saveDecryptedFileToDisk(String filename, Uint8List bytes) async {
-    final path = await saveDecryptedFileToDisk(filename, bytes);
-    if (mounted) {
-      if (path != null) {
-        CustomSnackbar.showSuccess(context, 'SAVED TO DISK: $path');
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
+    if (!mounted) return;
+
+    // Show location chooser dialog first
+    String? chosenDir = await showDialog<String>(
+      context: context,
+      builder: (ctx) {
+        String? selectedDir;
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
             title: const Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.green),
+                Icon(Icons.folder_open, color: Colors.amber),
                 SizedBox(width: 12),
-                Text('File Downloaded Successfully'),
+                Flexible(child: Text('Choose Download Location')),
               ],
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('The decrypted file has been saved to your computer:'),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(8),
+                const Text('Where do you want to save the decrypted file?'),
+                const SizedBox(height: 16),
+                // Quick preset: default Downloads
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.download_outlined, color: Colors.blue),
+                  title: const Text('Downloads Folder', style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Default system downloads directory'),
+                  trailing: selectedDir == null ? const Icon(Icons.radio_button_checked, color: Colors.blue) : const Icon(Icons.radio_button_off),
+                  onTap: () => setDialogState(() => selectedDir = null),
+                ),
+                const Divider(height: 1),
+                // Quick preset: app private storage (Android safe)
+                if (Platform.isAndroid)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.security_outlined, color: Colors.green),
+                    title: const Text('App Private Storage', style: TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: const Text('/data/user/0/... (private, secure)'),
+                    trailing: selectedDir == '/app_private' ? const Icon(Icons.radio_button_checked, color: Colors.green) : const Icon(Icons.radio_button_off),
+                    onTap: () async {
+                      try {
+                        // We use a sentinel value; actual resolution happens on save
+                        setDialogState(() => selectedDir = '/app_private');
+                      } catch (_) {}
+                    },
                   ),
-                  child: SelectableText(
-                    path,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                if (selectedDir != null && selectedDir != '/app_private')
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.folder_special_outlined, color: Colors.amber, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedDir!,
+                            style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                const SizedBox(height: 8),
+                // Browse for custom folder
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.folder_open_outlined),
+                  label: const Text('Browse & Choose Custom Folder'),
+                  onPressed: () async {
+                    try {
+                      final dir = await FilePicker.platform.getDirectoryPath(
+                        dialogTitle: 'Select Download Destination Folder',
+                      );
+                      if (dir != null && dir.isNotEmpty) {
+                        setDialogState(() => selectedDir = dir);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Folder picker error: $e')),
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
             ),
             actions: [
-              ElevatedButton(
+              TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.download_done_outlined),
+                label: const Text('Save Here'),
+                onPressed: () => Navigator.pop(ctx, selectedDir ?? ''),
               ),
             ],
           ),
         );
-      } else {
-        CustomSnackbar.showError(context, 'Failed to write file to disk.');
+      },
+    );
+
+    if (chosenDir == null || !mounted) return; // user cancelled
+
+    // Resolve app private sentinel
+    String? resolvedDir;
+    if (chosenDir == '/app_private') {
+      try {
+        final appDir = await FilePicker.platform.getDirectoryPath();
+        resolvedDir = appDir;
+      } catch (_) {
+        resolvedDir = null;
       }
+    } else if (chosenDir.isNotEmpty) {
+      resolvedDir = chosenDir;
+    }
+
+    final path = await saveDecryptedFileToDisk(filename, bytes, customDir: resolvedDir);
+    if (!mounted) return;
+
+    if (path != null) {
+      CustomSnackbar.showSuccess(context, 'Saved: $path');
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 12),
+              Flexible(child: Text('File Downloaded Successfully')),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('The decrypted file has been saved to:'),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SelectableText(
+                  path,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      CustomSnackbar.showError(context, 'Failed to write file to disk.');
     }
   }
 

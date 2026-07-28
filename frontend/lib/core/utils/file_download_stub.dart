@@ -1,16 +1,17 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
+/// Saves [bytes] as [filename] to [customDir] if provided, otherwise to the
+/// platform's default Downloads folder. Returns the saved file path or null.
+Future<String?> downloadOrSaveFile(String filename, Uint8List bytes, {String? customDir}) async {
   try {
     Directory? targetDir;
-    if (Platform.isAndroid) {
+
+    if (customDir != null && customDir.isNotEmpty) {
+      targetDir = Directory(customDir);
+    } else if (Platform.isAndroid) {
       final downloadDir = Directory('/storage/emulated/0/Download');
-      if (downloadDir.existsSync()) {
-        targetDir = downloadDir;
-      } else {
-        targetDir = Directory.systemTemp;
-      }
+      targetDir = downloadDir.existsSync() ? downloadDir : Directory.systemTemp;
     } else if (Platform.isWindows) {
       final userHeader = Platform.environment['USERPROFILE'] ?? '.';
       targetDir = Directory('$userHeader\\Downloads');

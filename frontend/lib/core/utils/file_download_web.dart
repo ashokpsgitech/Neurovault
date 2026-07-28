@@ -3,7 +3,7 @@ import 'dart:html' as html;
 import 'dart:typed_data';
 import 'debug_log_service.dart';
 
-Future<String?> downloadOrSaveFile(String filename, Uint8List bytes) async {
+Future<String?> downloadOrSaveFile(String filename, Uint8List bytes, {String? customDir}) async {
   try {
     final blob = html.Blob([bytes], 'application/octet-stream');
     final url = html.Url.createObjectUrlFromBlob(blob);
