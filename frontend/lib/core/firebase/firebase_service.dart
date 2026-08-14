@@ -13,6 +13,7 @@ import '../../features/authentication/models/user_model.dart';
 import '../../features/files/models/file_metadata_model.dart';
 import '../../features/host/data/host_repository.dart';
 import '../crypto/file_chunker.dart';
+import '../network/p2p_webrtc_service.dart';
 
 /// 24/7 Firebase Cloud Backend Service for NeuroVault.
 /// Provides Authentication and Firestore Metadata sync for host chunk locations.
@@ -553,8 +554,9 @@ class FirebaseService {
                 DebugLogService().warn('[FirebaseService] WARNING: chunk_$i could not be stored — host may not be enabled or path is unavailable');
               }
             } else {
-              // Remote host — POST the chunk bytes to host's built-in HTTP chunk server
+              // Remote host — POST the chunk bytes to host's built-in HTTP chunk server (LAN / same network)
               final String postUrl = 'http://$targetIp:8080/api/storage/chunks/$chunkId';
+              bool remoteWritten = false;
               try {
                 final dio = Dio();
                 await dio.post(
@@ -567,10 +569,35 @@ class FirebaseService {
                     },
                     responseType: ResponseType.json,
                   ),
-                ).timeout(const Duration(seconds: 30));
+                ).timeout(const Duration(seconds: 10));
+                remoteWritten = true;
                 DebugLogService().info('[FirebaseService] Posted chunk_$i (${chunkBytes.length} bytes) to remote host chunk server: $postUrl');
               } catch (e) {
-                DebugLogService().warn('[FirebaseService] Failed to POST chunk_$i to host HTTP server $postUrl: $e');
+                DebugLogService().warn('[FirebaseService] LAN HTTP POST failed for chunk_$i → $postUrl: $e. Trying WebRTC P2P cross-internet...');
+              }
+
+              // Tier 3: WebRTC DataChannel cross-internet fallback
+              if (!remoteWritten) {
+                try {
+                  final bool p2pSuccess = await P2PWebRTCService().uploadChunkViaPeer(
+                    hostId: targetHostId,
+                    chunkId: chunkId,
+                    chunkBytes: Uint8List.fromList(chunkBytes),
+                    timeout: const Duration(seconds: 45),
+                  );
+                  if (p2pSuccess) {
+                    remoteWritten = true;
+                    DebugLogService().info('[FirebaseService] Delivered chunk_$i via WebRTC P2P cross-internet to host $targetHostId');
+                  } else {
+                    DebugLogService().warn('[FirebaseService] WebRTC P2P upload failed for chunk_$i to host $targetHostId');
+                  }
+                } catch (e) {
+                  DebugLogService().warn('[FirebaseService] WebRTC P2P upload exception for chunk_$i: $e');
+                }
+              }
+
+              if (!remoteWritten) {
+                DebugLogService().warn('[FirebaseService] WARNING: chunk_$i could not be delivered to remote host $targetHostId via any transport');
               }
             }
 
@@ -780,6 +807,30 @@ class FirebaseService {
                 DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) via loopback: $loopbackUrl');
               }
             } catch (_) {}
+          }
+
+          // 4. WebRTC P2P DataChannel — cross-internet fallback (different network / cellular)
+          if (!chunkFetched) {
+            final String assignedHostId = chunkData['assignedHostId']?.toString() ?? '';
+            if (assignedHostId.isNotEmpty && assignedHostId != 'local-container') {
+              DebugLogService().info('[FirebaseService] Attempting WebRTC P2P download for chunk $chunkId from host $assignedHostId...');
+              try {
+                final p2pBytes = await P2PWebRTCService().downloadChunkViaPeer(
+                  hostId: assignedHostId,
+                  chunkId: chunkId,
+                  timeout: const Duration(seconds: 60),
+                );
+                if (p2pBytes != null && p2pBytes.isNotEmpty) {
+                  chunkList.add(p2pBytes);
+                  chunkFetched = true;
+                  DebugLogService().info('[FirebaseService] Downloaded chunk $chunkId (${p2pBytes.length} bytes) via WebRTC P2P from host $assignedHostId');
+                } else {
+                  DebugLogService().warn('[FirebaseService] WebRTC P2P download returned empty for chunk $chunkId');
+                }
+              } catch (e) {
+                DebugLogService().warn('[FirebaseService] WebRTC P2P download exception for chunk $chunkId: $e');
+              }
+            }
           }
 
           if (!chunkFetched) {

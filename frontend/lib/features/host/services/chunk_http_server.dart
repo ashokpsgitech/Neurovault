@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import '../../../core/network/p2p_webrtc_service.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../data/host_repository.dart';
 
@@ -17,17 +18,20 @@ class ChunkHttpServer {
 
   HttpServer? _server;
   String? _containerPath;
+  String? _hostId;
   bool _running = false;
 
   bool get isRunning => _running;
 
-  /// Starts the chunk HTTP server bound to all network interfaces on port 8080.
-  Future<void> start(String containerPath) async {
+  /// Starts the chunk HTTP server bound to all network interfaces on port 8080,
+  /// and simultaneously starts the WebRTC P2P host listener for cross-internet transfers.
+  Future<void> start(String containerPath, {String? hostId}) async {
     if (_running) {
       _containerPath = containerPath;
       return;
     }
     _containerPath = containerPath;
+    _hostId = hostId;
     try {
       _server = await HttpServer.bind(InternetAddress.anyIPv4, kPort, shared: true);
       _running = true;
@@ -36,18 +40,88 @@ class ChunkHttpServer {
     } catch (e) {
       DebugLogService().warn('[ChunkHttpServer] Failed to start chunk server on port $kPort: $e');
     }
+
+    // Start WebRTC P2P host listener for cross-internet chunk transfers
+    if (hostId != null && hostId.isNotEmpty) {
+      try {
+        P2PWebRTCService().startHostListener(
+          hostId: hostId,
+          onChunkReadRequest: _readChunkForP2P,
+          onChunkWriteRequest: _writeChunkForP2P,
+        );
+        DebugLogService().info('[ChunkHttpServer] WebRTC P2P listener active for hostId: $hostId');
+      } catch (e) {
+        DebugLogService().warn('[ChunkHttpServer] WebRTC P2P listener startup error: $e');
+      }
+    }
   }
 
-  /// Stops the chunk HTTP server.
+  /// Stops the chunk HTTP server and WebRTC P2P listener.
   Future<void> stop() async {
     _running = false;
     await _server?.close(force: true);
     _server = null;
     DebugLogService().info('[ChunkHttpServer] Host chunk server stopped.');
+
+    // Stop WebRTC host listener
+    if (_hostId != null && _hostId!.isNotEmpty) {
+      try {
+        await P2PWebRTCService().stopHostListener(_hostId!);
+      } catch (_) {}
+    }
   }
 
   void updateContainerPath(String path) {
     _containerPath = path;
+  }
+
+  /// Activates the WebRTC P2P listener with the given [hostId].
+  /// Call this after host registration to enable cross-internet chunk transfers.
+  void activateWebRTCListener(String hostId) {
+    _hostId = hostId;
+    try {
+      P2PWebRTCService().startHostListener(
+        hostId: hostId,
+        onChunkReadRequest: _readChunkForP2P,
+        onChunkWriteRequest: _writeChunkForP2P,
+      );
+      DebugLogService().info('[ChunkHttpServer] WebRTC P2P listener activated for hostId: $hostId');
+    } catch (e) {
+      DebugLogService().warn('[ChunkHttpServer] WebRTC P2P activateWebRTCListener error: $e');
+    }
+  }
+
+  // ─── WebRTC P2P chunk read/write callbacks ───
+
+  Future<Uint8List?> _readChunkForP2P(String chunkId) async {
+    final path = _containerPath;
+    if (path == null || path.isEmpty) return null;
+    try {
+      // Parse chunk index from chunkId format: {fileId}_chunk_{index}
+      int chunkIndex = 0;
+      final match = RegExp(r'_chunk_(\d+)$').firstMatch(chunkId);
+      if (match != null) chunkIndex = int.tryParse(match.group(1) ?? '0') ?? 0;
+      final bytes = await HostRepository().readChunkFromLocalContainer(path, chunkIndex, 0, chunkId: chunkId);
+      DebugLogService().info('[ChunkHttpServer][P2P] Read chunk $chunkId (${bytes?.length ?? 0} bytes) for WebRTC peer');
+      return bytes;
+    } catch (e) {
+      DebugLogService().warn('[ChunkHttpServer][P2P] Error reading chunk $chunkId for P2P: $e');
+      return null;
+    }
+  }
+
+  Future<void> _writeChunkForP2P(String chunkId, Uint8List bytes) async {
+    final path = _containerPath;
+    if (path == null || path.isEmpty) {
+      throw Exception('[ChunkHttpServer][P2P] Container path not set — cannot write chunk');
+    }
+    try {
+      await HostRepository().writeChunkToLocalContainer(path, bytes, chunkId: chunkId);
+      DebugLogService().info('[ChunkHttpServer][P2P] Wrote chunk $chunkId (${bytes.length} bytes) from WebRTC peer');
+    } catch (e) {
+      DebugLogService().warn('[ChunkHttpServer][P2P] Error writing chunk $chunkId from P2P: $e');
+      rethrow;
+    }
   }
 
   void _handleRequests() {

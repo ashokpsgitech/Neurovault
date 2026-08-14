@@ -146,13 +146,17 @@ class HostNotifier extends StateNotifier<HostState> {
       await _storage.saveHostContainerSizeGb(reservedGb);
       await _storage.saveHostAllocated(true);
 
-      // 4. Start 24/7 Android Foreground Service
+      // 4. Activate WebRTC P2P host listener now that we have the canonical hostId
+      //    This enables cross-internet chunk transfers from clients on different networks
+      ChunkHttpServer().activateWebRTCListener(info.id);
+
+      // 5. Start 24/7 Android Foreground Service
       await HostBackgroundService.startHostService(
         reservedGb: reservedGb,
         containerPath: containerPath,
       );
 
-      // 5. Set state to HostEnabled & start 10s heartbeat pulse daemon
+      // 6. Set state to HostEnabled & start 10s heartbeat pulse daemon
       final updatedInfo = info.copyWith(
         status: 'ONLINE',
         containerCreated: true,
