@@ -31,13 +31,15 @@ class P2PWebRTCService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final Uuid _uuid = const Uuid();
 
-  /// Google Public STUN servers — NAT hole-punching
+  /// Google & Global Public STUN servers — NAT hole-punching
   static const Map<String, dynamic> _rtcConfig = {
     'iceServers': [
       {'urls': 'stun:stun.l.google.com:19302'},
       {'urls': 'stun:stun1.l.google.com:19302'},
       {'urls': 'stun:stun2.l.google.com:19302'},
       {'urls': 'stun:stun3.l.google.com:19302'},
+      {'urls': 'stun:stun4.l.google.com:19302'},
+      {'urls': 'stun:global.stun.twilio.com:3478'},
     ],
     'sdpSemantics': 'unified-plan',
   };
@@ -561,46 +563,53 @@ class P2PWebRTCService {
 
       pc = await createPeerConnection(_rtcConfig, _dataChannelConstraints);
 
-      // Create DataChannel from host side for sending chunk bytes to client
-      final init = RTCDataChannelInit()
-        ..ordered = true
-        ..maxRetransmits = 5;
-      final dc = await pc.createDataChannel('chunk-$chunkId', init);
+      // Handle DataChannel created by the client
+      pc.onDataChannel = (channel) {
+        DebugLogService().info('[P2PRTC] [HOST] Download DataChannel received from client: ${channel.label}');
 
-      pc.onIceCandidate = (candidate) async {
-        try {
-          await sessionRef.collection('calleeCandidates').add(candidate.toMap());
-        } catch (_) {}
-      };
-
-      dc.onDataChannelState = (state) async {
-        if (state == RTCDataChannelState.RTCDataChannelOpen) {
-          DebugLogService().info('[P2PRTC] [HOST] Download DataChannel open — reading chunk $chunkId');
+        Future<void> sendChunkData() async {
           try {
             final bytes = await onRead(chunkId);
             if (bytes != null && bytes.isNotEmpty) {
-              dc.send(RTCDataChannelMessage('$chunkId|${bytes.length}'));
+              channel.send(RTCDataChannelMessage('$chunkId|${bytes.length}'));
               const int kSliceSize = 65536;
               int offset = 0;
               while (offset < bytes.length) {
                 final end = (offset + kSliceSize).clamp(0, bytes.length);
-                dc.send(RTCDataChannelMessage.fromBinary(bytes.sublist(offset, end)));
+                channel.send(RTCDataChannelMessage.fromBinary(bytes.sublist(offset, end)));
                 offset = end;
                 if (offset % (kSliceSize * 4) == 0) {
                   await Future.delayed(Duration.zero);
                 }
               }
-              dc.send(RTCDataChannelMessage('__EOF__'));
+              channel.send(RTCDataChannelMessage('__EOF__'));
               await sessionRef.update({'status': 'done'});
-              DebugLogService().info('[P2PRTC] [HOST] Sent ${bytes.length} bytes for chunk $chunkId');
+              DebugLogService().info('[P2PRTC] [HOST] Sent ${bytes.length} bytes for chunk $chunkId to peer');
             } else {
-              dc.send(RTCDataChannelMessage('ERR:not_found'));
+              channel.send(RTCDataChannelMessage('ERR:not_found'));
               await sessionRef.update({'status': 'error'});
             }
           } catch (e) {
             DebugLogService().warn('[P2PRTC] [HOST] Download send error: $e');
+            try { channel.send(RTCDataChannelMessage('ERR:$e')); } catch (_) {}
           }
         }
+
+        if (channel.state == RTCDataChannelState.RTCDataChannelOpen) {
+          sendChunkData();
+        } else {
+          channel.onDataChannelState = (state) {
+            if (state == RTCDataChannelState.RTCDataChannelOpen) {
+              sendChunkData();
+            }
+          };
+        }
+      };
+
+      pc.onIceCandidate = (candidate) async {
+        try {
+          await sessionRef.collection('calleeCandidates').add(candidate.toMap());
+        } catch (_) {}
       };
 
       // Set remote offer (from client) and create answer
