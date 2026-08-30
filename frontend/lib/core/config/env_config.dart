@@ -18,10 +18,10 @@ class EnvConfig {
     }
 
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.42.96.100:8080';
+      return 'https://neurovault-coordinator-a0fxbegtcudkc4g8.centralindia-01.azurewebsites.net';
     }
 
-    return 'http://localhost:8080';
+    return 'https://neurovault-coordinator-a0fxbegtcudkc4g8.centralindia-01.azurewebsites.net';
   }
 
   static const int connectTimeoutMs = 15000;
