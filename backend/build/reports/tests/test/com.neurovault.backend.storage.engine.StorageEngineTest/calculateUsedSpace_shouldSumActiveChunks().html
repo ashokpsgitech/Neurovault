@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - calculateUsedSpace_shouldSumActiveChunks()</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<a class="breadcrumb" href="index.html">com.neurovault.backend.storage.engine.StorageEngineTest</a> &gt; 
+<span class="breadcrumb">calculateUsedSpace_shouldSumActiveChunks()</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>calculateUsedSpace_shouldSumActiveChunks()</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">0.013s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-calculateUsedSpace_shouldSumActiveChunks()">2026-09-02T15:07:34.871+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\junit16598157623892275240\test-host\storage.container with size 2097152 bytes
+2026-09-02T15:07:34.875+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\junit16598157623892275240\test-host\storage.container (2097152 bytes locked on disk)
+2026-09-02T15:07:34.875+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:34.875+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:34.875+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 4922d7de-6c76-40fc-8a45-8dbc92956359 (100 bytes) for owner a0d34858-9da8-498b-844b-024f442d9b83
+2026-09-02T15:07:34.877+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 4922d7de-6c76-40fc-8a45-8dbc92956359 stored at offset 1048832 (100 bytes, SHA256=cd00e292c5970d3c5e2f0ffa5171e555bc46bfc4faddfb4a418b6840b86e79a3)
+2026-09-02T15:07:34.877+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk b73a8c0c-c4e4-4774-bf23-d5d6c7057008 (200 bytes) for owner a0d34858-9da8-498b-844b-024f442d9b83
+2026-09-02T15:07:34.879+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk b73a8c0c-c4e4-4774-bf23-d5d6c7057008 stored at offset 1048932 (200 bytes, SHA256=6d9c54dee5660c46886f32d80e57e9dd0ffa57ee0cd2a762b036d9c8e0c3a33a)
+2026-09-02T15:07:34.879+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 6b9d1656-9dea-4383-b684-06fe69af07cc (300 bytes) for owner a0d34858-9da8-498b-844b-024f442d9b83
+2026-09-02T15:07:34.880+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 6b9d1656-9dea-4383-b684-06fe69af07cc stored at offset 1049132 (300 bytes, SHA256=d13d4a8b3b8add19b5970157f09d00c12cbda4fed4d74d8493156523f7069b66)
+2026-09-02T15:07:34.880+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-calculateUsedSpace_shouldSumActiveChunks()">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
+</div>
+</div>
+</body>
+</html>

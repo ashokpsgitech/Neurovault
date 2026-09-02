@@ -3,15 +3,33 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta http-equiv="x-ua-compatible" content="IE=edge"/>
-<title>Test results - Test Summary</title>
+<title>Test results - All Results</title>
 <link href="css/base-style.css" rel="stylesheet" type="text/css"/>
 <link href="css/style.css" rel="stylesheet" type="text/css"/>
 <script src="js/report.js" type="text/javascript"></script>
 </head>
 <body>
 <div id="content">
-<h1>Test Summary</h1>
-<div id="summary">
+<h1>All Results</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>Gradle Test Run :test</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
 <table>
 <tr>
 <td>
@@ -19,26 +37,26 @@
 <table>
 <tr>
 <td>
-<div class="infoBox" id="tests">
-<div class="counter">127</div>
+<div class="infoBox">
+<div class="counter">136</div>
 <p>tests</p>
 </div>
 </td>
 <td>
-<div class="infoBox" id="failures">
+<div class="infoBox">
 <div class="counter">0</div>
 <p>failures</p>
 </div>
 </td>
 <td>
-<div class="infoBox" id="ignored">
+<div class="infoBox">
 <div class="counter">0</div>
-<p>ignored</p>
+<p>skipped</p>
 </div>
 </td>
 <td>
-<div class="infoBox" id="duration">
-<div class="counter">19.773s</div>
+<div class="infoBox duration">
+<div class="counter">30.163s</div>
 <p>duration</p>
 </div>
 </td>
@@ -47,7 +65,7 @@
 </div>
 </td>
 <td>
-<div class="infoBox success" id="successRate">
+<div class="infoBox success successRate">
 <div class="percent">100%</div>
 <p>successful</p>
 </div>
@@ -55,408 +73,288 @@
 </tr>
 </table>
 </div>
-<div id="tabs">
-<ul class="tabLinks">
-<li>
-<a href="#tab0">Packages</a>
-</li>
-<li>
-<a href="#tab1">Classes</a>
-</li>
-</ul>
-<div id="tab0" class="tab">
-<h2>Packages</h2>
-<table>
+<table class="test-results sortable">
 <thead>
 <tr>
-<th>Package</th>
-<th>Tests</th>
-<th>Failures</th>
-<th>Ignored</th>
-<th>Duration</th>
+<th>Child</th>
+<th>Name</th>
+<th data-sort-default="desc">Tests</th>
+<th data-sort-default="desc">Failures</th>
+<th data-sort-default="desc">Skipped</th>
+<th data-sort-default="desc">Duration</th>
 <th>Success rate</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.controller.html">com.neurovault.backend.controller</a>
+<a href="com.neurovault.backend.controller.AuthControllerTest/index.html">AuthControllerTest</a>
 </td>
-<td>7</td>
+<td class="path">com.neurovault.backend.controller.AuthControllerTest</td>
+<td>4</td>
 <td>0</td>
 <td>0</td>
-<td>3.132s</td>
-<td class="success">100%</td>
+<td data-sort-value="6984">6.984s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.coordinator.html">com.neurovault.backend.coordinator</a>
+<a href="com.neurovault.backend.controller.FileControllerTest/index.html">FileControllerTest</a>
 </td>
+<td class="path">com.neurovault.backend.controller.FileControllerTest</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="1447">1.447s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.coordinator.CoordinatorServiceTest/index.html">CoordinatorServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.coordinator.CoordinatorServiceTest</td>
 <td>2</td>
 <td>0</td>
 <td>0</td>
-<td>0.068s</td>
-<td class="success">100%</td>
+<td data-sort-value="824">0.824s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.download.html">com.neurovault.backend.download</a>
+<a href="com.neurovault.backend.download.DownloadServiceTest/index.html">DownloadServiceTest</a>
 </td>
+<td class="path">com.neurovault.backend.download.DownloadServiceTest</td>
 <td>1</td>
 <td>0</td>
 <td>0</td>
-<td>0.117s</td>
-<td class="success">100%</td>
+<td data-sort-value="712">0.712s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.encryption.html">com.neurovault.backend.encryption</a>
+<a href="com.neurovault.backend.encryption.AesEncryptionServiceTest/index.html">AesEncryptionServiceTest</a>
 </td>
-<td>34</td>
+<td class="path">com.neurovault.backend.encryption.AesEncryptionServiceTest</td>
+<td>7</td>
 <td>0</td>
 <td>0</td>
-<td>12.485s</td>
-<td class="success">100%</td>
+<td data-sort-value="247">0.247s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.host.service.html">com.neurovault.backend.host.service</a>
+<a href="com.neurovault.backend.encryption.ChunkEngineTest/index.html">ChunkEngineTest</a>
 </td>
-<td>11</td>
+<td class="path">com.neurovault.backend.encryption.ChunkEngineTest</td>
+<td>13</td>
 <td>0</td>
 <td>0</td>
-<td>1.209s</td>
-<td class="success">100%</td>
+<td data-sort-value="17">0.017s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.monitor.service.html">com.neurovault.backend.monitor.service</a>
+<a href="com.neurovault.backend.encryption.IntegrityServiceTest/index.html">IntegrityServiceTest</a>
 </td>
-<td>8</td>
+<td class="path">com.neurovault.backend.encryption.IntegrityServiceTest</td>
+<td>9</td>
 <td>0</td>
 <td>0</td>
-<td>0.453s</td>
-<td class="success">100%</td>
+<td data-sort-value="11">0.011s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.replication.controller.html">com.neurovault.backend.replication.controller</a>
+<a href="com.neurovault.backend.encryption.RsaKeyServiceTest/index.html">RsaKeyServiceTest</a>
 </td>
+<td class="path">com.neurovault.backend.encryption.RsaKeyServiceTest</td>
 <td>5</td>
 <td>0</td>
 <td>0</td>
-<td>0.168s</td>
-<td class="success">100%</td>
+<td data-sort-value="5485">5.485s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.replication.service.html">com.neurovault.backend.replication.service</a>
+<a href="com.neurovault.backend.host.service.HeartbeatServiceTest/index.html">HeartbeatServiceTest</a>
 </td>
-<td>16</td>
+<td class="path">com.neurovault.backend.host.service.HeartbeatServiceTest</td>
+<td>6</td>
 <td>0</td>
 <td>0</td>
-<td>1.001s</td>
-<td class="success">100%</td>
+<td data-sort-value="452">0.452s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.scheduler.html">com.neurovault.backend.scheduler</a>
+<a href="com.neurovault.backend.host.service.HostRegistrationServiceTest/index.html">HostRegistrationServiceTest</a>
 </td>
+<td class="path">com.neurovault.backend.host.service.HostRegistrationServiceTest</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="116">0.116s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.monitor.service.ClusterAnalyticsServiceTest/index.html">ClusterAnalyticsServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.monitor.service.ClusterAnalyticsServiceTest</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="1384">1.384s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.monitor.service.ClusterHealthMonitorTest/index.html">ClusterHealthMonitorTest</a>
+</td>
+<td class="path">com.neurovault.backend.monitor.service.ClusterHealthMonitorTest</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="1131">1.131s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.monitor.service.FailureDetectionServiceTest/index.html">FailureDetectionServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.monitor.service.FailureDetectionServiceTest</td>
 <td>2</td>
 <td>0</td>
 <td>0</td>
-<td>0.050s</td>
-<td class="success">100%</td>
+<td data-sort-value="951">0.951s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.storage.container.html">com.neurovault.backend.storage.container</a>
+<a href="com.neurovault.backend.replication.controller.ClusterControllerTest/index.html">ClusterControllerTest</a>
 </td>
-<td>14</td>
+<td class="path">com.neurovault.backend.replication.controller.ClusterControllerTest</td>
+<td>5</td>
 <td>0</td>
 <td>0</td>
-<td>0.229s</td>
-<td class="success">100%</td>
+<td data-sort-value="1864">1.864s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.storage.engine.html">com.neurovault.backend.storage.engine</a>
+<a href="com.neurovault.backend.replication.service.ChunkTransferServiceTest/index.html">ChunkTransferServiceTest</a>
 </td>
-<td>17</td>
+<td class="path">com.neurovault.backend.replication.service.ChunkTransferServiceTest</td>
+<td>4</td>
 <td>0</td>
 <td>0</td>
-<td>0.284s</td>
-<td class="success">100%</td>
+<td data-sort-value="1880">1.880s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.storage.service.html">com.neurovault.backend.storage.service</a>
+<a href="com.neurovault.backend.replication.service.LoadBalancingServiceTest/index.html">LoadBalancingServiceTest</a>
 </td>
+<td class="path">com.neurovault.backend.replication.service.LoadBalancingServiceTest</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="1408">1.408s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.replication.service.ReplicationServiceTest/index.html">ReplicationServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.replication.service.ReplicationServiceTest</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="984">0.984s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.replication.service.SelfHealingServiceTest/index.html">SelfHealingServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.replication.service.SelfHealingServiceTest</td>
 <td>8</td>
 <td>0</td>
 <td>0</td>
-<td>0.403s</td>
-<td class="success">100%</td>
+<td data-sort-value="255">0.255s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 <tr>
 <td class="success">
-<a href="packages/com.neurovault.backend.upload.html">com.neurovault.backend.upload</a>
+<a href="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest/index.html">WeightedScoreHostSelectionStrategyTest</a>
 </td>
+<td class="path">com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest</td>
+<td>6</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="745">0.745s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.scheduler.ClusterMaintenanceSchedulerTest/index.html">ClusterMaintenanceSchedulerTest</a>
+</td>
+<td class="path">com.neurovault.backend.scheduler.ClusterMaintenanceSchedulerTest</td>
 <td>2</td>
 <td>0</td>
 <td>0</td>
-<td>0.174s</td>
-<td class="success">100%</td>
+<td data-sort-value="726">0.726s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.storage.container.ContainerManagerTest/index.html">ContainerManagerTest</a>
+</td>
+<td class="path">com.neurovault.backend.storage.container.ContainerManagerTest</td>
+<td>14</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="162">0.162s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.storage.engine.StorageEngineTest/index.html">StorageEngineTest</a>
+</td>
+<td class="path">com.neurovault.backend.storage.engine.StorageEngineTest</td>
+<td>17</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="239">0.239s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.storage.service.StorageServiceTest/index.html">StorageServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.storage.service.StorageServiceTest</td>
+<td>8</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="259">0.259s</td>
+<td class="success" data-sort-value="100">100%</td>
+</tr>
+<tr>
+<td class="success">
+<a href="com.neurovault.backend.upload.UploadServiceTest/index.html">UploadServiceTest</a>
+</td>
+<td class="path">com.neurovault.backend.upload.UploadServiceTest</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td data-sort-value="618">0.618s</td>
+<td class="success" data-sort-value="100">100%</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="tab1" class="tab">
-<h2>Classes</h2>
-<table>
-<thead>
-<tr>
-<th>Class</th>
-<th>Tests</th>
-<th>Failures</th>
-<th>Ignored</th>
-<th>Duration</th>
-<th>Success rate</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.controller.AuthControllerTest.html">com.neurovault.backend.controller.AuthControllerTest</a>
-</td>
-<td>4</td>
-<td>0</td>
-<td>0</td>
-<td>2.340s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.controller.FileControllerTest.html">com.neurovault.backend.controller.FileControllerTest</a>
-</td>
-<td>3</td>
-<td>0</td>
-<td>0</td>
-<td>0.792s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.coordinator.CoordinatorServiceTest.html">com.neurovault.backend.coordinator.CoordinatorServiceTest</a>
-</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>0.068s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.download.DownloadServiceTest.html">com.neurovault.backend.download.DownloadServiceTest</a>
-</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>0.117s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.encryption.AesEncryptionServiceTest.html">com.neurovault.backend.encryption.AesEncryptionServiceTest</a>
-</td>
-<td>7</td>
-<td>0</td>
-<td>0</td>
-<td>0.465s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.encryption.ChunkEngineTest.html">com.neurovault.backend.encryption.ChunkEngineTest</a>
-</td>
-<td>13</td>
-<td>0</td>
-<td>0</td>
-<td>0.031s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.encryption.IntegrityServiceTest.html">com.neurovault.backend.encryption.IntegrityServiceTest</a>
-</td>
-<td>9</td>
-<td>0</td>
-<td>0</td>
-<td>0.012s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.encryption.RsaKeyServiceTest.html">com.neurovault.backend.encryption.RsaKeyServiceTest</a>
-</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>11.977s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.host.service.HeartbeatServiceTest.html">com.neurovault.backend.host.service.HeartbeatServiceTest</a>
-</td>
-<td>6</td>
-<td>0</td>
-<td>0</td>
-<td>1.036s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.host.service.HostRegistrationServiceTest.html">com.neurovault.backend.host.service.HostRegistrationServiceTest</a>
-</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>0.173s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.monitor.service.ClusterAnalyticsServiceTest.html">com.neurovault.backend.monitor.service.ClusterAnalyticsServiceTest</a>
-</td>
-<td>1</td>
-<td>0</td>
-<td>0</td>
-<td>0.061s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.monitor.service.ClusterHealthMonitorTest.html">com.neurovault.backend.monitor.service.ClusterHealthMonitorTest</a>
-</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>0.291s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.monitor.service.FailureDetectionServiceTest.html">com.neurovault.backend.monitor.service.FailureDetectionServiceTest</a>
-</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>0.101s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.replication.controller.ClusterControllerTest.html">com.neurovault.backend.replication.controller.ClusterControllerTest</a>
-</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>0.168s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.replication.service.LoadBalancingServiceTest.html">com.neurovault.backend.replication.service.LoadBalancingServiceTest</a>
-</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>0.298s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.replication.service.ReplicationServiceTest.html">com.neurovault.backend.replication.service.ReplicationServiceTest</a>
-</td>
-<td>5</td>
-<td>0</td>
-<td>0</td>
-<td>0.243s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.replication.service.SelfHealingServiceTest.html">com.neurovault.backend.replication.service.SelfHealingServiceTest</a>
-</td>
-<td>3</td>
-<td>0</td>
-<td>0</td>
-<td>0.265s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest.html">com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest</a>
-</td>
-<td>6</td>
-<td>0</td>
-<td>0</td>
-<td>0.195s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.scheduler.ClusterMaintenanceSchedulerTest.html">com.neurovault.backend.scheduler.ClusterMaintenanceSchedulerTest</a>
-</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>0.050s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.storage.container.ContainerManagerTest.html">com.neurovault.backend.storage.container.ContainerManagerTest</a>
-</td>
-<td>14</td>
-<td>0</td>
-<td>0</td>
-<td>0.229s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.storage.engine.StorageEngineTest.html">com.neurovault.backend.storage.engine.StorageEngineTest</a>
-</td>
-<td>17</td>
-<td>0</td>
-<td>0</td>
-<td>0.284s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.storage.service.StorageServiceTest.html">com.neurovault.backend.storage.service.StorageServiceTest</a>
-</td>
-<td>8</td>
-<td>0</td>
-<td>0</td>
-<td>0.403s</td>
-<td class="success">100%</td>
-</tr>
-<tr>
-<td class="success">
-<a href="classes/com.neurovault.backend.upload.UploadServiceTest.html">com.neurovault.backend.upload.UploadServiceTest</a>
-</td>
-<td>2</td>
-<td>0</td>
-<td>0</td>
-<td>0.174s</td>
-<td class="success">100%</td>
-</tr>
-</tbody>
-</table>
+</div>
+</div>
 </div>
 </div>
 <div id="footer">
@@ -466,7 +364,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 8.8</a> at 26-Jul-2026, 4:57:16 pm</p>
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
 </div>
 </div>
 </body>

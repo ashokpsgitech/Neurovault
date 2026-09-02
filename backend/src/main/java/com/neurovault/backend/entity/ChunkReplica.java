@@ -54,6 +54,7 @@ public class ChunkReplica {
 
     public enum Status {
         ACTIVE,
+        SYNCING,
         MISSING,
         CORRUPTED
     }

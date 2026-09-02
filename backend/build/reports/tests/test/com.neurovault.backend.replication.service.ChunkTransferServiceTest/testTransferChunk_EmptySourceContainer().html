@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - testTransferChunk_EmptySourceContainer()</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<a class="breadcrumb" href="index.html">com.neurovault.backend.replication.service.ChunkTransferServiceTest</a> &gt; 
+<span class="breadcrumb">testTransferChunk_EmptySourceContainer()</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>testTransferChunk_EmptySourceContainer()</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">0.143s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-testTransferChunk_EmptySourceContainer()">2026-09-02T15:07:30.172+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 82214dda-69be-43fd-82fe-ad7858893114 with size 500 MB (path=null)
+2026-09-02T15:07:30.175+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.175+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.209+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.209+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.209+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.214+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 82214dda-69be-43fd-82fe-ad7858893114 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.219+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3 with size 500 MB (path=null)
+2026-09-02T15:07:30.220+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.220+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.223+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.223+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.223+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.226+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.236+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.236+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.236+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.237+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.237+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 (256 bytes) for owner eedd4f09-db2b-48c0-8417-a964c5bad6db
+2026-09-02T15:07:30.246+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.252+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Initiating chunk transfer: chunk=be3e19c5-4577-43df-ad8f-841d2b2d3228, source=DestHost (8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3), destination=SourceHost (82214dda-69be-43fd-82fe-ad7858893114)
+2026-09-02T15:07:30.257+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.257+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.257+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.258+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.258+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.258+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.259+05:30 ERROR 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Transfer failed for chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 (DestHost → SourceHost): Chunk not found with ID: be3e19c5-4577-43df-ad8f-841d2b2d3228
+
+com.neurovault.backend.storage.exception.ChunkNotFoundException: Chunk not found with ID: be3e19c5-4577-43df-ad8f-841d2b2d3228
+	at com.neurovault.backend.storage.engine.StorageEngine.readChunk(StorageEngine.java:182) ~[main/:na]
+	at com.neurovault.backend.storage.service.StorageService.readChunk(StorageService.java:236) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:354) ~[spring-aop-6.1.10.jar:6.1.10]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716) ~[spring-aop-6.1.10.jar:6.1.10]
+	at com.neurovault.backend.storage.service.StorageService$$SpringCGLIB$$0.readChunk(&lt;generated&gt;) ~[main/:na]
+	at com.neurovault.backend.replication.service.ChunkTransferService.transferChunk(ChunkTransferService.java:70) ~[main/:na]
+	at com.neurovault.backend.replication.service.ChunkTransferServiceTest.testTransferChunk_EmptySourceContainer(ChunkTransferServiceTest.java:220) ~[test/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728) ~[junit-platform-commons-1.10.2.jar:1.10.2]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:218) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:214) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:139) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:206) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:123) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:117) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63) ~[na:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77) ~[na:na]
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28) ~[na:na]
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19) ~[na:na]
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33) ~[na:na]
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88) ~[na:na]
+	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63) ~[na:na]
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56) ~[na:na]
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122) ~[na:na]
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72) ~[na:na]
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69) ~[gradle-worker.jar:na]
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74) ~[gradle-worker.jar:na]
+
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-testTransferChunk_EmptySourceContainer()">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
+</div>
+</div>
+</body>
+</html>

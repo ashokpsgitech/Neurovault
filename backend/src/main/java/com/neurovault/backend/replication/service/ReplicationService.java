@@ -235,4 +235,81 @@ public class ReplicationService {
                 .map(chunk -> generateReplicaMetadata(chunk.getId()))
                 .collect(Collectors.toList());
     }
+
+    /**
+     * Creates a new replica record with {@code SYNCING} status for self-healing transfers.
+     * Unlike {@link #assignReplicas}, this does NOT set the status to ACTIVE — the caller
+     * must verify the physical transfer before promoting to ACTIVE via {@link #markReplicaActive}.
+     *
+     * @param chunkId the chunk to replicate
+     * @param hostId  the destination host
+     * @return the created replica in SYNCING state
+     * @throws ReplicationException if chunk or host not found, or replica already exists
+     */
+    @Transactional
+    public ChunkReplica createSyncingReplica(UUID chunkId, UUID hostId) {
+        log.info("Creating SYNCING replica for chunk {} on host {}", chunkId, hostId);
+
+        Chunk chunk = chunkRepository.findById(chunkId)
+                .orElseThrow(() -> new ReplicationException("Chunk not found: " + chunkId));
+
+        Host host = hostRepository.findById(hostId)
+                .orElseThrow(() -> new ReplicationException("Host not found: " + hostId));
+
+        // Check for existing replica (any status) to prevent duplicates
+        if (chunkReplicaRepository.findByChunkIdAndHostId(chunkId, hostId).isPresent()) {
+            throw new ReplicationException(
+                    String.format("Replica already exists for chunk %s on host %s", chunkId, hostId));
+        }
+
+        ChunkReplica replica = ChunkReplica.builder()
+                .chunk(chunk)
+                .host(host)
+                .containerOffsetBytes(0L)
+                .status(ChunkReplica.Status.SYNCING)
+                .build();
+
+        ChunkReplica saved = chunkReplicaRepository.save(replica);
+        log.info("Created SYNCING replica {} for chunk {} on host {}", saved.getId(), chunkId, hostId);
+        return saved;
+    }
+
+    /**
+     * Promotes a SYNCING replica to ACTIVE after successful physical transfer and verification.
+     *
+     * @param replicaId the replica to promote
+     * @throws ReplicationException if replica not found or not in SYNCING state
+     */
+    @Transactional
+    public void markReplicaActive(UUID replicaId) {
+        ChunkReplica replica = chunkReplicaRepository.findById(replicaId)
+                .orElseThrow(() -> new ReplicationException("Replica not found: " + replicaId));
+
+        if (replica.getStatus() != ChunkReplica.Status.SYNCING) {
+            log.warn("Cannot promote replica {} — expected SYNCING but found {}",
+                    replicaId, replica.getStatus());
+            return;
+        }
+
+        replica.setStatus(ChunkReplica.Status.ACTIVE);
+        chunkReplicaRepository.save(replica);
+        log.info("Promoted replica {} to ACTIVE (chunk={}, host={})",
+                replicaId, replica.getChunk().getId(), replica.getHost().getId());
+    }
+
+    /**
+     * Finds a healthy source host that has an ACTIVE replica of the given chunk.
+     *
+     * @param chunkId the chunk to find a source for
+     * @return an ONLINE host with an ACTIVE replica, or empty if none available
+     */
+    public Optional<Host> findHealthySourceHost(UUID chunkId) {
+        List<ChunkReplica> activeReplicas = chunkReplicaRepository
+                .findByChunkIdAndStatus(chunkId, ChunkReplica.Status.ACTIVE);
+
+        return activeReplicas.stream()
+                .map(ChunkReplica::getHost)
+                .filter(host -> host.getStatus() == Host.Status.ONLINE)
+                .findFirst();
+    }
 }

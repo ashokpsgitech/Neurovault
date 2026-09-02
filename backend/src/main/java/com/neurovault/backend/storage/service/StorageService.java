@@ -291,13 +291,21 @@ public class StorageService {
     }
 
     private void ensureContainerOpen(Path path) {
-        if (!containerManager.isOpen()) {
-            try {
-                containerManager.openContainer(path);
-                storageEngine.initialize();
-            } catch (ContainerException e) {
-                throw new ContainerException("Failed to open container at " + path, e);
+        if (containerManager.isOpen()) {
+            // Check if the correct container is already open
+            Path currentPath = containerManager.getContainerPath();
+            if (currentPath != null && currentPath.equals(path)) {
+                return; // Already open to the right container
             }
+            // Different container is open — close it and switch
+            log.debug("Switching container from {} to {}", currentPath, path);
+            containerManager.closeContainer();
+        }
+        try {
+            containerManager.openContainer(path);
+            storageEngine.initialize();
+        } catch (ContainerException e) {
+            throw new ContainerException("Failed to open container at " + path, e);
         }
     }
 

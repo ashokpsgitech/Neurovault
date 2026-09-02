@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - testCompleteUpload()</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<a class="breadcrumb" href="index.html">com.neurovault.backend.controller.FileControllerTest</a> &gt; 
+<span class="breadcrumb">testCompleteUpload()</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>POST /api/files/upload-complete should finalize metadata</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">0.242s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-testCompleteUpload()">2026-09-02T15:07:15.245+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.controller.FileController    : Upload plan request from user a280ad65-8e19-4153-afce-1f4bfcb8aac4 for file 'complete-test.dat'
+2026-09-02T15:07:15.246+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Creating upload plan for file 'complete-test.dat' (4194304 bytes, 1 chunks) for user a280ad65-8e19-4153-afce-1f4bfcb8aac4
+2026-09-02T15:07:15.246+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes (user=a280ad65-8e19-4153-afce-1f4bfcb8aac4, mode=null), excluding []
+2026-09-02T15:07:15.255+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:15.258+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.coordinator.CoordinatorService     : Selected 1 target host nodes using strategy 'WeightedScore' for 1 chunk allocations (user=a280ad65-8e19-4153-afce-1f4bfcb8aac4, mode=null)
+2026-09-02T15:07:15.261+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Created upload session d40c06c4-fa4d-4d61-b377-10b11724771e for file 'complete-test.dat' (1 chunks)
+2026-09-02T15:07:15.266+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session d40c06c4-fa4d-4d61-b377-10b11724771e fileId set to ccec357b-551c-4d8e-8c75-46a4b939050e
+2026-09-02T15:07:15.277+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload plan created: sessionId=d40c06c4-fa4d-4d61-b377-10b11724771e, allocations=1
+2026-09-02T15:07:15.312+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.controller.FileController    : Upload completion request from user a280ad65-8e19-4153-afce-1f4bfcb8aac4 for session d40c06c4-fa4d-4d61-b377-10b11724771e
+2026-09-02T15:07:15.313+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Finalizing upload session d40c06c4-fa4d-4d61-b377-10b11724771e for user a280ad65-8e19-4153-afce-1f4bfcb8aac4
+2026-09-02T15:07:15.315+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 24259d40-af22-4fe7-80c7-f61e66f537b3
+2026-09-02T15:07:15.320+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica a9963d04-9b3a-4cc7-babb-365dc06db9eb for chunk 24259d40-af22-4fe7-80c7-f61e66f537b3 on host 2c8466c1-e112-4162-af77-0fbbde8f40a5
+2026-09-02T15:07:15.321+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session d40c06c4-fa4d-4d61-b377-10b11724771e status updated to COMPLETED
+2026-09-02T15:07:15.321+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload session d40c06c4-fa4d-4d61-b377-10b11724771e successfully finalized: fileId=fb93700c-654d-4aee-9366-c86b7cff1519
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-testCompleteUpload()">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
+</div>
+</div>
+</body>
+</html>

@@ -4,6 +4,7 @@ import com.neurovault.backend.entity.ChunkReplica;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -13,4 +14,7 @@ import java.util.UUID;
 public interface ChunkReplicaRepository extends JpaRepository<ChunkReplica, UUID> {
     List<ChunkReplica> findByChunkId(UUID chunkId);
     List<ChunkReplica> findByHostId(UUID hostId);
+    Optional<ChunkReplica> findByChunkIdAndHostId(UUID chunkId, UUID hostId);
+    List<ChunkReplica> findByStatus(ChunkReplica.Status status);
+    List<ChunkReplica> findByChunkIdAndStatus(UUID chunkId, ChunkReplica.Status status);
 }

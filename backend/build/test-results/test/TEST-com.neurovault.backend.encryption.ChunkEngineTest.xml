@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.encryption.ChunkEngineTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:26:41" hostname="ASHOK" time="0.041">
+<testsuite name="com.neurovault.backend.encryption.ChunkEngineTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:17.223Z" hostname="LAPTOP-32IT9DET" time="0.017">
   <properties/>
-  <testcase name="splitFile should produce correct number of chunks for multi-chunk data" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.005"/>
-  <testcase name="each chunk should have valid SHA-256 hash and CRC32 checksum" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.002"/>
-  <testcase name="getChunkSize should return configured chunk size" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
+  <testcase name="splitFile should produce correct number of chunks for multi-chunk data" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.003"/>
+  <testcase name="each chunk should have valid SHA-256 hash and CRC32 checksum" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
+  <testcase name="getChunkSize should return configured chunk size" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
   <testcase name="verifyChunkOrder should return false for missing indices" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.002"/>
   <testcase name="splitFile should produce a single chunk for data smaller than chunk size" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
-  <testcase name="calculateTotalChunks should handle edge cases correctly" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
-  <testcase name="splitFile with non-aligned size should have smaller last chunk" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.004"/>
-  <testcase name="mergeChunks should sort by index even if chunks arrive out of order" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.005"/>
-  <testcase name="split then merge should recover original data" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.005"/>
-  <testcase name="verifyChunkOrder should return true for valid contiguous indices" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.003"/>
+  <testcase name="calculateTotalChunks should handle edge cases correctly" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
+  <testcase name="splitFile with non-aligned size should have smaller last chunk" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
+  <testcase name="mergeChunks should sort by index even if chunks arrive out of order" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.002"/>
+  <testcase name="split then merge should recover original data" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
+  <testcase name="verifyChunkOrder should return true for valid contiguous indices" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
   <testcase name="verifyChunkOrder should return false for duplicate indices" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
   <testcase name="verifyChunkOrder should return false for empty list" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
-  <testcase name="mergeChunks with empty list should throw IllegalArgumentException" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.001"/>
-  <system-out><![CDATA[2026-07-26T16:56:41.743+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T16:56:41.745+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2048 bytes) into 2 chunks (chunk size=1024)
-2026-07-26T16:56:41.750+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 2
-2026-07-26T16:56:41.752+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (18 bytes) into 1 chunks (chunk size=1024)
-2026-07-26T16:56:41.759+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2148 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T16:56:41.763+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T16:56:41.765+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 3 chunks into 3072 bytes
-2026-07-26T16:56:41.771+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (5620 bytes) into 6 chunks (chunk size=1024)
-2026-07-26T16:56:41.771+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 6 chunks into 5620 bytes
-2026-07-26T16:56:41.775+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
-2026-07-26T16:56:41.776+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 0
+  <testcase name="mergeChunks with empty list should throw IllegalArgumentException" classname="com.neurovault.backend.encryption.ChunkEngineTest" time="0.0"/>
+  <system-out><![CDATA[2026-09-02T15:07:17.226+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-09-02T15:07:17.227+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2048 bytes) into 2 chunks (chunk size=1024)
+2026-09-02T15:07:17.230+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 2
+2026-09-02T15:07:17.231+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (18 bytes) into 1 chunks (chunk size=1024)
+2026-09-02T15:07:17.233+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (2148 bytes) into 3 chunks (chunk size=1024)
+2026-09-02T15:07:17.234+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-09-02T15:07:17.235+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 3 chunks into 3072 bytes
+2026-09-02T15:07:17.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (5620 bytes) into 6 chunks (chunk size=1024)
+2026-09-02T15:07:17.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Merged 6 chunks into 5620 bytes
+2026-09-02T15:07:17.238+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Split file (3072 bytes) into 3 chunks (chunk size=1024)
+2026-09-02T15:07:17.239+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] c.n.backend.encryption.ChunkEngine       : Chunk order verification failed at position 1: expected index 1, got 0
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

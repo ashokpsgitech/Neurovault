@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.host.service.HeartbeatServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:26:53" hostname="ASHOK" time="1.045">
+<testsuite name="com.neurovault.backend.host.service.HeartbeatServiceTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:22.739Z" hostname="LAPTOP-32IT9DET" time="0.452">
   <properties/>
-  <testcase name="getHeartbeatHistory_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.951"/>
-  <testcase name="markHostOffline_shouldUpdateStatus()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.048"/>
-  <testcase name="processHeartbeat_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.013"/>
-  <testcase name="processHeartbeat_shouldUpdateHostAndPersist()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.011"/>
-  <testcase name="markHostOffline_shouldNotUpdateIfAlreadyOffline()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.006"/>
-  <testcase name="getHeartbeatHistory_shouldReturnOrderedList()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.007"/>
-  <system-out><![CDATA[2026-07-26T16:56:54.763+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Marking host cbe8f1e2-c436-4a4c-b401-865e3624adb9 ('test-host') as OFFLINE due to missed heartbeats
-2026-07-26T16:56:54.804+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host b90796a3-4017-46d0-907d-4eee47402493
-2026-07-26T16:56:54.817+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host 24a1bb14-72db-462d-ae4c-12d4273df9f6
-2026-07-26T16:56:54.818+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Heartbeat from host 24a1bb14-72db-462d-ae4c-12d4273df9f6 processed successfully
+  <testcase name="getHeartbeatHistory_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.393"/>
+  <testcase name="markHostOffline_shouldUpdateStatus()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.022"/>
+  <testcase name="processHeartbeat_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.008"/>
+  <testcase name="processHeartbeat_shouldUpdateHostAndPersist()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.008"/>
+  <testcase name="markHostOffline_shouldNotUpdateIfAlreadyOffline()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.005"/>
+  <testcase name="getHeartbeatHistory_shouldReturnOrderedList()" classname="com.neurovault.backend.host.service.HeartbeatServiceTest" time="0.006"/>
+  <system-out><![CDATA[2026-09-02T15:07:23.145+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Marking host 1adf93d3-e628-4508-ac6b-31c067f0702c ('test-host') as OFFLINE due to missed heartbeats
+2026-09-02T15:07:23.166+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host 15dd1126-e969-4ad1-b9fb-c2d658d4a374
+2026-09-02T15:07:23.173+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Processing heartbeat from host f0b667d8-e53c-45f0-a2ba-f73a44f64690
+2026-09-02T15:07:23.173+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.host.service.HeartbeatService      : Heartbeat from host f0b667d8-e53c-45f0-a2ba-f73a44f64690 processed successfully
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

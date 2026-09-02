@@ -5,6 +5,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import java.time.Duration;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
@@ -60,4 +65,16 @@ public class ReplicationConfig {
      */
     @Positive
     private long schedulerIntervalMs = 30000;
+
+    private int hostPort = 8080;
+
+    private int transferTimeoutSeconds = 120;
+
+    @Bean
+    public RestTemplate restTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(10));
+        factory.setReadTimeout(Duration.ofSeconds(transferTimeoutSeconds));
+        return new RestTemplate(factory);
+    }
 }

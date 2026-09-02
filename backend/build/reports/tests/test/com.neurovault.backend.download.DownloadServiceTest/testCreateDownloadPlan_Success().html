@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - testCreateDownloadPlan_Success()</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<a class="breadcrumb" href="index.html">com.neurovault.backend.download.DownloadServiceTest</a> &gt; 
+<span class="breadcrumb">testCreateDownloadPlan_Success()</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>createDownloadPlan should return chunk locations and tokens for metadata file</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">0.063s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-testCreateDownloadPlan_Success()">2026-09-02T15:07:16.913+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-09-02T15:07:16.914+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-09-02T15:07:16.914+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-09-02T15:07:16.916+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-09-02T15:07:16.917+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-09-02T15:07:16.918+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-09-02T15:07:16.918+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_STARTED, hostId=null, chunkId=null, message='Self-healing cycle started', time=2026-09-02T15:07:16.920946}
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_COMPLETED, hostId=null, chunkId=null, message='No repairs needed — all chunks fully replicated', time=2026-09-02T15:07:16.925946300}
+2026-09-02T15:07:16.927+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-09-02T15:07:16.930+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Creating upload plan for file 'dl-test.txt' (4194304 bytes, 1 chunks) for user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.930+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes (user=e1d10e28-b4b0-4a7f-afe4-6c9775204542, mode=null), excluding []
+2026-09-02T15:07:16.933+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-09-02T15:07:16.934+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-09-02T15:07:16.934+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:16.936+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.coordinator.CoordinatorService     : Selected 1 target host nodes using strategy 'WeightedScore' for 1 chunk allocations (user=e1d10e28-b4b0-4a7f-afe4-6c9775204542, mode=null)
+2026-09-02T15:07:16.937+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Created upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f for file 'dl-test.txt' (1 chunks)
+2026-09-02T15:07:16.938+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f fileId set to 1d98b1f5-c636-4f07-b616-297b89078237
+2026-09-02T15:07:16.942+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload plan created: sessionId=980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f, allocations=1
+2026-09-02T15:07:16.946+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Finalizing upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f for user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.949+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk fdea0796-8d7d-4711-b339-7283717072bf
+2026-09-02T15:07:16.953+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 433d05d9-a5ad-4306-b000-867d9d0b8ce8 for chunk fdea0796-8d7d-4711-b339-7283717072bf on host cfc3ffc6-3055-4fcb-bf72-e3f1cb31d4f5
+2026-09-02T15:07:16.953+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f status updated to COMPLETED
+2026-09-02T15:07:16.954+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f successfully finalized: fileId=94ee1824-1d35-4612-aa74-9bbb613f599b
+2026-09-02T15:07:16.965+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadSessionManager    : Created download session 66878680-671e-4363-a399-006a1a31e7ae for file 'dl-test.txt' (1 chunks) by user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.971+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.download.DownloadService     : Created download plan for file 'dl-test.txt' (94ee1824-1d35-4612-aa74-9bbb613f599b): session=66878680-671e-4363-a399-006a1a31e7ae, locations=1
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-testCreateDownloadPlan_Success()">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
+</div>
+</div>
+</body>
+</html>

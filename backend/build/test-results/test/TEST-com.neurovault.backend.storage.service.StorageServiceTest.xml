@@ -1,23 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.storage.service.StorageServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:27:14" hostname="ASHOK" time="0.408">
+<testsuite name="com.neurovault.backend.storage.service.StorageServiceTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:35.054Z" hostname="LAPTOP-32IT9DET" time="0.259">
   <properties/>
-  <testcase name="createStorage_shouldUpdateExistingContainer()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.357"/>
-  <testcase name="createStorage_shouldCreateContainerAndPersist()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.007"/>
-  <testcase name="listChunks_shouldReturnDtoList()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.009"/>
-  <testcase name="readChunk_shouldReturnEncryptedBytes()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.006"/>
-  <testcase name="storeChunk_shouldDelegateToEngine()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.008"/>
-  <testcase name="deleteStorage_shouldDeleteContainerAndCleanup()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.006"/>
+  <testcase name="createStorage_shouldUpdateExistingContainer()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.226"/>
+  <testcase name="createStorage_shouldCreateContainerAndPersist()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.008"/>
+  <testcase name="listChunks_shouldReturnDtoList()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.005"/>
+  <testcase name="readChunk_shouldReturnEncryptedBytes()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.002"/>
+  <testcase name="storeChunk_shouldDelegateToEngine()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.005"/>
+  <testcase name="deleteStorage_shouldDeleteContainerAndCleanup()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.003"/>
   <testcase name="createStorage_shouldThrowWhenHostNotFound()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.003"/>
-  <testcase name="getStorageStatus_shouldReturnLiveMetrics()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.007"/>
-  <system-out><![CDATA[2026-07-26T16:57:15.254+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host c00300b8-dffb-4c9a-b7c5-3ae26d966d1a with size 1 GB (path=null)
-2026-07-26T16:57:15.256+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: .\test-storage\c00300b8-dffb-4c9a-b7c5-3ae26d966d1a\storage.container
-2026-07-26T16:57:15.258+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host c00300b8-dffb-4c9a-b7c5-3ae26d966d1a at .\test-storage\c00300b8-dffb-4c9a-b7c5-3ae26d966d1a\storage.container (1073741824 bytes locked on disk)
-2026-07-26T16:57:15.267+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 94b8f3a9-6cf7-4d09-960a-38c97c72995b with size 1 GB (path=null)
-2026-07-26T16:57:15.267+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: .\test-storage\94b8f3a9-6cf7-4d09-960a-38c97c72995b\storage.container
-2026-07-26T16:57:15.268+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 94b8f3a9-6cf7-4d09-960a-38c97c72995b at .\test-storage\94b8f3a9-6cf7-4d09-960a-38c97c72995b\storage.container (1073741824 bytes locked on disk)
-2026-07-26T16:57:15.297+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Deleting storage container for host 0948f10f-3b94-459d-a8e1-b3d9c9b8d32b
-2026-07-26T16:57:15.300+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container deleted for host 0948f10f-3b94-459d-a8e1-b3d9c9b8d32b
-2026-07-26T16:57:15.304+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 5dbb8c0a-2ea5-4515-8333-245744deec52 with size 1 GB (path=null)
+  <testcase name="getStorageStatus_shouldReturnLiveMetrics()" classname="com.neurovault.backend.storage.service.StorageServiceTest" time="0.002"/>
+  <system-out><![CDATA[2026-09-02T15:07:35.277+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 515161e9-7f6e-4143-989a-5eed2c8187df with size 1 GB (path=null)
+2026-09-02T15:07:35.278+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: .\test-storage\515161e9-7f6e-4143-989a-5eed2c8187df\storage.container
+2026-09-02T15:07:35.279+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 515161e9-7f6e-4143-989a-5eed2c8187df at .\test-storage\515161e9-7f6e-4143-989a-5eed2c8187df\storage.container (1073741824 bytes locked on disk)
+2026-09-02T15:07:35.285+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 2f379e8c-fe2a-43e1-88a1-79c784f57ada with size 1 GB (path=null)
+2026-09-02T15:07:35.286+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: .\test-storage\2f379e8c-fe2a-43e1-88a1-79c784f57ada\storage.container
+2026-09-02T15:07:35.287+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 2f379e8c-fe2a-43e1-88a1-79c784f57ada at .\test-storage\2f379e8c-fe2a-43e1-88a1-79c784f57ada\storage.container (1073741824 bytes locked on disk)
+2026-09-02T15:07:35.293+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from null to .\test-storage\f7299a02-5148-4227-8471-d08701688c10\storage.container
+2026-09-02T15:07:35.298+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from null to .\test-storage\56a26878-8616-4e4e-8115-b0f56b787c60\storage.container
+2026-09-02T15:07:35.303+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from null to .\test-storage\b6aab7c7-35b8-41ed-b87b-59595dd844de\storage.container
+2026-09-02T15:07:35.306+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Deleting storage container for host 002e2dbe-7a7d-4d52-919c-44105a1a8431
+2026-09-02T15:07:35.307+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container deleted for host 002e2dbe-7a7d-4d52-919c-44105a1a8431
+2026-09-02T15:07:35.311+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host de07db70-4ba4-46d3-ad0a-20a01a448528 with size 1 GB (path=null)
+2026-09-02T15:07:35.313+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from null to .\test-storage\a2cdd9c1-0f0a-4a6f-ae08-3eef1b3e0736\storage.container
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

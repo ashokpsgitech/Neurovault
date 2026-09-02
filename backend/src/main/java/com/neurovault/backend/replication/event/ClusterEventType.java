@@ -38,5 +38,15 @@ public enum ClusterEventType {
     /** A repair operation has completed successfully. */
     REPAIR_COMPLETED,
     /** A repair operation has failed. */
-    REPAIR_FAILED
+    REPAIR_FAILED,
+
+    // Self-healing transfer events
+    HEALING_CYCLE_STARTED,
+    HEALING_CYCLE_COMPLETED,
+    REPAIR_TRANSFER_STARTED,
+    REPAIR_TRANSFER_COMPLETED,
+    REPAIR_INTEGRITY_VERIFIED,
+    REPAIR_METADATA_COMMITTED,
+    REPAIR_NO_SOURCE_AVAILABLE,
+    REPAIR_NO_DESTINATION_AVAILABLE
 }

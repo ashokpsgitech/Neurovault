@@ -7,6 +7,8 @@ import com.neurovault.backend.host.dto.HostStatusDto;
 import com.neurovault.backend.host.service.HostRegistrationService;
 import com.neurovault.backend.repository.UserRepository;
 import com.neurovault.backend.storage.dto.ChunkMetadataDto;
+import com.neurovault.backend.storage.dto.ChunkTransferRequest;
+import com.neurovault.backend.storage.dto.ChunkTransferResponse;
 import com.neurovault.backend.storage.dto.CreateContainerRequest;
 import com.neurovault.backend.storage.dto.StorageStatusResponse;
 import com.neurovault.backend.storage.dto.StoreChunkRequest;
@@ -154,6 +156,129 @@ public class StorageController {
         log.info("DELETE /api/storage/chunks/{} for host {}", chunkId, targetHostId);
         storageService.deleteChunk(targetHostId, chunkId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Transfers a chunk from a source host's container to a destination host's container.
+     * This endpoint is called by the Coordinator (SelfHealingService) to initiate a
+     * host-to-host repair transfer. In the current single-process architecture, both
+     * containers are managed by the same JVM.
+     *
+     * <p>Flow:
+     * <ol>
+     *   <li>Read chunk data from source host's container</li>
+     *   <li>Compute SHA-256 hash and verify against expected checksum</li>
+     *   <li>Store chunk data in destination host's container</li>
+     *   <li>Verify the stored chunk's hash matches</li>
+     *   <li>Return transfer result</li>
+     * </ol>
+     */
+    @PostMapping("/transfer")
+    public ResponseEntity<ChunkTransferResponse> transferChunk(
+            @RequestBody ChunkTransferRequest request) {
+
+        log.info("POST /api/storage/transfer — chunk {} from host {} to host {}",
+                request.getChunkId(), request.getSourceHostId(), request.getDestinationHostId());
+
+        try {
+            // 1. Read chunk from source host
+            byte[] chunkData = storageService.readChunk(
+                    request.getSourceHostId(), request.getChunkId());
+
+            if (chunkData == null || chunkData.length == 0) {
+                return ResponseEntity.ok(ChunkTransferResponse.builder()
+                        .success(false)
+                        .chunkId(request.getChunkId())
+                        .sourceHostId(request.getSourceHostId())
+                        .destinationHostId(request.getDestinationHostId())
+                        .errorMessage("Chunk data not found on source host")
+                        .build());
+            }
+
+            // 2. Verify source integrity against expected checksum
+            if (request.getExpectedChecksum() != null && !request.getExpectedChecksum().isEmpty()) {
+                String sourceHash = computeSha256(chunkData);
+                if (!sourceHash.equalsIgnoreCase(request.getExpectedChecksum())) {
+                    log.error("Source integrity check failed for chunk {}: expected={}, actual={}",
+                            request.getChunkId(), request.getExpectedChecksum(), sourceHash);
+                    return ResponseEntity.ok(ChunkTransferResponse.builder()
+                            .success(false)
+                            .chunkId(request.getChunkId())
+                            .sourceHostId(request.getSourceHostId())
+                            .destinationHostId(request.getDestinationHostId())
+                            .errorMessage("Source integrity verification failed")
+                            .build());
+                }
+            }
+
+            // 3. Store chunk on destination host
+            StoreChunkRequest storeRequest = StoreChunkRequest.builder()
+                    .chunkId(request.getChunkId())
+                    .ownerId(request.getOwnerId())
+                    .data(chunkData)
+                    .build();
+
+            ChunkMetadataDto destMetadata = storageService.storeChunk(
+                    request.getDestinationHostId(), storeRequest);
+
+            // 4. Verify destination integrity
+            String destinationChecksum = destMetadata.getSha256Hash();
+
+            boolean checksumMatch = request.getExpectedChecksum() == null
+                    || request.getExpectedChecksum().isEmpty()
+                    || destinationChecksum.equalsIgnoreCase(request.getExpectedChecksum());
+
+            if (!checksumMatch) {
+                log.error("Destination integrity check failed for chunk {}: expected={}, destination={}",
+                        request.getChunkId(), request.getExpectedChecksum(), destinationChecksum);
+                return ResponseEntity.ok(ChunkTransferResponse.builder()
+                        .success(false)
+                        .chunkId(request.getChunkId())
+                        .sourceHostId(request.getSourceHostId())
+                        .destinationHostId(request.getDestinationHostId())
+                        .destinationChecksum(destinationChecksum)
+                        .errorMessage("Destination integrity verification failed")
+                        .build());
+            }
+
+            log.info("Chunk {} successfully transferred from host {} to host {}",
+                    request.getChunkId(), request.getSourceHostId(), request.getDestinationHostId());
+
+            return ResponseEntity.ok(ChunkTransferResponse.builder()
+                    .success(true)
+                    .chunkId(request.getChunkId())
+                    .sourceHostId(request.getSourceHostId())
+                    .destinationHostId(request.getDestinationHostId())
+                    .destinationChecksum(destinationChecksum)
+                    .build());
+
+        } catch (Exception e) {
+            log.error("Transfer failed for chunk {}: {}", request.getChunkId(), e.getMessage(), e);
+            return ResponseEntity.ok(ChunkTransferResponse.builder()
+                    .success(false)
+                    .chunkId(request.getChunkId())
+                    .sourceHostId(request.getSourceHostId())
+                    .destinationHostId(request.getDestinationHostId())
+                    .errorMessage("Transfer failed: " + e.getMessage())
+                    .build());
+        }
+    }
+
+    /**
+     * Computes SHA-256 hash of the given data.
+     */
+    private String computeSha256(byte[] data) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data);
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 not available", e);
+        }
     }
 
     /**

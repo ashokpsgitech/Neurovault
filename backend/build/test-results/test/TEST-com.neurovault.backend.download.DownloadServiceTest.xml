@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.download.DownloadServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:26:41" hostname="ASHOK" time="0.117">
+<testsuite name="com.neurovault.backend.download.DownloadServiceTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:16.263Z" hostname="LAPTOP-32IT9DET" time="0.712">
   <properties/>
-  <testcase name="createDownloadPlan should return chunk locations and tokens for metadata file" classname="com.neurovault.backend.download.DownloadServiceTest" time="0.117"/>
-  <system-out><![CDATA[2026-07-26T16:56:39.932+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.download.DownloadServiceTest]: DownloadServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-07-26T16:56:39.942+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.download.DownloadServiceTest
+  <testcase name="createDownloadPlan should return chunk locations and tokens for metadata file" classname="com.neurovault.backend.download.DownloadServiceTest" time="0.063"/>
+  <system-out><![CDATA[2026-09-02T15:07:16.264+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.download.DownloadServiceTest]: DownloadServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-02T15:07:16.272+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.download.DownloadServiceTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -14,52 +14,55 @@
 
  :: Spring Boot ::                (v3.3.1)
 
-2026-07-26T16:56:39.982+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Starting DownloadServiceTest using Java 21.0.11 with PID 7872 (started by ashok in D:\Project\micro server\backend)
-2026-07-26T16:56:39.984+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Running with Spring Boot v3.3.1, Spring v6.1.10
-2026-07-26T16:56:39.984+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : The following 1 profile is active: "test"
-2026-07-26T16:56:40.301+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-07-26T16:56:40.335+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 32 ms. Found 10 JPA repository interfaces.
-2026-07-26T16:56:40.437+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-07-26T16:56:40.441+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-07-26T16:56:40.452+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-07-26T16:56:40.453+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
-2026-07-26T16:56:40.458+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-4 - Added connection conn30: url=jdbc:h2:mem:downloadtestdb user=SA
-2026-07-26T16:56:40.459+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
-2026-07-26T16:56:40.459+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-07-26T16:56:40.684+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-07-26T16:56:40.723+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-07-26T16:56:40.773+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2026-07-26T16:56:40.774+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
-2026-07-26T16:56:40.939+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-07-26T16:56:41.140+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
-2026-07-26T16:56:41.140+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Started DownloadServiceTest in 1.193 seconds (process running for 18.557)
-2026-07-26T16:56:41.147+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
-2026-07-26T16:56:41.148+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
-2026-07-26T16:56:41.148+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
-2026-07-26T16:56:41.152+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T16:56:41.157+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
-2026-07-26T16:56:41.157+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T16:56:41.157+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
-2026-07-26T16:56:41.164+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
-2026-07-26T16:56:41.165+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T16:56:41.167+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
-2026-07-26T16:56:41.168+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
-2026-07-26T16:56:41.171+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
-2026-07-26T16:56:41.179+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Creating upload plan for file 'dl-test.txt' (4194304 bytes, 1 chunks) for user e8adcfd9-9d9c-4f58-907a-7b1de176122e
-2026-07-26T16:56:41.179+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes (user=e8adcfd9-9d9c-4f58-907a-7b1de176122e, mode=null), excluding []
-2026-07-26T16:56:41.182+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
-2026-07-26T16:56:41.182+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
-2026-07-26T16:56:41.189+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
-2026-07-26T16:56:41.192+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.coordinator.CoordinatorService     : Selected 1 target host nodes using strategy 'WeightedScore' for 1 chunk allocations (user=e8adcfd9-9d9c-4f58-907a-7b1de176122e, mode=null)
-2026-07-26T16:56:41.194+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Created upload session d71fff50-180e-4e11-8139-bc4904564ec7 for file 'dl-test.txt' (1 chunks)
-2026-07-26T16:56:41.201+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload plan created: sessionId=d71fff50-180e-4e11-8139-bc4904564ec7, allocations=1
-2026-07-26T16:56:41.211+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Finalizing upload session d71fff50-180e-4e11-8139-bc4904564ec7 for user e8adcfd9-9d9c-4f58-907a-7b1de176122e
-2026-07-26T16:56:41.215+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk 430c9cdf-7290-495c-bf87-f0803f84bdd6
-2026-07-26T16:56:41.224+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica ffc890a5-78c8-4ca5-a92e-0ad0228a800c for chunk 430c9cdf-7290-495c-bf87-f0803f84bdd6 on host 56c4acf4-528c-4f29-bdc9-2f5995aaf8f6
-2026-07-26T16:56:41.225+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session d71fff50-180e-4e11-8139-bc4904564ec7 status updated to COMPLETED
-2026-07-26T16:56:41.225+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload session d71fff50-180e-4e11-8139-bc4904564ec7 successfully finalized: fileId=82c07211-7db1-4d97-b443-84ab1a285c19
-2026-07-26T16:56:41.243+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadSessionManager    : Created download session f27bed38-0922-4ac4-8bb1-264d48baac08 for file 'dl-test.txt' (1 chunks) by user e8adcfd9-9d9c-4f58-907a-7b1de176122e
-2026-07-26T16:56:41.256+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] c.n.backend.download.DownloadService     : Created download plan for file 'dl-test.txt' (82c07211-7db1-4d97-b443-84ab1a285c19): session=f27bed38-0922-4ac4-8bb1-264d48baac08, locations=1
+2026-09-02T15:07:16.292+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Starting DownloadServiceTest using Java 21.0.12.1 with PID 30068 (started by Arun Madav R in D:\Projects\Neurovault-main\backend)
+2026-09-02T15:07:16.292+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-09-02T15:07:16.292+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : The following 1 profile is active: "test"
+2026-09-02T15:07:16.447+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-02T15:07:16.466+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 18 ms. Found 10 JPA repository interfaces.
+2026-09-02T15:07:16.524+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-02T15:07:16.526+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-02T15:07:16.532+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-02T15:07:16.534+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2026-09-02T15:07:16.537+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-4 - Added connection conn30: url=jdbc:h2:mem:downloadtestdb user=SA
+2026-09-02T15:07:16.537+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2026-09-02T15:07:16.537+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-02T15:07:16.655+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-02T15:07:16.669+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-02T15:07:16.690+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-09-02T15:07:16.692+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-09-02T15:07:16.806+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-02T15:07:16.909+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-09-02T15:07:16.910+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadServiceTest       : Started DownloadServiceTest in 0.634 seconds (process running for 10.841)
+2026-09-02T15:07:16.913+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-09-02T15:07:16.914+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-09-02T15:07:16.914+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-09-02T15:07:16.916+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-09-02T15:07:16.917+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-09-02T15:07:16.918+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-09-02T15:07:16.918+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-09-02T15:07:16.920+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_STARTED, hostId=null, chunkId=null, message='Self-healing cycle started', time=2026-09-02T15:07:16.920946}
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-09-02T15:07:16.925+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_COMPLETED, hostId=null, chunkId=null, message='No repairs needed — all chunks fully replicated', time=2026-09-02T15:07:16.925946300}
+2026-09-02T15:07:16.927+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-09-02T15:07:16.930+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Creating upload plan for file 'dl-test.txt' (4194304 bytes, 1 chunks) for user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.930+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 4194304 bytes (user=e1d10e28-b4b0-4a7f-afe4-6c9775204542, mode=null), excluding []
+2026-09-02T15:07:16.933+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-09-02T15:07:16.934+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-09-02T15:07:16.934+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:16.936+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.coordinator.CoordinatorService     : Selected 1 target host nodes using strategy 'WeightedScore' for 1 chunk allocations (user=e1d10e28-b4b0-4a7f-afe4-6c9775204542, mode=null)
+2026-09-02T15:07:16.937+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Created upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f for file 'dl-test.txt' (1 chunks)
+2026-09-02T15:07:16.938+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f fileId set to 1d98b1f5-c636-4f07-b616-297b89078237
+2026-09-02T15:07:16.942+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload plan created: sessionId=980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f, allocations=1
+2026-09-02T15:07:16.946+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Finalizing upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f for user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.949+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Assigning 1 replicas for chunk fdea0796-8d7d-4711-b339-7283717072bf
+2026-09-02T15:07:16.953+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ReplicationService       : Created replica 433d05d9-a5ad-4306-b000-867d9d0b8ce8 for chunk fdea0796-8d7d-4711-b339-7283717072bf on host cfc3ffc6-3055-4fcb-bf72-e3f1cb31d4f5
+2026-09-02T15:07:16.953+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadSessionManager  : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f status updated to COMPLETED
+2026-09-02T15:07:16.954+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.upload.UploadService         : Upload session 980ed7c0-2d96-4f99-a3ee-8bba5b6c4e8f successfully finalized: fileId=94ee1824-1d35-4612-aa74-9bbb613f599b
+2026-09-02T15:07:16.965+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.download.DownloadSessionManager    : Created download session 66878680-671e-4363-a399-006a1a31e7ae for file 'dl-test.txt' (1 chunks) by user e1d10e28-b4b0-4a7f-afe4-6c9775204542
+2026-09-02T15:07:16.971+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.backend.download.DownloadService     : Created download plan for file 'dl-test.txt' (94ee1824-1d35-4612-aa74-9bbb613f599b): session=66878680-671e-4363-a399-006a1a31e7ae, locations=1
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

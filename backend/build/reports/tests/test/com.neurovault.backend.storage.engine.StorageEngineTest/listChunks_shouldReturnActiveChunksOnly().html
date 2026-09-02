@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Test results - listChunks_shouldReturnActiveChunksOnly()</title>
+<link href="../css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="../css/style.css" rel="stylesheet" type="text/css"/>
+<script src="../js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<div class="breadcrumbs">
+<a class="breadcrumb" href="../index.html">all</a> &gt; 
+<a class="breadcrumb" href="index.html">com.neurovault.backend.storage.engine.StorageEngineTest</a> &gt; 
+<span class="breadcrumb">listChunks_shouldReturnActiveChunksOnly()</span>
+</div>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="successGroup" href="#">Gradle Test Run :test</a>
+</li>
+</ul>
+<div class="tab">
+<h2>Gradle Test Run :test</h2>
+<h1>listChunks_shouldReturnActiveChunksOnly()</h1>
+<div class="tab-container">
+<ul class="tabLinks">
+<li>
+<a class="" href="#">summary</a>
+</li>
+<li>
+<a class="" href="#">standard output</a>
+</li>
+</ul>
+<div class="tab">
+<h2>summary</h2>
+<div>
+<div class="summary">
+<table>
+<tr>
+<td>
+<div class="summaryGroup">
+<table>
+<tr>
+<td>
+<div class="infoBox">
+<div class="counter">1</div>
+<p>tests</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>failures</p>
+</div>
+</td>
+<td>
+<div class="infoBox">
+<div class="counter">0</div>
+<p>skipped</p>
+</div>
+</td>
+<td>
+<div class="infoBox duration">
+<div class="counter">0.016s</div>
+<p>duration</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</td>
+<td>
+<div class="infoBox success successRate">
+<div class="percent">100%</div>
+<p>successful</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="tab">
+<h2>standard output</h2>
+<span class="code">
+<pre id="root-0-test-stdout-listChunks_shouldReturnActiveChunksOnly()">2026-09-02T15:07:34.914+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\junit15601603993644579810\test-host\storage.container with size 2097152 bytes
+2026-09-02T15:07:34.918+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\junit15601603993644579810\test-host\storage.container (2097152 bytes locked on disk)
+2026-09-02T15:07:34.919+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:34.919+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:34.919+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 8444b4f8-bc2e-40b7-9441-ac97f2799a6a (4 bytes) for owner b7402bfc-51cc-410b-b0a1-6044dc99af6f
+2026-09-02T15:07:34.921+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 8444b4f8-bc2e-40b7-9441-ac97f2799a6a stored at offset 1048832 (4 bytes, SHA256=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08)
+2026-09-02T15:07:34.921+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 80c22e4e-3d16-48dd-a427-b09a32496790 (4 bytes) for owner b7402bfc-51cc-410b-b0a1-6044dc99af6f
+2026-09-02T15:07:34.922+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 80c22e4e-3d16-48dd-a427-b09a32496790 stored at offset 1048836 (4 bytes, SHA256=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08)
+2026-09-02T15:07:34.923+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk ead16dae-48a1-4831-809a-a181c0f0af4f (4 bytes) for owner b7402bfc-51cc-410b-b0a1-6044dc99af6f
+2026-09-02T15:07:34.924+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk ead16dae-48a1-4831-809a-a181c0f0af4f stored at offset 1048840 (4 bytes, SHA256=9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08)
+2026-09-02T15:07:34.924+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Deleting chunk 80c22e4e-3d16-48dd-a427-b09a32496790 (4 bytes)
+2026-09-02T15:07:34.925+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 80c22e4e-3d16-48dd-a427-b09a32496790 marked as deleted
+2026-09-02T15:07:34.926+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+</pre>
+<button class="clipboard-copy-btn" aria-label="Copy to clipboard" data-copy-element-id="root-0-test-stdout-listChunks_shouldReturnActiveChunksOnly()">Copy</button>
+</span>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="https://www.gradle.org">Gradle 9.7.1</a> at Sep 2, 2026, 3:07:36 PM</p>
+</div>
+</div>
+</body>
+</html>

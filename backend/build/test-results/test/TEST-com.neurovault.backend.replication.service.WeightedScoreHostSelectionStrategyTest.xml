@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-07-26T11:27:12" hostname="ASHOK" time="0.201">
+<testsuite name="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:33.178Z" hostname="LAPTOP-32IT9DET" time="0.745">
   <properties/>
-  <testcase name="testSelectHosts_FilteringOfflineAndUnhealthy()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.049"/>
-  <testcase name="testSelectHosts_ExcludesContainerFailures()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.023"/>
-  <testcase name="testComputeScore_RankingVerification()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.06"/>
-  <testcase name="testSelectHosts_ExcludesStaleHeartbeat()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.018"/>
-  <testcase name="testSelectHosts_ExcludesInsufficientCapacity()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.023"/>
-  <testcase name="testSelectHosts_ExcludesManuallyExcludedHosts()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.022"/>
-  <system-out><![CDATA[2026-07-26T16:57:11.331+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest]: WeightedScoreHostSelectionStrategyTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-2026-07-26T16:57:11.333+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest
+  <testcase name="testSelectHosts_FilteringOfflineAndUnhealthy()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.023"/>
+  <testcase name="testSelectHosts_ExcludesContainerFailures()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.01"/>
+  <testcase name="testComputeScore_RankingVerification()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.026"/>
+  <testcase name="testSelectHosts_ExcludesStaleHeartbeat()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.012"/>
+  <testcase name="testSelectHosts_ExcludesInsufficientCapacity()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.012"/>
+  <testcase name="testSelectHosts_ExcludesManuallyExcludedHosts()" classname="com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest" time="0.009"/>
+  <system-out><![CDATA[2026-09-02T15:07:33.180+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest]: WeightedScoreHostSelectionStrategyTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-02T15:07:33.181+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.WeightedScoreHostSelectionStrategyTest
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -19,54 +19,56 @@
 
  :: Spring Boot ::                (v3.3.1)
 
-2026-07-26T16:57:11.370+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Starting WeightedScoreHostSelectionStrategyTest using Java 21.0.11 with PID 7872 (started by ashok in D:\Project\micro server\backend)
-2026-07-26T16:57:11.370+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Running with Spring Boot v3.3.1, Spring v6.1.10
-2026-07-26T16:57:11.370+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : The following 1 profile is active: "test"
-2026-07-26T16:57:11.727+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-07-26T16:57:11.768+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 41 ms. Found 10 JPA repository interfaces.
-2026-07-26T16:57:11.919+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-07-26T16:57:11.924+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-07-26T16:57:11.942+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-07-26T16:57:11.943+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-12 - Starting...
-2026-07-26T16:57:11.948+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-12 - Added connection conn110: url=jdbc:h2:mem:testdb_selection user=SA
-2026-07-26T16:57:11.948+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-12 - Start completed.
-2026-07-26T16:57:11.948+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-07-26T16:57:12.186+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-07-26T16:57:12.213+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-07-26T16:57:12.272+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
-2026-07-26T16:57:12.272+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
-2026-07-26T16:57:12.443+05:30  WARN 7872 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-07-26T16:57:12.667+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
-2026-07-26T16:57:12.667+05:30  INFO 7872 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Started WeightedScoreHostSelectionStrategyTest in 1.331 seconds (process running for 50.084)
-2026-07-26T16:57:12.678+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
-2026-07-26T16:57:12.679+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
-2026-07-26T16:57:12.679+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
-2026-07-26T16:57:12.682+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
-2026-07-26T16:57:12.686+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
-2026-07-26T16:57:12.687+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
-2026-07-26T16:57:12.687+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
-2026-07-26T16:57:12.693+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
-2026-07-26T16:57:12.693+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 2 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
-2026-07-26T16:57:12.693+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
-2026-07-26T16:57:12.696+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
-2026-07-26T16:57:12.696+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
-2026-07-26T16:57:12.698+05:30 DEBUG 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
-2026-07-26T16:57:12.709+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
-2026-07-26T16:57:12.709+05:30  INFO 7872 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
-2026-07-26T16:57:12.712+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 2 total hosts
-2026-07-26T16:57:12.720+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host aa454120-20bb-452d-bc83-cd17304ff52b (name=OnlineHost) with score {:.4f}
-2026-07-26T16:57:12.734+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
-2026-07-26T16:57:12.745+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
-2026-07-26T16:57:12.769+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 2 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
-2026-07-26T16:57:12.785+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 2 total hosts
-2026-07-26T16:57:12.805+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host a53db7ea-66df-4bd2-9e63-7f82ab4354f1 (name=HostA) with score {:.4f}
-2026-07-26T16:57:12.805+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host a1a8d596-8224-4f22-a70f-9d5835a02746 (name=HostB) with score {:.4f}
-2026-07-26T16:57:12.819+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
-2026-07-26T16:57:12.825+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
-2026-07-26T16:57:12.840+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 10 bytes (user=null, mode=null), excluding []
-2026-07-26T16:57:12.850+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
-2026-07-26T16:57:12.865+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding [2c569ba5-ae6e-4279-b95e-c75b8cb61de7]
-2026-07-26T16:57:12.871+05:30 DEBUG 7872 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:33.205+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Starting WeightedScoreHostSelectionStrategyTest using Java 21.0.12.1 with PID 30068 (started by Arun Madav R in D:\Projects\Neurovault-main\backend)
+2026-09-02T15:07:33.205+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-09-02T15:07:33.205+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : The following 1 profile is active: "test"
+2026-09-02T15:07:33.362+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-02T15:07:33.384+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 21 ms. Found 10 JPA repository interfaces.
+2026-09-02T15:07:33.445+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-02T15:07:33.446+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-02T15:07:33.455+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-02T15:07:33.455+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-12 - Starting...
+2026-09-02T15:07:33.458+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-12 - Added connection conn110: url=jdbc:h2:mem:testdb_selection user=SA
+2026-09-02T15:07:33.458+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-12 - Start completed.
+2026-09-02T15:07:33.458+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-02T15:07:33.577+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-02T15:07:33.593+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-02T15:07:33.619+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-09-02T15:07:33.620+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-09-02T15:07:33.705+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-02T15:07:33.826+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] s.WeightedScoreHostSelectionStrategyTest : Started WeightedScoreHostSelectionStrategyTest in 0.642 seconds (process running for 27.757)
+2026-09-02T15:07:33.826+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : Running stale host detection check...
+2026-09-02T15:07:33.833+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.host.scheduler.HeartbeatScheduler  : No ONLINE hosts to check
+2026-09-02T15:07:33.833+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Starting scheduled cluster maintenance cycle...
+2026-09-02T15:07:33.833+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Checking for timed-out host heartbeats...
+2026-09-02T15:07:33.834+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Running failure detection scan...
+2026-09-02T15:07:33.835+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterHealthMonitor     : Cluster health scan: 0/0 hosts healthy
+2026-09-02T15:07:33.836+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Failure detection complete: 0 new events published
+2026-09-02T15:07:33.836+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Scanning for failed replicas...
+2026-09-02T15:07:33.837+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 2 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
+2026-09-02T15:07:33.840+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.FailureDetectionService  : Replica failure scan complete: 0 issues found
+2026-09-02T15:07:33.840+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : ═══ Starting self-healing cycle ═══
+2026-09-02T15:07:33.840+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_STARTED, hostId=null, chunkId=null, message='Self-healing cycle started', time=2026-09-02T15:07:33.840536500}
+2026-09-02T15:07:33.842+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 1 eligible candidates from 2 total hosts
+2026-09-02T15:07:33.844+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.ReplicationService       : Found 0 under-replicated chunks
+2026-09-02T15:07:33.844+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.service.SelfHealingService       : All chunks are fully replicated — no repairs needed
+2026-09-02T15:07:33.845+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.r.event.ClusterEventPublisher      : Publishing cluster event: ClusterEvent{type=HEALING_CYCLE_COMPLETED, hostId=null, chunkId=null, message='No repairs needed — all chunks fully replicated', time=2026-09-02T15:07:33.845534700}
+2026-09-02T15:07:33.846+05:30 DEBUG 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Computing cluster statistics...
+2026-09-02T15:07:33.849+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 78e03196-1970-4cf6-b09b-022828e4c219 (name=OnlineHost) with score {:.4f}
+2026-09-02T15:07:33.853+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.m.service.ClusterAnalyticsService  : Cluster stats: hosts=0/0 online, files=0, chunks=0, replicas=0/0 active, avg-rf={:.2f}, utilization={:.1f}%
+2026-09-02T15:07:33.853+05:30  INFO 30068 --- [neurovault-backend] [   scheduling-1] c.n.b.s.ClusterMaintenanceScheduler      : Scheduled cluster maintenance cycle completed successfully.
+2026-09-02T15:07:33.857+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
+2026-09-02T15:07:33.861+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:33.874+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 2 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
+2026-09-02T15:07:33.881+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 2 eligible candidates from 2 total hosts
+2026-09-02T15:07:33.887+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 738cfc10-847f-4d78-b773-fc49be6862e4 (name=HostA) with score {:.4f}
+2026-09-02T15:07:33.887+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy :   Selected host 7dd6d171-139f-41de-a1a4-56bfdd85351b (name=HostB) with score {:.4f}
+2026-09-02T15:07:33.896+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding []
+2026-09-02T15:07:33.899+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:33.907+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 10 bytes (user=null, mode=null), excluding []
+2026-09-02T15:07:33.911+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
+2026-09-02T15:07:33.918+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Selecting 1 hosts for chunk of 50 bytes (user=null, mode=null), excluding [49485e06-4dab-4298-ade9-70d2b3760fe5]
+2026-09-02T15:07:33.922+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] b.r.s.WeightedScoreHostSelectionStrategy : Found 0 eligible candidates from 1 total hosts
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

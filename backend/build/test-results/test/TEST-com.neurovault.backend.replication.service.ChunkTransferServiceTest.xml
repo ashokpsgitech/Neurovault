@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.neurovault.backend.replication.service.ChunkTransferServiceTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-02T09:37:28.646Z" hostname="LAPTOP-32IT9DET" time="1.879">
+  <properties/>
+  <testcase name="testTransferChunk_EmptySourceContainer()" classname="com.neurovault.backend.replication.service.ChunkTransferServiceTest" time="0.143"/>
+  <testcase name="testTransferChunk_IntegrityMismatch()" classname="com.neurovault.backend.replication.service.ChunkTransferServiceTest" time="0.072"/>
+  <testcase name="testTransferChunk_WithMatchingChecksum()" classname="com.neurovault.backend.replication.service.ChunkTransferServiceTest" time="0.082"/>
+  <testcase name="testTransferChunk_Success()" classname="com.neurovault.backend.replication.service.ChunkTransferServiceTest" time="0.082"/>
+  <system-out><![CDATA[2026-09-02T15:07:28.647+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [com.neurovault.backend.replication.service.ChunkTransferServiceTest]: ChunkTransferServiceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-09-02T15:07:28.664+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration com.neurovault.backend.BackendApplication for test class com.neurovault.backend.replication.service.ChunkTransferServiceTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.1)
+
+2026-09-02T15:07:28.701+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.s.ChunkTransferServiceTest       : Starting ChunkTransferServiceTest using Java 21.0.12.1 with PID 30068 (started by Arun Madav R in D:\Projects\Neurovault-main\backend)
+2026-09-02T15:07:28.701+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.s.ChunkTransferServiceTest       : Running with Spring Boot v3.3.1, Spring v6.1.10
+2026-09-02T15:07:28.701+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.s.ChunkTransferServiceTest       : The following 1 profile is active: "test"
+2026-09-02T15:07:29.031+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-09-02T15:07:29.061+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 29 ms. Found 10 JPA repository interfaces.
+2026-09-02T15:07:29.345+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-09-02T15:07:29.348+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-09-02T15:07:29.360+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-09-02T15:07:29.361+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-9 - Starting...
+2026-09-02T15:07:29.363+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-9 - Added connection conn80: url=jdbc:h2:mem:testdb_transfer user=SA
+2026-09-02T15:07:29.364+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-9 - Start completed.
+2026-09-02T15:07:29.365+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] org.hibernate.orm.deprecation            : HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-09-02T15:07:29.564+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-09-02T15:07:29.591+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-09-02T15:07:29.654+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] eAuthenticationProviderManagerConfigurer : Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-09-02T15:07:29.655+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used for username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider.
+2026-09-02T15:07:29.840+05:30  WARN 30068 --- [neurovault-backend] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-09-02T15:07:30.136+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.s.ChunkTransferServiceTest       : Started ChunkTransferServiceTest in 1.468 seconds (process running for 24.068)
+2026-09-02T15:07:30.172+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 82214dda-69be-43fd-82fe-ad7858893114 with size 500 MB (path=null)
+2026-09-02T15:07:30.175+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.175+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.209+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.209+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.209+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.214+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 82214dda-69be-43fd-82fe-ad7858893114 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.219+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3 with size 500 MB (path=null)
+2026-09-02T15:07:30.220+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.220+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.223+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.223+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.223+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.226+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.236+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.236+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.236+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container
+2026-09-02T15:07:30.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.237+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.237+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.237+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 (256 bytes) for owner eedd4f09-db2b-48c0-8417-a964c5bad6db
+2026-09-02T15:07:30.246+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.252+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Initiating chunk transfer: chunk=be3e19c5-4577-43df-ad8f-841d2b2d3228, source=DestHost (8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3), destination=SourceHost (82214dda-69be-43fd-82fe-ad7858893114)
+2026-09-02T15:07:30.257+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\82214dda-69be-43fd-82fe-ad7858893114\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.257+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.257+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container
+2026-09-02T15:07:30.258+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\8b9a7ac7-204b-4f5b-b877-f23fd2eb29a3\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.258+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.258+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.259+05:30 ERROR 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Transfer failed for chunk be3e19c5-4577-43df-ad8f-841d2b2d3228 (DestHost → SourceHost): Chunk not found with ID: be3e19c5-4577-43df-ad8f-841d2b2d3228
+
+com.neurovault.backend.storage.exception.ChunkNotFoundException: Chunk not found with ID: be3e19c5-4577-43df-ad8f-841d2b2d3228
+	at com.neurovault.backend.storage.engine.StorageEngine.readChunk(StorageEngine.java:182) ~[main/:na]
+	at com.neurovault.backend.storage.service.StorageService.readChunk(StorageService.java:236) ~[main/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:354) ~[spring-aop-6.1.10.jar:6.1.10]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716) ~[spring-aop-6.1.10.jar:6.1.10]
+	at com.neurovault.backend.storage.service.StorageService$$SpringCGLIB$$0.readChunk(<generated>) ~[main/:na]
+	at com.neurovault.backend.replication.service.ChunkTransferService.transferChunk(ChunkTransferService.java:70) ~[main/:na]
+	at com.neurovault.backend.replication.service.ChunkTransferServiceTest.testTransferChunk_EmptySourceContainer(ChunkTransferServiceTest.java:220) ~[test/:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728) ~[junit-platform-commons-1.10.2.jar:1.10.2]
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:218) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:214) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:139) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69) ~[junit-jupiter-engine-5.10.2.jar:5.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1596) ~[na:na]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54) ~[junit-platform-engine-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47) ~[junit-platform-launcher-1.10.2.jar:1.10.2]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.processAllTestDefinitions(JUnitPlatformTestDefinitionProcessor.java:206) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor$CollectThenExecuteTestDefinitionConsumer.access$000(JUnitPlatformTestDefinitionProcessor.java:123) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestDefinitionProcessor.stop(JUnitPlatformTestDefinitionProcessor.java:117) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.SuiteTestDefinitionProcessor.stop(SuiteTestDefinitionProcessor.java:63) ~[na:na]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580) ~[na:na]
+	at org.gradle.internal.dispatch.MethodInvocation.invokeOn(MethodInvocation.java:77) ~[na:na]
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:28) ~[na:na]
+	at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:19) ~[na:na]
+	at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33) ~[na:na]
+	at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:88) ~[na:na]
+	at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:195) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:126) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103) ~[na:na]
+	at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63) ~[na:na]
+	at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56) ~[na:na]
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122) ~[na:na]
+	at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72) ~[na:na]
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69) ~[gradle-worker.jar:na]
+	at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74) ~[gradle-worker.jar:na]
+
+2026-09-02T15:07:30.311+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host ee9f179e-f6bf-479e-99fb-76c93ad29d52 with size 500 MB (path=null)
+2026-09-02T15:07:30.313+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container
+2026-09-02T15:07:30.313+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.317+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.318+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.318+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.321+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host ee9f179e-f6bf-479e-99fb-76c93ad29d52 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.325+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa with size 500 MB (path=null)
+2026-09-02T15:07:30.327+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa\storage.container
+2026-09-02T15:07:30.327+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.329+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.330+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.330+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.333+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.340+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container
+2026-09-02T15:07:30.341+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.341+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container
+2026-09-02T15:07:30.341+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\ee9f179e-f6bf-479e-99fb-76c93ad29d52\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.341+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.342+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.342+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 276e3bd8-d422-4ab8-aea3-5ef08f2b20ec (256 bytes) for owner 4617132a-8c66-4a6e-9002-f2f4038ed061
+2026-09-02T15:07:30.345+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 276e3bd8-d422-4ab8-aea3-5ef08f2b20ec stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.348+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Initiating chunk transfer: chunk=276e3bd8-d422-4ab8-aea3-5ef08f2b20ec, source=SourceHost (ee9f179e-f6bf-479e-99fb-76c93ad29d52), destination=DestHost (4dfd6ee6-e1d4-4c5d-8a01-fd228331c6fa)
+2026-09-02T15:07:30.351+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Reading chunk 276e3bd8-d422-4ab8-aea3-5ef08f2b20ec (256 bytes at offset 1048832)
+2026-09-02T15:07:30.351+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Read 256 bytes for chunk 276e3bd8-d422-4ab8-aea3-5ef08f2b20ec from source host SourceHost
+2026-09-02T15:07:30.352+05:30 ERROR 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Source integrity check FAILED for chunk 276e3bd8-d422-4ab8-aea3-5ef08f2b20ec: expected=0000000000000000000000000000000000000000000000000000000000000000, actual=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102
+2026-09-02T15:07:30.387+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 93f0c09a-b878-42ff-aea2-092021b9e0e6 with size 500 MB (path=null)
+2026-09-02T15:07:30.388+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container
+2026-09-02T15:07:30.388+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.391+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.391+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.391+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.395+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 93f0c09a-b878-42ff-aea2-092021b9e0e6 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.399+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host c6379ff6-5915-4f6b-8cdf-e166812377b3 with size 500 MB (path=null)
+2026-09-02T15:07:30.402+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container
+2026-09-02T15:07:30.402+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.404+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.404+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.404+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.408+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host c6379ff6-5915-4f6b-8cdf-e166812377b3 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.417+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container
+2026-09-02T15:07:30.417+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.418+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container
+2026-09-02T15:07:30.418+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.419+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.419+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.419+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 26df1118-fa7d-4231-b47e-98b132224a9e (256 bytes) for owner 68b4fc1a-0098-4dfa-bee2-e7f7ffff84d9
+2026-09-02T15:07:30.422+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 26df1118-fa7d-4231-b47e-98b132224a9e stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.426+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Initiating chunk transfer: chunk=26df1118-fa7d-4231-b47e-98b132224a9e, source=SourceHost (93f0c09a-b878-42ff-aea2-092021b9e0e6), destination=DestHost (c6379ff6-5915-4f6b-8cdf-e166812377b3)
+2026-09-02T15:07:30.429+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Reading chunk 26df1118-fa7d-4231-b47e-98b132224a9e (256 bytes at offset 1048832)
+2026-09-02T15:07:30.429+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Read 256 bytes for chunk 26df1118-fa7d-4231-b47e-98b132224a9e from source host SourceHost
+2026-09-02T15:07:30.429+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Source integrity verified for chunk 26df1118-fa7d-4231-b47e-98b132224a9e
+2026-09-02T15:07:30.431+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\93f0c09a-b878-42ff-aea2-092021b9e0e6\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container
+2026-09-02T15:07:30.432+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.432+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container
+2026-09-02T15:07:30.432+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\c6379ff6-5915-4f6b-8cdf-e166812377b3\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.432+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.432+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.432+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk 26df1118-fa7d-4231-b47e-98b132224a9e (256 bytes) for owner 68b4fc1a-0098-4dfa-bee2-e7f7ffff84d9
+2026-09-02T15:07:30.435+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk 26df1118-fa7d-4231-b47e-98b132224a9e stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.438+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Chunk 26df1118-fa7d-4231-b47e-98b132224a9e successfully transferred: SourceHost → DestHost (checksum=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.467+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 19b25c7c-fd1c-40f9-8a6d-584f3f34b721 with size 500 MB (path=null)
+2026-09-02T15:07:30.470+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container
+2026-09-02T15:07:30.470+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.473+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.474+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.474+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.477+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 19b25c7c-fd1c-40f9-8a6d-584f3f34b721 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.481+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating storage container for host 19f811ae-19f4-40be-b500-d7b14b6d8a65 with size 500 MB (path=null)
+2026-09-02T15:07:30.484+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Creating disk container file at: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container
+2026-09-02T15:07:30.484+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Creating container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container with size 524288000 bytes
+2026-09-02T15:07:30.487+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container created successfully: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.487+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.487+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.491+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Storage container created for host 19f811ae-19f4-40be-b500-d7b14b6d8a65 at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container (524288000 bytes locked on disk)
+2026-09-02T15:07:30.498+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container
+2026-09-02T15:07:30.498+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.498+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container
+2026-09-02T15:07:30.499+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.499+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.499+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.499+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk d5d14836-b2cc-420c-aab6-2da2606c8330 (256 bytes) for owner 53a7ec3b-d937-4dfb-9da4-c19ed9a90f93
+2026-09-02T15:07:30.502+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk d5d14836-b2cc-420c-aab6-2da2606c8330 stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.505+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Initiating chunk transfer: chunk=d5d14836-b2cc-420c-aab6-2da2606c8330, source=SourceHost (19b25c7c-fd1c-40f9-8a6d-584f3f34b721), destination=DestHost (19f811ae-19f4-40be-b500-d7b14b6d8a65)
+2026-09-02T15:07:30.507+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Reading chunk d5d14836-b2cc-420c-aab6-2da2606c8330 (256 bytes at offset 1048832)
+2026-09-02T15:07:30.507+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Read 256 bytes for chunk d5d14836-b2cc-420c-aab6-2da2606c8330 from source host SourceHost
+2026-09-02T15:07:30.510+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.service.StorageService     : Switching container from C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19b25c7c-fd1c-40f9-8a6d-584f3f34b721\storage.container to C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container
+2026-09-02T15:07:30.510+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Closing container
+2026-09-02T15:07:30.511+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Opening container at C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container
+2026-09-02T15:07:30.511+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.s.container.ContainerManager       : Container opened: C:\Users\ARUNMA~1\AppData\Local\Temp\neurovault-transfer-test\19f811ae-19f4-40be-b500-d7b14b6d8a65\storage.container (size=524288000, chunks=0, used=0)
+2026-09-02T15:07:30.511+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : No metadata index found or empty container (dataLength=0)
+2026-09-02T15:07:30.511+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : StorageEngine initialized: 0 chunks loaded, next data offset at 1048832
+2026-09-02T15:07:30.511+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Storing chunk d5d14836-b2cc-420c-aab6-2da2606c8330 (256 bytes) for owner 53a7ec3b-d937-4dfb-9da4-c19ed9a90f93
+2026-09-02T15:07:30.513+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Chunk d5d14836-b2cc-420c-aab6-2da2606c8330 stored at offset 1048832 (256 bytes, SHA256=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.516+05:30  INFO 30068 --- [neurovault-backend] [    Test worker] c.n.b.r.service.ChunkTransferService     : Chunk d5d14836-b2cc-420c-aab6-2da2606c8330 successfully transferred: SourceHost → DestHost (checksum=b30cc751dac8c84e10af41681df44fa00d546701ba46b42ad020bb1ba814d102)
+2026-09-02T15:07:30.520+05:30 DEBUG 30068 --- [neurovault-backend] [    Test worker] c.n.b.storage.engine.StorageEngine       : Reading chunk d5d14836-b2cc-420c-aab6-2da2606c8330 (256 bytes at offset 1048832)
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
