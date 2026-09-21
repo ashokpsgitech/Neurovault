@@ -416,6 +416,31 @@ class FirebaseService {
 
     final fileId = DateTime.now().millisecondsSinceEpoch.toString();
 
+    // Build the complete cluster-wide sibling manifest mapping across all active hosts
+    final List<SiblingChunkInfo> siblingManifestList = [];
+    for (int j = 0; j < dynamicChunks.length; j++) {
+      final slice = dynamicChunks[j];
+      final targetDoc = activeHostDocs.isNotEmpty ? activeHostDocs[j % activeHostDocs.length] : null;
+      final targetData = targetDoc?.data();
+      final hostId = targetDoc?.id ?? 'local-container';
+      final hostname = targetData?['hostname']?.toString() ?? 'MicroServer-Node';
+      final device = targetData?['deviceType']?.toString() ?? 'Host Device';
+      final ip = targetData?['publicIp']?.toString() ?? '127.0.0.1';
+      final chunkSha256 = FileChunker.computeSha256(slice);
+
+      siblingManifestList.add(SiblingChunkInfo(
+        chunkIndex: j,
+        chunkId: '${fileId}_chunk_$j',
+        sizeBytes: slice.length,
+        sha256: chunkSha256,
+        assignedHostId: hostId,
+        assignedHostname: hostname,
+        assignedHostDevice: device,
+        assignedHostIp: ip,
+        replicaHostIds: [hostId],
+      ));
+    }
+
     final fileDoc = <String, dynamic>{
       'id': fileId,
       'filename': filename,
@@ -441,14 +466,28 @@ class FirebaseService {
 
       // Record chunk allocation metadata & host locations (NO raw payload bytes stored in Firestore or Firebase)
       for (int i = 0; i < dynamicChunks.length; i++) {
-        final chunkBytes = dynamicChunks[i];
+        final chunkSliceBytes = dynamicChunks[i];
+        final currentSiblingInfo = siblingManifestList[i];
         final targetHostDoc = activeHostDocs.isNotEmpty ? activeHostDocs[i % activeHostDocs.length] : null;
-        final targetHostData = targetHostDoc?.data();
-        final targetHostId = targetHostDoc?.id ?? 'local-container';
-        final targetHostname = targetHostData?['hostname']?.toString() ?? 'MicroServer-Node';
-        final targetOwnerEmail = targetHostData?['ownerEmail']?.toString() ?? targetHostData?['ownerId']?.toString() ?? 'Host Account';
-        final targetDevice = targetHostData?['deviceType']?.toString() ?? 'Host Device';
-        final targetIp = targetHostData?['publicIp']?.toString() ?? '127.0.0.1';
+        final targetHostId = currentSiblingInfo.assignedHostId;
+        final targetHostname = currentSiblingInfo.assignedHostname;
+        final targetOwnerEmail = targetHostDoc?.data()?['ownerEmail']?.toString() ?? targetHostDoc?.data()?['ownerId']?.toString() ?? 'Host Account';
+        final targetDevice = currentSiblingInfo.assignedHostDevice;
+        final targetIp = currentSiblingInfo.assignedHostIp;
+        final chunkId = '${fileId}_chunk_$i';
+
+        // Build autonomous ChunkManifest & ChunkEnvelope with sibling topology
+        final manifest = ChunkManifest(
+          fileId: fileId,
+          filename: filename,
+          fileSizeBytes: fileBytes.length,
+          totalChunks: calculatedChunkCount,
+          currentChunkIndex: i,
+          currentChunkId: chunkId,
+          siblingChunks: siblingManifestList,
+        );
+
+        final envelopeBytes = ChunkEnvelope.pack(manifest, chunkSliceBytes);
 
         try {
           // Record assigned host location metadata under client's file chunk document
@@ -460,9 +499,11 @@ class FirebaseService {
               .collection('chunks')
               .doc('chunk_$i')
               .set({
-            'chunkId': '${fileId}_chunk_$i',
+            'chunkId': chunkId,
             'chunkIndex': i,
-            'sizeBytes': chunkBytes.length,
+            'sizeBytes': chunkSliceBytes.length,
+            'envelopeSizeBytes': envelopeBytes.length,
+            'sha256': currentSiblingInfo.sha256,
             'assignedHostId': targetHostId,
             'assignedHostname': targetHostname,
             'assignedHostOwnerEmail': targetOwnerEmail,
@@ -477,24 +518,25 @@ class FirebaseService {
                 .collection('hosts')
                 .doc(targetHostId)
                 .collection('hosted_chunks')
-                .doc('${fileId}_chunk_$i')
+                .doc(chunkId)
                 .set({
               'fileId': fileId,
               'filename': filename,
               'chunkIndex': i,
-              'sizeBytes': chunkBytes.length,
+              'sizeBytes': chunkSliceBytes.length,
+              'envelopeSizeBytes': envelopeBytes.length,
+              'sha256': currentSiblingInfo.sha256,
               'clientUid': user.uid,
               'clientEmail': user.email ?? (user.isAnonymous ? 'anonymous@neurovault.net' : 'Client User'),
               'createdAt': FieldValue.serverTimestamp(),
               'createdAtIso': DateTime.now().toIso8601String(),
             }).timeout(const Duration(seconds: 5));
 
-            // Deliver chunk payload to host:
+            // Deliver chunk envelope payload to host:
             // Strategy A: If THIS device IS the assigned host → write directly to local container
             // Strategy B: Remote host → POST the chunk bytes to host's built-in HTTP chunk server
             final String canonicalSelfHostId = _auth.currentUser != null ? 'host_${_auth.currentUser!.uid}' : '';
             final bool isSelfHost = canonicalSelfHostId.isNotEmpty && targetHostId == canonicalSelfHostId;
-            final String chunkId = '${fileId}_chunk_$i';
 
             bool chunkWritten = false;
 
@@ -505,11 +547,11 @@ class FirebaseService {
                 try {
                   await HostRepository().writeChunkToLocalContainer(
                     hostContainerPath,
-                    Uint8List.fromList(chunkBytes),
+                    envelopeBytes,
                     chunkId: chunkId,
                   );
                   chunkWritten = true;
-                  DebugLogService().info('[FirebaseService] Stored chunk_$i (${chunkBytes.length} bytes) to self-host container: $hostContainerPath');
+                  DebugLogService().info('[FirebaseService] Stored chunk_$i envelope (${envelopeBytes.length} bytes) to self-host container: $hostContainerPath');
                 } catch (e) {
                   DebugLogService().warn('[FirebaseService] Self-host Firestore path write failed: $e');
                 }
@@ -521,11 +563,11 @@ class FirebaseService {
                   if (savedPath != null && savedPath.isNotEmpty) {
                     await HostRepository().writeChunkToLocalContainer(
                       savedPath,
-                      Uint8List.fromList(chunkBytes),
+                      envelopeBytes,
                       chunkId: chunkId,
                     );
                     chunkWritten = true;
-                    DebugLogService().info('[FirebaseService] Stored chunk_$i via SecureStorage path: $savedPath');
+                    DebugLogService().info('[FirebaseService] Stored chunk_$i envelope via SecureStorage path: $savedPath');
                   }
                 } catch (e) {
                   DebugLogService().warn('[FirebaseService] Self-host SecureStorage path write failed: $e');
@@ -538,14 +580,14 @@ class FirebaseService {
                   final dio = Dio();
                   await dio.post(
                     postUrl,
-                    data: Stream.fromIterable([Uint8List.fromList(chunkBytes)]),
+                    data: Stream.fromIterable([envelopeBytes]),
                     options: Options(
-                      headers: {'Content-Type': 'application/octet-stream', 'Content-Length': chunkBytes.length},
+                      headers: {'Content-Type': 'application/octet-stream', 'Content-Length': envelopeBytes.length},
                       responseType: ResponseType.json,
                     ),
                   ).timeout(const Duration(seconds: 30));
                   chunkWritten = true;
-                  DebugLogService().info('[FirebaseService] Stored chunk_$i via loopback POST to self-host server');
+                  DebugLogService().info('[FirebaseService] Stored chunk_$i envelope via loopback POST to self-host server');
                 } catch (e) {
                   DebugLogService().warn('[FirebaseService] Self-host loopback POST failed: $e');
                 }
@@ -554,24 +596,24 @@ class FirebaseService {
                 DebugLogService().warn('[FirebaseService] WARNING: chunk_$i could not be stored — host may not be enabled or path is unavailable');
               }
             } else {
-              // Remote host — POST the chunk bytes to host's built-in HTTP chunk server (LAN / same network)
+              // Remote host — POST the chunk envelope to host's built-in HTTP chunk server (LAN / same network)
               final String postUrl = 'http://$targetIp:8080/api/storage/chunks/$chunkId';
               bool remoteWritten = false;
               try {
                 final dio = Dio();
                 await dio.post(
                   postUrl,
-                  data: Stream.fromIterable([Uint8List.fromList(chunkBytes)]),
+                  data: Stream.fromIterable([envelopeBytes]),
                   options: Options(
                     headers: {
                       'Content-Type': 'application/octet-stream',
-                      'Content-Length': chunkBytes.length,
+                      'Content-Length': envelopeBytes.length,
                     },
                     responseType: ResponseType.json,
                   ),
                 ).timeout(const Duration(seconds: 10));
                 remoteWritten = true;
-                DebugLogService().info('[FirebaseService] Posted chunk_$i (${chunkBytes.length} bytes) to remote host chunk server: $postUrl');
+                DebugLogService().info('[FirebaseService] Posted chunk_$i envelope (${envelopeBytes.length} bytes) to remote host chunk server: $postUrl');
               } catch (e) {
                 DebugLogService().warn('[FirebaseService] LAN HTTP POST failed for chunk_$i → $postUrl: $e. Trying WebRTC P2P cross-internet...');
               }
@@ -582,12 +624,12 @@ class FirebaseService {
                   final bool p2pSuccess = await P2PWebRTCService().uploadChunkViaPeer(
                     hostId: targetHostId,
                     chunkId: chunkId,
-                    chunkBytes: Uint8List.fromList(chunkBytes),
+                    chunkBytes: envelopeBytes,
                     timeout: const Duration(seconds: 45),
                   );
                   if (p2pSuccess) {
                     remoteWritten = true;
-                    DebugLogService().info('[FirebaseService] Delivered chunk_$i via WebRTC P2P cross-internet to host $targetHostId');
+                    DebugLogService().info('[FirebaseService] Delivered chunk_$i envelope via WebRTC P2P cross-internet to host $targetHostId');
                   } else {
                     DebugLogService().warn('[FirebaseService] WebRTC P2P upload failed for chunk_$i to host $targetHostId');
                   }
@@ -602,13 +644,13 @@ class FirebaseService {
             }
 
             await _firestore.collection('hosts').doc(targetHostId).set({
-              'usedStorageBytes': FieldValue.increment(chunkBytes.length),
+              'usedStorageBytes': FieldValue.increment(envelopeBytes.length),
               'activeChunks': FieldValue.increment(1),
               'lastSeen': FieldValue.serverTimestamp(),
             }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
           }
 
-          DebugLogService().info('[FirebaseService] Registered chunk_$i metadata (${chunkBytes.length} bytes) to assigned host node: $targetHostname ($targetOwnerEmail).');
+          DebugLogService().info('[FirebaseService] Registered chunk_$i metadata (${chunkSliceBytes.length} payload bytes, envelope ${envelopeBytes.length} bytes) to assigned host node: $targetHostname ($targetOwnerEmail).');
         } catch (e) {
           DebugLogService().warn('[FirebaseService] Failed to write chunk_$i metadata: $e');
         }
