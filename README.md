@@ -120,7 +120,7 @@ micro server/
 │   │   ├── repository/             # Spring Data Repositories
 │   │   ├── security/               # JWT Authentication Filters
 │   │   ├── storage/                # Binary Container Engine & Storage Service
-│   │   └── upload/                 # Upload Plan & Session Management
+│   │   └── upload/                  # Upload Session Management
 │   ├── src/main/resources/
 │   │   └── application.yml         # Application Config & Storage Properties
 │   └── build.gradle                # Dependencies & Gradle Build Manifest
@@ -135,7 +135,7 @@ micro server/
 │   │   ├── core/                   # Crypto Engine, Firebase Service & API Client
 │   │   │   └── utils/
 │   │   │       ├── debug_log_service.dart  # In-App Memory Logger
-│   │   │       └── multi_host_test.py      # Multi-Node Test Harness
+│   │   │       └── multi_host_test.py     # Multi-Node Test Harness
 │   │   ├── features/               # Feature Modules (Auth, Dashboard, Files, Host, Settings)
 │   │   │   └── files/screens/
 │   │   │       ├── upload_dialog.dart      # 4MB Chunking Modal & Live Progress
@@ -146,7 +146,7 @@ micro server/
 │
 ├── scratch/
 │   └── e2e_workflow.py             # 14-Step Automated End-to-End Test Suite
-└── build_and_push_apk.bat          # 1-Click Release APK Compiler & GitHub Sync Script
+└── build_and_push_apk.bat         # 1-Click Release APK Compiler & GitHub Sync Script
 ```
 
 ---
@@ -300,3 +300,5 @@ Use the automated 1-click batch script to compile the release APK and sync with 
 
 ## 📜 License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Under development by Ashokan and Team
