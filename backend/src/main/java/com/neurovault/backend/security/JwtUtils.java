@@ -23,10 +23,28 @@ public class JwtUtils {
     private final SecretKey key;
     private final long expirationMs;
 
+    private static final String INSECURE_DEFAULT_SECRET = "4035763074377938355668596D6235723D723930516D61365468576D5A713474";
+
     public JwtUtils(
             @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.expiration-ms}") long expirationMs) {
+            @Value("${app.jwt.expiration-ms}") long expirationMs,
+            org.springframework.core.env.Environment env) {
         this.expirationMs = expirationMs;
+
+        boolean isProd = false;
+        for (String profile : env.getActiveProfiles()) {
+            if ("prod".equalsIgnoreCase(profile) || "production".equalsIgnoreCase(profile)) {
+                isProd = true;
+                break;
+            }
+        }
+
+        if (isProd && INSECURE_DEFAULT_SECRET.equals(secret)) {
+            throw new IllegalStateException("CRITICAL SECURITY ERROR: Insecure default JWT secret detected in production profile! Set APP_JWT_SECRET environment variable.");
+        } else if (INSECURE_DEFAULT_SECRET.equals(secret)) {
+            log.warn("SECURITY WARNING: Using default development JWT secret. Override APP_JWT_SECRET before deploying to production.");
+        }
+
         // Load key either as raw bytes or base64 depending on length and complexity.
         // We'll decode using base64 if it's base64-encoded, or fall back to UTF-8 bytes.
         SecretKey localKey;

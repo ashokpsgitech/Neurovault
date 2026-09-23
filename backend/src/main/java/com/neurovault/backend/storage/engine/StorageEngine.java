@@ -171,14 +171,6 @@ public class StorageEngine {
 
         ChunkMetadata metadata = chunkIndex.get(chunkId);
         if (metadata == null || metadata.isDeleted()) {
-            // Fallback for legacy / test chunks: pick first active chunk in index if available
-            metadata = chunkIndex.values().stream()
-                    .filter(m -> !m.isDeleted())
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        if (metadata == null || metadata.isDeleted()) {
             throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId);
         }
 
@@ -190,7 +182,9 @@ public class StorageEngine {
         if (metadata.getChecksum() != 0) {
             long actualCrc = computeCrc32(data);
             if (actualCrc != metadata.getChecksum()) {
-                log.warn("Chunk {} CRC32 warning: Expected {}, actual {}", chunkId, metadata.getChecksum(), actualCrc);
+                log.error("Chunk {} CRC32 integrity failure: expected {}, actual {}", chunkId, metadata.getChecksum(), actualCrc);
+                throw new com.neurovault.backend.storage.exception.CorruptedChunkException(
+                        "Chunk integrity failure for ID " + chunkId + ": expected CRC32 " + metadata.getChecksum() + ", got " + actualCrc);
             }
         }
 

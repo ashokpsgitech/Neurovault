@@ -89,7 +89,8 @@ public class FileController {
      */
     @GetMapping("/progress/{uploadId}")
     public ResponseEntity<UploadProgressResponse> getUploadProgress(@PathVariable UUID uploadId) {
-        UploadProgressResponse progress = uploadService.getProgress(uploadId);
+        User user = getAuthenticatedUser();
+        UploadProgressResponse progress = uploadService.getProgress(uploadId, user);
         return ResponseEntity.ok(progress);
     }
 
@@ -101,7 +102,7 @@ public class FileController {
         User user = getAuthenticatedUser();
         log.info("Cancel request from user {} for upload {}", user.getId(), uploadId);
 
-        uploadService.cancelUpload(uploadId);
+        uploadService.cancelUpload(uploadId, user);
         return ResponseEntity.ok().build();
     }
 

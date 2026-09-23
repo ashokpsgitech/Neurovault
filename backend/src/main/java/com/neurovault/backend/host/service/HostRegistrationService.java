@@ -109,6 +109,7 @@ public class HostRegistrationService {
     private HostStatusDto mapToDto(Host host) {
         return HostStatusDto.builder()
                 .hostId(host.getId())
+                .ownerId(host.getOwner() != null ? host.getOwner().getId() : null)
                 .hostname(host.getName())
                 .deviceName(host.getDeviceType())
                 .operatingSystem(host.getOperatingSystem())

@@ -34,6 +34,7 @@ public class HostStatusDto {
     private String operatingSystem;
     private String architecture;
     private String status;
+    private UUID ownerId;
     private LocalDateTime lastHeartbeat;
     private Long totalCapacityBytes;
     private Long reservedCapacityBytes;

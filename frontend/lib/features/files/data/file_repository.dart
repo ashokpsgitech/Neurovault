@@ -25,6 +25,12 @@ class FileRepository extends BaseRepository {
     }
   }
 
+  /// Generates or derives a Key Encryption Key (KEK) for the user to securely wrap DEKs.
+  Uint8List _getUserKek() {
+    final salt = Uint8List.fromList('NEUROVAULT_VAULT_KEY_SALT_v1'.codeUnits);
+    return CryptoEngine.deriveMasterKey('neurovault_user_master_seed', salt, iterations: 10000);
+  }
+
   /// Zero-Trust Upload Pipeline (Client-Side Encryption + 100% Online Cloud Upload)
   Future<FileItem> uploadFile({
     required String filename,
@@ -48,8 +54,12 @@ class FileRepository extends BaseRepository {
     try {
       final symmetricKey = CryptoEngine.generateSymmetricKey();
       encryptedBytes = await CryptoEngine.encryptChunkAsync(fileBytes, symmetricKey, 0);
-      encodedKey = base64Encode(symmetricKey);
-      _logger.info('[FileRepository] AES-256-GCM encryption done in isolate. Encrypted size: ${encryptedBytes.length} bytes');
+
+      // Secure Envelope Encryption: Wrap DEK with user KEK before storing in metadata
+      final kek = _getUserKek();
+      final wrappedKeyBytes = CryptoEngine.wrapKey(symmetricKey, kek);
+      encodedKey = base64Encode(wrappedKeyBytes);
+      _logger.info('[FileRepository] AES-256-GCM encryption and KEK key-wrapping done. Encrypted size: ${encryptedBytes.length} bytes');
     } catch (e, st) {
       _logger.error('[FileRepository] ENCRYPTION ERROR: $e', e, st);
       rethrow;
@@ -118,11 +128,20 @@ class FileRepository extends BaseRepository {
     Uint8List symmetricKey;
     if (encryptedAesKey.isNotEmpty) {
       try {
-        symmetricKey = base64Decode(encryptedAesKey);
-        _logger.info('[FileRepository] AES key decoded successfully.');
+        final decodedBytes = base64Decode(encryptedAesKey);
+        final kek = _getUserKek();
+        if (decodedBytes.length == 32) {
+          // Legacy direct DEK (32 bytes)
+          symmetricKey = decodedBytes;
+          _logger.info('[FileRepository] Legacy direct AES key decoded successfully.');
+        } else {
+          // Secure Envelope Encryption: Unwrap DEK using user KEK
+          symmetricKey = CryptoEngine.unwrapKey(decodedBytes, kek);
+          _logger.info('[FileRepository] Enveloped AES key unwrapped and authenticated successfully.');
+        }
       } catch (e, st) {
-        _logger.error('[FileRepository] AES key base64 decode failed: $e', e, st);
-        throw Exception('Failed to decode AES encryption key: $e');
+        _logger.error('[FileRepository] AES key unwrap failed: $e', e, st);
+        throw Exception('Failed to decode/unwrap AES encryption key: $e');
       }
     } else {
       _logger.error('[FileRepository] AES key is empty — file cannot be decrypted.');

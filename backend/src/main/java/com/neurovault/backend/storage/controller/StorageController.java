@@ -36,14 +36,17 @@ public class StorageController {
     private final StorageService storageService;
     private final HostRegistrationService hostRegistrationService;
     private final UserRepository userRepository;
+    private final com.neurovault.backend.security.JwtUtils jwtUtils;
 
     public StorageController(
             StorageService storageService,
             HostRegistrationService hostRegistrationService,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            com.neurovault.backend.security.JwtUtils jwtUtils) {
         this.storageService = storageService;
         this.hostRegistrationService = hostRegistrationService;
         this.userRepository = userRepository;
+        this.jwtUtils = jwtUtils;
     }
 
     /**
@@ -109,19 +112,21 @@ public class StorageController {
     @PostMapping("/chunks")
     public ResponseEntity<ChunkMetadataDto> storeChunk(
             @RequestParam(required = false) UUID hostId,
+            @RequestHeader(value = "X-Chunk-Token", required = false) String chunkToken,
             @Valid @RequestBody StoreChunkRequest request,
             Principal principal) {
-        UUID targetHostId = resolveHostId(hostId, principal);
+        UUID targetHostId;
+        if (hostId != null && isValidChunkToken(chunkToken, hostId)) {
+            targetHostId = hostId;
+        } else {
+            targetHostId = resolveHostId(hostId, principal);
+        }
+
         if (request.getOwnerId() == null && principal != null) {
-            try {
-                String name = principal.getName();
-                try {
-                    request.setOwnerId(UUID.fromString(name));
-                } catch (IllegalArgumentException e) {
-                    User user = userRepository.findByEmail(name).orElse(null);
-                    if (user != null) request.setOwnerId(user.getId());
-                }
-            } catch (Exception ignored) {}
+            UUID ownerId = extractUserId(principal);
+            if (ownerId != null) {
+                request.setOwnerId(ownerId);
+            }
         }
         log.info("POST /api/storage/chunks for host {} chunk {}", targetHostId, request.getChunkId());
         ChunkMetadataDto metadata = storageService.storeChunk(targetHostId, request);
@@ -135,8 +140,15 @@ public class StorageController {
     public ResponseEntity<byte[]> readChunk(
             @PathVariable UUID chunkId,
             @RequestParam(required = false) UUID hostId,
+            @RequestHeader(value = "X-Chunk-Token", required = false) String chunkToken,
             Principal principal) {
-        UUID targetHostId = resolveHostId(hostId, principal);
+        UUID targetHostId;
+        if (hostId != null && isValidChunkToken(chunkToken, hostId)) {
+            targetHostId = hostId;
+        } else {
+            targetHostId = resolveHostId(hostId, principal);
+        }
+
         log.debug("GET /api/storage/chunks/{} for host {}", chunkId, targetHostId);
         byte[] data = storageService.readChunk(targetHostId, chunkId);
         return ResponseEntity.ok(data);
@@ -157,22 +169,54 @@ public class StorageController {
     }
 
     /**
+     * Validates a scoped chunk capability token issued by the Coordinator.
+     */
+    private boolean isValidChunkToken(String chunkToken, UUID targetHostId) {
+        if (chunkToken == null || chunkToken.isBlank() || targetHostId == null) {
+            return false;
+        }
+        try {
+            String subject = jwtUtils.getUsernameFromToken(chunkToken);
+            return subject != null && subject.contains(":host:" + targetHostId);
+        } catch (Exception e) {
+            log.warn("Invalid or expired chunk capability token for host {}: {}", targetHostId, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Extracts user UUID from principal name (supporting both UUID strings and user email).
+     */
+    private UUID extractUserId(Principal principal) {
+        if (principal == null) return null;
+        String name = principal.getName();
+        try {
+            return UUID.fromString(name);
+        } catch (IllegalArgumentException e) {
+            User user = userRepository.findByEmail(name).orElse(null);
+            return user != null ? user.getId() : null;
+        }
+    }
+
+    /**
      * Resolves host ID from request parameter or authenticated user's registered host.
+     * Enforces strict host ownership check to eliminate IDOR vulnerabilities.
      */
     private UUID resolveHostId(UUID explicitHostId, Principal principal) {
+        UUID ownerId = extractUserId(principal);
         if (explicitHostId != null) {
+            if (ownerId != null) {
+                HostStatusDto host = hostRegistrationService.getHostById(explicitHostId);
+                if (!host.getOwnerId().equals(ownerId)) {
+                    log.warn("IDOR access violation: User {} attempted to access host {} owned by {}",
+                            ownerId, explicitHostId, host.getOwnerId());
+                    throw new org.springframework.security.access.AccessDeniedException(
+                            "Access denied: You do not have permission to manage host " + explicitHostId);
+                }
+            }
             return explicitHostId;
         }
-        if (principal != null) {
-            String name = principal.getName();
-            UUID ownerId;
-            try {
-                ownerId = UUID.fromString(name);
-            } catch (IllegalArgumentException e) {
-                User user = userRepository.findByEmail(name)
-                        .orElseThrow(() -> new ResourceNotFoundException("User not found: " + name));
-                ownerId = user.getId();
-            }
+        if (ownerId != null) {
             List<HostStatusDto> hosts = hostRegistrationService.getHostsByOwner(ownerId);
             if (!hosts.isEmpty()) {
                 return hosts.get(0).getHostId();

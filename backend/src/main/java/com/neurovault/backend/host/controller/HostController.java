@@ -68,8 +68,8 @@ public class HostController {
             Principal principal) {
 
         UUID targetHostId = hostId != null ? hostId : request.getHostId();
-        if (targetHostId == null && principal != null) {
-            UUID ownerId = extractUserId(principal);
+        UUID ownerId = principal != null ? extractUserId(principal) : null;
+        if (targetHostId == null && ownerId != null) {
             List<HostStatusDto> hosts = registrationService.getHostsByOwner(ownerId);
             if (!hosts.isEmpty()) {
                 targetHostId = hosts.get(0).getHostId();
@@ -77,6 +77,15 @@ public class HostController {
         }
         if (targetHostId == null) {
             throw new ResourceNotFoundException("Host ID is required to process heartbeat");
+        }
+
+        // Verify host exists and belongs to the authenticated caller
+        HostStatusDto host = registrationService.getHostById(targetHostId);
+        if (ownerId != null && !host.getOwnerId().equals(ownerId)) {
+            log.warn("Heartbeat impersonation rejected: user {} attempted heartbeat on host {} owned by {}",
+                    ownerId, targetHostId, host.getOwnerId());
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Access denied: You do not own host " + targetHostId);
         }
 
         request.setHostId(targetHostId);
@@ -94,8 +103,8 @@ public class HostController {
         if (hosts.isEmpty()) {
             HostStatusDto unregistered = HostStatusDto.builder()
                     .status("UNREGISTERED")
-                    .totalCapacityBytes(53687091200L)
-                    .reservedCapacityBytes(10737418240L)
+                    .totalCapacityBytes(0L)
+                    .reservedCapacityBytes(0L)
                     .usedCapacityBytes(0L)
                     .build();
             return ResponseEntity.ok(unregistered);
@@ -107,8 +116,19 @@ public class HostController {
      * Retrieves details of a specific host by ID.
      */
     @GetMapping("/{hostId}")
-    public ResponseEntity<HostStatusDto> getHost(@PathVariable UUID hostId) {
+    public ResponseEntity<HostStatusDto> getHost(
+            @PathVariable UUID hostId,
+            Principal principal) {
         HostStatusDto host = registrationService.getHostById(hostId);
+        if (principal != null) {
+            UUID ownerId = extractUserId(principal);
+            if (!host.getOwnerId().equals(ownerId)) {
+                log.warn("Unauthorized host access: user {} attempted to view host {} owned by {}",
+                        ownerId, hostId, host.getOwnerId());
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Access denied: You do not have permission to view host " + hostId);
+            }
+        }
         return ResponseEntity.ok(host);
     }
 

@@ -54,19 +54,22 @@ public class SelfHealingService {
     private final ClusterAnalyticsService analyticsService;
     private final ReplicationConfig config;
     private final HostRepository hostRepository;
+    private final com.neurovault.backend.repository.ReplicationTaskRepository taskRepository;
 
     public SelfHealingService(ReplicationService replicationService,
                               HostSelectionService hostSelectionService,
                               ClusterEventPublisher eventPublisher,
                               ClusterAnalyticsService analyticsService,
                               ReplicationConfig config,
-                              HostRepository hostRepository) {
+                              HostRepository hostRepository,
+                              com.neurovault.backend.repository.ReplicationTaskRepository taskRepository) {
         this.replicationService = replicationService;
         this.hostSelectionService = hostSelectionService;
         this.eventPublisher = eventPublisher;
         this.analyticsService = analyticsService;
         this.config = config;
         this.hostRepository = hostRepository;
+        this.taskRepository = taskRepository;
     }
 
     /**
@@ -181,6 +184,24 @@ public class SelfHealingService {
                 Host replacementHost = hostSelectionService
                         .selectReplacementHost(chunkId, currentHostIds);
 
+                UUID sourceHostId = existingReplicas.stream()
+                        .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
+                        .map(r -> r.getHost().getId())
+                        .findFirst()
+                        .orElse(null);
+
+                // Create durable task record
+                com.neurovault.backend.entity.ReplicationTask task = com.neurovault.backend.entity.ReplicationTask.builder()
+                        .chunkId(chunkId)
+                        .sourceHostId(sourceHostId)
+                        .targetHostId(replacementHost.getId())
+                        .status(com.neurovault.backend.entity.ReplicationTask.Status.RUNNING)
+                        .reason("Automatic healing deficit recovery")
+                        .attemptCount(1)
+                        .leaseExpiresAt(LocalDateTime.now().plusMinutes(5))
+                        .build();
+                task = taskRepository.save(task);
+
                 // Create the new replica
                 replicationService.assignReplicas(chunkId,
                         List.of(replacementHost.getId()));
@@ -192,6 +213,11 @@ public class SelfHealingService {
                         replacementHost.getUsedCapacityBytes() + chunkSize);
                 hostRepository.save(replacementHost);
 
+                // Mark task succeeded
+                task.setStatus(com.neurovault.backend.entity.ReplicationTask.Status.SUCCEEDED);
+                task.setCompletedAt(LocalDateTime.now());
+                taskRepository.save(task);
+
                 // Add to exclusion set for the next iteration
                 currentHostIds.add(replacementHost.getId());
 
@@ -202,8 +228,8 @@ public class SelfHealingService {
                 analyticsService.incrementRecoveryCount();
                 repaired++;
 
-                log.info("  → Replica {}/{} created on host {} for chunk {}",
-                        repaired, deficit, replacementHost.getName(), chunkId);
+                log.info("  → Replica {}/{} created on host {} for chunk {} (task={})",
+                        repaired, deficit, replacementHost.getName(), chunkId, task.getId());
 
             } catch (InsufficientHostsException e) {
                 log.warn("  → No more eligible hosts for chunk {} (placed {}/{})",

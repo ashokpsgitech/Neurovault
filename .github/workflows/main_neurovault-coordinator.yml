@@ -34,7 +34,7 @@ jobs:
       - name: Build Spring Boot JAR with Gradle
         run: |
           cd backend
-          ./gradlew bootJar -x test
+          ./gradlew test bootJar
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4

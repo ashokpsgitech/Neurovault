@@ -18,11 +18,19 @@ class DioClient {
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          if (getToken != null) {
+          final uri = options.uri;
+          final baseUri = Uri.tryParse(baseUrl);
+          final isCoordinatorDomain = baseUri != null &&
+              (uri.host.isEmpty || uri.host == baseUri.host);
+
+          if (isCoordinatorDomain && getToken != null) {
             final token = await getToken();
             if (token != null && token.isNotEmpty) {
               options.headers['Authorization'] = 'Bearer $token';
             }
+          } else {
+            // Strip Coordinator Authorization header for direct host nodes and peer IPs
+            options.headers.remove('Authorization');
           }
           return handler.next(options);
         },

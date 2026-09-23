@@ -137,6 +137,20 @@ class ChunkHttpServer {
             pathSegments[2] == 'chunks') {
           final chunkId = pathSegments[3];
 
+          // Require authentication via scoped chunk capability token
+          final chunkToken = request.headers.value('X-Chunk-Token') ??
+              request.headers.value('Authorization')?.replaceFirst(RegExp(r'^Bearer\s+'), '');
+
+          if (chunkToken == null || chunkToken.trim().isEmpty) {
+            DebugLogService().warn('[ChunkHttpServer] Blocked unauthenticated request to $chunkId from ${request.connectionInfo?.remoteAddress.address}');
+            request.response
+              ..statusCode = HttpStatus.unauthorized
+              ..headers.contentType = ContentType.json
+              ..write('{"error":"Unauthorized: Missing required chunk capability token"}');
+            await request.response.close();
+            return;
+          }
+
           if (request.method == 'GET') {
             await _handleGetChunk(request, chunkId);
           } else if (request.method == 'POST') {

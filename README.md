@@ -25,14 +25,18 @@
 
 ---
 
-## 🌟 Key Features
+## 🌟 Features & Implementation Status
 
-* **🔒 Zero-Knowledge Security**: All file chunking (4MB blocks) and AES-256-GCM authenticated encryption occur exclusively on the client device before upload. Storage hosts only receive opaque binary chunks and **can never inspect file names, structures, or unencrypted contents**.
-* **⚡ Decoupled Metadata Coordinator**: Central Spring Boot backend handles host selection, capacity reservations, replication factors, and self-healing **without ever touching unencrypted file bytes**.
-* **📦 Binary Offset Storage Containers**: Host nodes store data inside pre-allocated binary container files (`storage.container`) using high-speed binary offset indexing.
-* **📱 24/7 Android Background Host Service**: Native Kotlin Foreground Service with persistent status notification and `BootReceiver` for continuous host node availability across device reboots.
-* **🐛 In-App Debug Console (`DebugConsoleModal`)**: Built-in visual debugging tool accessible by tapping the bug icon on mobile or desktop to view real-time API logs, state transitions, and stack traces.
-* **🔄 Self-Healing & Replication Engine**: Automated background scheduler scans for under-replicated chunks and host failures, dynamically re-replicating data across active host nodes.
+| Feature Domain | Capability | Status | Implementation Details |
+| :--- | :--- | :---: | :--- |
+| **Client-Side Cryptography** | AES-256-GCM & PBKDF2 Key Wrap | **Production Ready** | 128-bit MAC tag verification, CSPRNG 96-bit nonces, Envelope Encryption with user KEK. |
+| **Binary Storage Engine** | Direct Container I/O (`storage.container`) | **Production Ready** | Pre-allocated binary files, 256B `NVLT` header, 1MB metadata index, strict CRC32/SHA256 validation. |
+| **Access Control & IDOR** | Host Ownership & Scoped Capability Tokens | **Production Ready** | Principal-verified ownership on host APIs; signed short-lived JWT chunk capability tokens. |
+| **Dynamic Chunking** | Node-Based Partitioning & `NVCP` Envelopes | **Production Ready** | $M$-way balanced file slicing across active nodes with sibling chunk manifests. |
+| **Self-Healing Engine** | Durable Replication Tasks | **Beta** | `ReplicationTask` entity persistence, lease locking, deficit detection, and replica recovery. |
+| **Host Node Daemon** | Android Foreground Service & Chunk Server | **Beta** | Native Kotlin Foreground service, authenticated HTTP chunk server with capability checks. |
+| **Network Data Plane** | WebRTC Direct Peer-to-Peer Streaming | **Beta** | WebRTC signaling via Coordinator; direct chunk binary data channels. |
+| **Data Redundancy** | Reed-Solomon Erasure Coding ($K+M$) | **Planned** | Planned for post-beta distributed fleet resilience. |
 
 ---
 
@@ -241,13 +245,17 @@ Tap the **Bug Icon (🐛)** at the top right of the Flutter app at any time to o
 
 ## 🧪 Testing & Benchmarks
 
-### 1. Run Backend Unit & Integration Tests (127/127 Passed)
+### 1. Run Backend Unit & Integration Tests (136/136 Passed)
 ```powershell
 cd backend
 .\gradlew.bat test
 ```
+To run the dedicated adversarial security suite:
+```powershell
+.\gradlew.bat test --tests "com.neurovault.backend.security.*"
+```
 
-### 2. Run Frontend Unit & Widget Tests (4/4 Passed)
+### 2. Run Frontend Unit & Crypto Tests (9/9 Passed)
 ```powershell
 cd frontend
 flutter test

@@ -12,7 +12,7 @@ spring:
     driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.h2.Driver}
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: false
 
   servlet:
@@ -23,8 +23,8 @@ spring:
 app:
   jwt:
     # Base64-encoded or raw secret key (at least 256-bit for HS256)
-    secret: 4035763074377938355668596D6235723D723930516D61365468576D5A713474
-    expiration-ms: 86400000 # 24 hours
+    secret: ${APP_JWT_SECRET:4035763074377938355668596D6235723D723930516D61365468576D5A713474}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000} # 24 hours
 
 neurovault:
   storage:

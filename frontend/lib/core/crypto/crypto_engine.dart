@@ -36,6 +36,24 @@ class CryptoEngine {
     return Uint8List.fromList(List<int>.generate(32, (_) => random.nextInt(256)));
   }
 
+  /// Derives a 256-bit Key Encryption Key (KEK) from a user master secret and salt using PBKDF2-HMAC-SHA256.
+  static Uint8List deriveMasterKey(String passphrase, Uint8List salt, {int iterations = 10000}) {
+    final derivator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
+      ..init(Pbkdf2Parameters(salt, iterations, 32));
+    return derivator.process(Uint8List.fromList(passphrase.codeUnits));
+  }
+
+  /// Wraps (encrypts) a Data Encryption Key (DEK) with a Key Encryption Key (KEK) using AES-256-GCM.
+  /// Result layout: [12-byte Nonce] + [Encrypted DEK + 16-byte Auth Tag MAC] (total 60 bytes).
+  static Uint8List wrapKey(Uint8List dek, Uint8List kek) {
+    return encryptChunk(dek, kek, 0);
+  }
+
+  /// Unwraps (decrypts and verifies) a wrapped Data Encryption Key (DEK) with the Key Encryption Key (KEK).
+  static Uint8List unwrapKey(Uint8List wrappedKey, Uint8List kek) {
+    return decryptChunk(wrappedKey, kek, 0);
+  }
+
   /// Encrypts a chunk payload using AES-256-GCM with CSPRNG nonce.
   /// Result format: [12-byte Nonce] + [Ciphertext + 16-byte Auth Tag MAC]
   static Uint8List encryptChunk(Uint8List plainBytes, Uint8List key, int chunkIndex) {

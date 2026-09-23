@@ -64,3 +64,4 @@ application-local.properties
 neurovault-db*
 neurovault-storage/
 **/neurovault-storage/**
+NeuroVault_Full_Chat_Export.md

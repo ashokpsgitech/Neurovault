@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.neurovault.backend.replication.exception.InsufficientHostsException;
+import org.springframework.security.access.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +76,14 @@ public class UploadService {
 
         List<Host> targetHosts = coordinatorService.selectTargetHostsForUserAndMode(request.getTotalChunks(), user.getId(), null);
         if (targetHosts.isEmpty()) {
-            targetHosts = hostRepository.findAll();
+            targetHosts = hostRepository.findAll().stream()
+                    .filter(h -> h.getStatus() == Host.Status.ONLINE)
+                    .collect(Collectors.toList());
+        }
+
+        if (targetHosts.isEmpty()) {
+            log.error("Upload plan failed: No online hosts available in cluster for user {}", user.getId());
+            throw new InsufficientHostsException("No active host nodes available to allocate storage chunks. Please ensure storage hosts are online.");
         }
 
         UploadSession session = sessionManager.createSession(
@@ -97,18 +106,11 @@ public class UploadService {
         List<ChunkAllocationDto> allocations = new ArrayList<>();
 
         for (int i = 0; i < request.getTotalChunks(); i++) {
-            UUID hostId = UUID.randomUUID();
-            String hostName = "MicroServer-Node";
-            String publicIp = "127.0.0.1";
-            String uploadUrl = String.format("http://localhost:%d/api/storage/chunks", hostPort);
-
-            if (!targetHosts.isEmpty()) {
-                Host targetHost = targetHosts.get(i % targetHosts.size());
-                hostId = targetHost.getId();
-                hostName = targetHost.getName();
-                publicIp = targetHost.getPublicIp() != null ? targetHost.getPublicIp() : "127.0.0.1";
-                uploadUrl = String.format("http://%s:%d/api/storage/chunks", publicIp, hostPort);
-            }
+            Host targetHost = targetHosts.get(i % targetHosts.size());
+            UUID hostId = targetHost.getId();
+            String hostName = targetHost.getName();
+            String publicIp = targetHost.getPublicIp() != null ? targetHost.getPublicIp() : "127.0.0.1";
+            String uploadUrl = String.format("http://%s:%d/api/storage/chunks", publicIp, hostPort);
 
             UUID chunkId = UUID.randomUUID();
             Chunk pendingChunk = Chunk.builder()
@@ -155,6 +157,17 @@ public class UploadService {
     public UploadResponse completeUpload(UploadCompleteRequest request, User user) {
         UploadSession session = sessionManager.getSession(request.getUploadSessionId());
 
+        if (user != null && session.getUser() != null && !session.getUser().getId().equals(user.getId())) {
+            log.warn("Unauthorized upload completion attempt by user {} on session {} owned by {}",
+                    user.getId(), session.getId(), session.getUser().getId());
+            throw new AccessDeniedException("Access denied: You are not authorized to finalize this upload session");
+        }
+
+        if (session.getExpiresAt() != null && session.getExpiresAt().isBefore(LocalDateTime.now())) {
+            sessionManager.updateStatus(session.getId(), UploadSession.Status.FAILED);
+            throw new BadRequestException("Upload session " + session.getId() + " has expired. Please create a new upload plan.");
+        }
+
         if (session.getStatus() == UploadSession.Status.COMPLETED) {
             return UploadResponse.builder()
                     .uploadId(session.getId())
@@ -165,7 +178,7 @@ public class UploadService {
                     .build();
         }
 
-        log.info("Finalizing upload session {} for user {}", session.getId(), user.getId());
+        log.info("Finalizing upload session {} for user {}", session.getId(), user != null ? user.getId() : "anonymous");
 
         if (request.getEncryptedAesKey() == null || request.getEncryptedAesKey().isBlank()) {
             throw new BadRequestException("Encrypted AES key is required");
@@ -189,10 +202,10 @@ public class UploadService {
                     }
                     computedFileHash = hex.toString();
                 } catch (Exception e) {
-                    computedFileHash = "SHA256_" + UUID.randomUUID().toString().replace("-", "");
+                    throw new BadRequestException("Failed to compute SHA-256 file hash from chunks");
                 }
             } else {
-                computedFileHash = "SHA256_" + UUID.randomUUID().toString().replace("-", "");
+                throw new BadRequestException("File hash (SHA-256) is required for file completion");
             }
         }
 
@@ -282,7 +295,14 @@ public class UploadService {
     }
 
     public UploadProgressResponse getProgress(UUID uploadId) {
+        return getProgress(uploadId, null);
+    }
+
+    public UploadProgressResponse getProgress(UUID uploadId, User user) {
         UploadSession session = sessionManager.getSession(uploadId);
+        if (user != null && session.getUser() != null && !session.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied: You are not authorized to view progress for this upload session");
+        }
 
         return UploadProgressResponse.builder()
                 .uploadId(uploadId)
@@ -297,7 +317,15 @@ public class UploadService {
 
     @Transactional
     public void cancelUpload(UUID uploadId) {
+        cancelUpload(uploadId, null);
+    }
+
+    @Transactional
+    public void cancelUpload(UUID uploadId, User user) {
         UploadSession session = sessionManager.getSession(uploadId);
+        if (user != null && session.getUser() != null && !session.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Access denied: You are not authorized to cancel this upload session");
+        }
         if (session.getStatus() != UploadSession.Status.COMPLETED) {
             sessionManager.updateStatus(uploadId, UploadSession.Status.FAILED);
         }

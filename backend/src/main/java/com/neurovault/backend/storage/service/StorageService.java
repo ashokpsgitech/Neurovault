@@ -77,14 +77,20 @@ public class StorageService {
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
 
-        // Use client-specified path if provided, otherwise use default server-side path
+        // Secure path resolution: client-specified path must reside strictly within the managed storage base directory
         Path resolvedPath;
         if (containerPath != null && !containerPath.isBlank()) {
-            resolvedPath = Paths.get(containerPath);
-            Path fileName = resolvedPath.getFileName();
-            // If path is a root directory like "D:\" or doesn't end with .container, append storage.container
-            if (fileName == null || !fileName.toString().endsWith(".container")) {
-                resolvedPath = resolvedPath.resolve(CONTAINER_FILENAME);
+            Path candidate = Paths.get(containerPath).normalize().toAbsolutePath();
+            Path baseDir = Paths.get(storageProperties.getBaseDir()).normalize().toAbsolutePath();
+            if (candidate.startsWith(baseDir)) {
+                Path fileName = candidate.getFileName();
+                if (fileName == null || !fileName.toString().endsWith(".container")) {
+                    candidate = candidate.resolve(CONTAINER_FILENAME);
+                }
+                resolvedPath = candidate;
+            } else {
+                log.warn("Rejected path traversal attempt '{}'; enforcing secure server-managed path", containerPath);
+                resolvedPath = resolveContainerPath(hostId);
             }
         } else {
             resolvedPath = resolveContainerPath(hostId);
@@ -291,9 +297,15 @@ public class StorageService {
     }
 
     private void ensureContainerOpen(Path path) {
-        if (!containerManager.isOpen()) {
+        Path normalizedTarget = path.normalize().toAbsolutePath();
+        Path currentlyOpen = containerManager.getContainerPath() != null ? containerManager.getContainerPath().normalize().toAbsolutePath() : null;
+
+        if (!containerManager.isOpen() || !normalizedTarget.equals(currentlyOpen)) {
             try {
-                containerManager.openContainer(path);
+                if (containerManager.isOpen()) {
+                    containerManager.closeContainer();
+                }
+                containerManager.openContainer(normalizedTarget);
                 storageEngine.initialize();
             } catch (ContainerException e) {
                 throw new ContainerException("Failed to open container at " + path, e);

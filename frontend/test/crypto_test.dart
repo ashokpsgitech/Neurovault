@@ -141,5 +141,32 @@ void main() {
       final reassembled = FileChunker.reassembleChunks(envelopes);
       expect(reassembled, equals(originalData));
     });
+
+    test('PBKDF2 Key Derivation & AES-256-GCM Envelope Key Wrapping Round-Trip', () {
+      final salt = Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8]);
+      final kek = CryptoEngine.deriveMasterKey('user_secure_passphrase_123', salt, iterations: 1000);
+      expect(kek.length, equals(32)); // 256 bits
+
+      final dek = CryptoEngine.generateSymmetricKey();
+      expect(dek.length, equals(32));
+
+      // Wrap DEK with KEK
+      final wrappedKey = CryptoEngine.wrapKey(dek, kek);
+      expect(wrappedKey.length, equals(12 + 32 + 16)); // 12-byte Nonce + 32-byte DEK + 16-byte Auth Tag = 60 bytes
+      expect(wrappedKey, isNot(equals(dek)));
+
+      // Unwrap DEK with correct KEK
+      final unwrappedDek = CryptoEngine.unwrapKey(wrappedKey, kek);
+      expect(unwrappedDek, equals(dek));
+
+      // Tampered wrapped key must fail authentication
+      final tampered = Uint8List.fromList(wrappedKey);
+      tampered[tampered.length - 1] ^= 0xFF; // flip bit in auth tag
+      expect(() => CryptoEngine.unwrapKey(tampered, kek), throwsA(anything));
+
+      // Wrong KEK must fail authentication
+      final wrongKek = CryptoEngine.deriveMasterKey('wrong_passphrase', salt, iterations: 1000);
+      expect(() => CryptoEngine.unwrapKey(wrappedKey, wrongKek), throwsA(anything));
+    });
   });
 }

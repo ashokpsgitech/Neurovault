@@ -56,6 +56,9 @@ public class SelfHealingServiceTest {
     @Autowired
     private ChunkReplicaRepository chunkReplicaRepository;
 
+    @Autowired
+    private com.neurovault.backend.repository.ReplicationTaskRepository taskRepository;
+
     private User testUser;
     private Host hostA;
     private Host hostB;
@@ -151,6 +154,11 @@ public class SelfHealingServiceTest {
         // Verify replicas placed across all 3 hosts
         List<ChunkReplica> replicas = chunkReplicaRepository.findByChunkId(chunk.getId());
         assertEquals(3, replicas.size());
+
+        // Verify durable ReplicationTask records were persisted
+        var tasks = taskRepository.findByChunkId(chunk.getId());
+        assertEquals(3, tasks.size());
+        assertEquals(ReplicationTask.Status.SUCCEEDED, tasks.get(0).getStatus());
     }
 
     @Test

@@ -48,4 +48,15 @@ public class StorageExceptionHandler {
                 .build();
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(CorruptedChunkException.class)
+    public ResponseEntity<ErrorResponse> handleCorruptedChunkException(CorruptedChunkException ex) {
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .error("Corrupted Chunk")
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
 }
