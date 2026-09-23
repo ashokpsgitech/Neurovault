@@ -27,13 +27,17 @@ public class CoordinatorService {
     private final HostSelectionStrategy hostSelectionStrategy;
     private final JwtUtils jwtUtils;
 
+    private final com.neurovault.backend.security.capability.CapabilityTokenService capabilityTokenService;
+
     public CoordinatorService(
             HostRepository hostRepository,
             HostSelectionStrategy hostSelectionStrategy,
-            JwtUtils jwtUtils) {
+            JwtUtils jwtUtils,
+            com.neurovault.backend.security.capability.CapabilityTokenService capabilityTokenService) {
         this.hostRepository = hostRepository;
         this.hostSelectionStrategy = hostSelectionStrategy;
         this.jwtUtils = jwtUtils;
+        this.capabilityTokenService = capabilityTokenService;
     }
 
     /**
@@ -75,15 +79,26 @@ public class CoordinatorService {
     }
 
     /**
-     * Generates a signed authorization token for a client to perform a direct chunk operation on a host.
-     *
-     * @param sessionId upload or download session ID
-     * @param hostId    target host ID
-     * @param chunkIndex chunk index
-     * @return signed token string
+     * Generates a signed capability token for a client to perform a direct chunk operation on a host.
      */
     public String generateChunkToken(UUID sessionId, UUID hostId, int chunkIndex) {
-        String tokenSubject = String.format("chunk-session:%s:host:%s:index:%d", sessionId, hostId, chunkIndex);
-        return jwtUtils.generateToken(tokenSubject);
+        return generateChunkToken(sessionId, hostId, null, chunkIndex, com.neurovault.backend.security.capability.CapabilityOperation.WRITE);
+    }
+
+    /**
+     * Generates a signed capability token specifying exact chunk ID and operation.
+     */
+    public String generateChunkToken(UUID sessionId, UUID hostId, UUID chunkId, int chunkIndex,
+                                     com.neurovault.backend.security.capability.CapabilityOperation operation) {
+        com.neurovault.backend.security.capability.CapabilityToken token =
+                com.neurovault.backend.security.capability.CapabilityToken.builder()
+                        .sessionId(sessionId)
+                        .hostId(hostId)
+                        .chunkId(chunkId)
+                        .chunkIndex(chunkIndex)
+                        .operation(operation)
+                        .subject("client-" + (sessionId != null ? sessionId : UUID.randomUUID()))
+                        .build();
+        return capabilityTokenService.issueToken(token);
     }
 }

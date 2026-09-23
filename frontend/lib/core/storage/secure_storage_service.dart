@@ -58,6 +58,22 @@ class SecureStorageService {
     return val == 'true';
   }
 
+  Future<void> saveUserMasterSecret(String secret) async {
+    await _storage.write(key: 'vault_master_secret', value: secret);
+  }
+
+  Future<String?> getUserMasterSecret() async {
+    return await _storage.read(key: 'vault_master_secret');
+  }
+
+  Future<void> saveUserVaultSalt(String salt) async {
+    await _storage.write(key: 'vault_user_salt', value: salt);
+  }
+
+  Future<String?> getUserVaultSalt() async {
+    return await _storage.read(key: 'vault_user_salt');
+  }
+
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }

@@ -451,6 +451,9 @@ class FirebaseService {
       'createdAtIso': DateTime.now().toIso8601String(),
       'chunkCount': calculatedChunkCount,
       'activeHostReplicas': activeHostCount,
+      'encryptionVersion': 2,
+      'layoutVersion': 1,
+      'chunkingStrategy': 'NODE_DYNAMIC_V1',
     };
 
     DebugLogService().info('[FirebaseService] Writing Firestore metadata document for file: $fileId ($calculatedChunkCount chunks across $activeHostCount active host replicas)');
@@ -675,6 +678,28 @@ class FirebaseService {
     );
   }
 
+  /// Updates file key metadata when migrating from legacy raw DEK to wrapped KEK format.
+  Future<void> updateFileKey(String fileId, String aesKeyBase64, {int encryptionVersion = 2}) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('files')
+          .doc(fileId)
+          .update({
+            'encryptedAesKey': aesKeyBase64,
+            'encryptionVersion': encryptionVersion,
+            'updatedAt': FieldValue.serverTimestamp(),
+          })
+          .timeout(const Duration(seconds: 5));
+      DebugLogService().info('[FirebaseService] Updated encryption metadata for file $fileId to version $encryptionVersion');
+    } catch (e) {
+      DebugLogService().warn('[FirebaseService] Failed to update file key in Firestore: $e');
+    }
+  }
+
   /// Fetches list of files stored in user's Cloud Firestore Vault across all devices.
   Future<List<FileItem>> listUserFiles() async {
     final user = _auth.currentUser;
@@ -749,7 +774,7 @@ class FirebaseService {
     final String encryptedAesKey = data['encryptedAesKey']?.toString() ?? '';
 
     Uint8List? encryptedBytes;
-    final List<Uint8List> chunkList = [];
+    final Map<int, Uint8List> chunksByIndex = {};
 
     // Query chunk host location metadata from Firestore (NO payload stored in Firestore/Firebase)
     try {
@@ -805,7 +830,7 @@ class FirebaseService {
                   chunkId: chunkId,
                 );
                 if (localBytes != null && localBytes.isNotEmpty) {
-                  chunkList.add(localBytes);
+                  chunksByIndex[chunkIndex] = localBytes;
                   chunkFetched = true;
                   DebugLogService().info('[FirebaseService] Retrieved chunk $chunkId from local container: $path');
                 }
@@ -825,7 +850,7 @@ class FirebaseService {
               ).timeout(const Duration(seconds: 15));
 
               if (response.data != null && response.data!.isNotEmpty) {
-                chunkList.add(Uint8List.fromList(response.data!));
+                chunksByIndex[chunkIndex] = Uint8List.fromList(response.data!);
                 chunkFetched = true;
                 DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) from host: $primaryUrl');
               }
@@ -844,7 +869,7 @@ class FirebaseService {
               ).timeout(const Duration(seconds: 10));
 
               if (response.data != null && response.data!.isNotEmpty) {
-                chunkList.add(Uint8List.fromList(response.data!));
+                chunksByIndex[chunkIndex] = Uint8List.fromList(response.data!);
                 chunkFetched = true;
                 DebugLogService().info('[FirebaseService] Downloaded chunk #$chunkIndex (${response.data!.length} bytes) via loopback: $loopbackUrl');
               }
@@ -863,7 +888,7 @@ class FirebaseService {
                   timeout: const Duration(seconds: 60),
                 );
                 if (p2pBytes != null && p2pBytes.isNotEmpty) {
-                  chunkList.add(p2pBytes);
+                  chunksByIndex[chunkIndex] = p2pBytes;
                   chunkFetched = true;
                   DebugLogService().info('[FirebaseService] Downloaded chunk $chunkId (${p2pBytes.length} bytes) via WebRTC P2P from host $assignedHostId');
                 } else {
@@ -880,13 +905,38 @@ class FirebaseService {
           }
         }
 
-        if (chunkList.isNotEmpty) {
-          encryptedBytes = FileChunker.reassembleChunks(chunkList);
-          DebugLogService().info('[FirebaseService] Successfully reassembled ${chunkList.length} encrypted chunks from host container pool.');
+        final int expectedChunkCount = (data['chunkCount'] is int && data['chunkCount'] > 0)
+            ? data['chunkCount'] as int
+            : chunksSnap.docs.length;
+        final int expectedSizeBytes = data['sizeBytes'] ?? 0;
+
+        // Strict validation: never assemble partial chunks
+        if (chunksByIndex.length < expectedChunkCount) {
+          final missing = <int>[];
+          for (int i = 0; i < expectedChunkCount; i++) {
+            if (!chunksByIndex.containsKey(i)) missing.add(i);
+          }
+          throw Exception('File reassembly failed: missing chunks $missing of $expectedChunkCount for file $fileId');
         }
+
+        final List<Uint8List> sortedChunkList = [];
+        for (int i = 0; i < expectedChunkCount; i++) {
+          final chunkBytes = chunksByIndex[i];
+          if (chunkBytes == null || chunkBytes.isEmpty) {
+            throw Exception('File reassembly failed: chunk at index $i is empty or corrupted');
+          }
+          sortedChunkList.add(chunkBytes);
+        }
+
+        encryptedBytes = FileChunker.reassembleChunks(sortedChunkList);
+        if (expectedSizeBytes > 0 && encryptedBytes.length != expectedSizeBytes) {
+          throw Exception('File reassembly size mismatch: expected $expectedSizeBytes bytes, got ${encryptedBytes.length} bytes');
+        }
+        DebugLogService().info('[FirebaseService] Successfully reassembled $expectedChunkCount encrypted chunks (${encryptedBytes.length} bytes) strictly ordered by chunkIndex.');
       }
     } catch (e) {
       DebugLogService().error('[FirebaseService] Host chunk location fetch error: $e');
+      rethrow;
     }
 
     if (encryptedBytes == null) {

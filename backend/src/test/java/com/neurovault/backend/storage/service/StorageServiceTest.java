@@ -2,11 +2,11 @@ package com.neurovault.backend.storage.service;
 
 import com.neurovault.backend.entity.Host;
 import com.neurovault.backend.entity.StorageContainer;
-import com.neurovault.backend.exception.BadRequestException;
 import com.neurovault.backend.exception.ResourceNotFoundException;
 import com.neurovault.backend.repository.HostRepository;
 import com.neurovault.backend.repository.StorageContainerRepository;
 import com.neurovault.backend.storage.config.StorageProperties;
+import com.neurovault.backend.storage.container.ContainerContext;
 import com.neurovault.backend.storage.container.ContainerManager;
 import com.neurovault.backend.storage.dto.ChunkMetadataDto;
 import com.neurovault.backend.storage.dto.StorageStatusResponse;
@@ -21,8 +21,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +53,9 @@ class StorageServiceTest {
     @Mock
     private StorageProperties storageProperties;
 
+    @Mock
+    private ContainerContext mockContext;
+
     @InjectMocks
     private StorageService storageService;
 
@@ -66,12 +69,15 @@ class StorageServiceTest {
                 .id(hostId)
                 .name("test-host")
                 .status(Host.Status.ONLINE)
-                .totalCapacityBytes(10_000_000_000L)
+                .totalCapacityBytes(StorageReservationSize.GB_5.getBytes())
                 .reservedCapacityBytes(0L)
                 .usedCapacityBytes(0L)
-                .heartbeatIntervalSeconds(30)
-                .createdAt(LocalDateTime.now())
                 .build();
+    }
+
+    private void mockContainerOpen() {
+        when(containerManager.getContext(hostId)).thenReturn(mockContext);
+        when(mockContext.isOpen()).thenReturn(true);
     }
 
     @Test
@@ -81,9 +87,9 @@ class StorageServiceTest {
         when(storageProperties.getBaseDir()).thenReturn("./test-storage");
         when(containerRepository.save(any(StorageContainer.class))).thenAnswer(inv -> inv.getArgument(0));
         when(hostRepository.save(any(Host.class))).thenReturn(host);
-        when(storageEngine.calculateUsedSpace()).thenReturn(0L);
-        when(storageEngine.calculateFreeSpace()).thenReturn(StorageReservationSize.GB_1.getBytes());
-        when(storageEngine.countActiveChunks()).thenReturn(0);
+        when(storageEngine.calculateUsedSpace(hostId)).thenReturn(0L);
+        when(storageEngine.calculateFreeSpace(hostId)).thenReturn(StorageReservationSize.GB_1.getBytes());
+        when(storageEngine.countActiveChunks(hostId)).thenReturn(0);
 
         StorageStatusResponse response = storageService.createStorage(hostId, StorageReservationSize.GB_1, null);
 
@@ -93,8 +99,8 @@ class StorageServiceTest {
         assertEquals("ONLINE", response.getHostStatus());
         assertEquals("ACTIVE", response.getContainerStatus());
 
-        verify(containerManager).createContainer(any(), eq(StorageReservationSize.GB_1.getBytes()));
-        verify(storageEngine).initialize();
+        verify(containerManager).createContainer(eq(hostId), any(Path.class), eq(StorageReservationSize.GB_1.getBytes()));
+        verify(storageEngine).initialize(hostId);
         verify(containerRepository).save(any(StorageContainer.class));
     }
 
@@ -106,9 +112,9 @@ class StorageServiceTest {
         when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(existing));
         when(containerRepository.save(any(StorageContainer.class))).thenAnswer(inv -> inv.getArgument(0));
         when(hostRepository.save(any(Host.class))).thenReturn(host);
-        when(storageEngine.calculateUsedSpace()).thenReturn(0L);
-        when(storageEngine.calculateFreeSpace()).thenReturn(StorageReservationSize.GB_1.getBytes());
-        when(storageEngine.countActiveChunks()).thenReturn(0);
+        when(storageEngine.calculateUsedSpace(hostId)).thenReturn(0L);
+        when(storageEngine.calculateFreeSpace(hostId)).thenReturn(StorageReservationSize.GB_1.getBytes());
+        when(storageEngine.countActiveChunks(hostId)).thenReturn(0);
 
         StorageStatusResponse response = storageService.createStorage(hostId, StorageReservationSize.GB_1, null);
         assertNotNull(response);
@@ -140,7 +146,7 @@ class StorageServiceTest {
 
         storageService.deleteStorage(hostId);
 
-        verify(containerManager).deleteContainer(any());
+        verify(containerManager).deleteContainer(eq(hostId), any(Path.class));
         verify(containerRepository).delete(containerEntity);
         verify(hostRepository).save(any(Host.class));
     }
@@ -157,10 +163,10 @@ class StorageServiceTest {
 
         when(hostRepository.findById(hostId)).thenReturn(Optional.of(host));
         when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(containerEntity));
-        when(containerManager.isOpen()).thenReturn(true);
-        when(storageEngine.calculateUsedSpace()).thenReturn(500_000L);
-        when(storageEngine.calculateFreeSpace()).thenReturn(StorageReservationSize.GB_1.getBytes() - 500_000L);
-        when(storageEngine.countActiveChunks()).thenReturn(10);
+        mockContainerOpen();
+        when(storageEngine.calculateUsedSpace(hostId)).thenReturn(500_000L);
+        when(storageEngine.calculateFreeSpace(hostId)).thenReturn(StorageReservationSize.GB_1.getBytes() - 500_000L);
+        when(storageEngine.countActiveChunks(hostId)).thenReturn(10);
 
         StorageStatusResponse status = storageService.getStorageStatus(hostId);
 
@@ -187,9 +193,9 @@ class StorageServiceTest {
                 chunkId, data.length, 1024, Instant.now(), "abc123", 12345L, ownerId);
 
         when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(containerEntity));
-        when(containerManager.isOpen()).thenReturn(true);
-        when(storageEngine.storeChunk(chunkId, ownerId, data)).thenReturn(metadata);
-        when(storageEngine.calculateUsedSpace()).thenReturn((long) data.length);
+        mockContainerOpen();
+        when(storageEngine.storeChunk(hostId, chunkId, ownerId, data)).thenReturn(metadata);
+        when(storageEngine.calculateUsedSpace(hostId)).thenReturn((long) data.length);
         when(hostRepository.save(any(Host.class))).thenReturn(host);
 
         StoreChunkRequest request = StoreChunkRequest.builder()
@@ -202,7 +208,7 @@ class StorageServiceTest {
 
         assertNotNull(result);
         assertEquals(chunkId, result.getChunkId());
-        verify(storageEngine).storeChunk(chunkId, ownerId, data);
+        verify(storageEngine).storeChunk(hostId, chunkId, ownerId, data);
     }
 
     @Test
@@ -219,8 +225,8 @@ class StorageServiceTest {
                 .build();
 
         when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(containerEntity));
-        when(containerManager.isOpen()).thenReturn(true);
-        when(storageEngine.readChunk(chunkId)).thenReturn(expectedData);
+        mockContainerOpen();
+        when(storageEngine.readChunk(hostId, chunkId)).thenReturn(expectedData);
 
         byte[] result = storageService.readChunk(hostId, chunkId);
         assertArrayEquals(expectedData, result);
@@ -242,8 +248,8 @@ class StorageServiceTest {
                 UUID.randomUUID(), 200, 2048, Instant.now(), "hash2", 222L, UUID.randomUUID());
 
         when(containerRepository.findByHostId(hostId)).thenReturn(Optional.of(containerEntity));
-        when(containerManager.isOpen()).thenReturn(true);
-        when(storageEngine.listChunks()).thenReturn(List.of(meta1, meta2));
+        mockContainerOpen();
+        when(storageEngine.listChunks(hostId)).thenReturn(List.of(meta1, meta2));
 
         List<ChunkMetadataDto> result = storageService.listChunks(hostId);
 

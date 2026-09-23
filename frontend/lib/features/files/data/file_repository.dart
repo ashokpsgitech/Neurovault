@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:math';
 import 'dart:typed_data';
 
 import '../../../core/crypto/crypto_engine.dart';
 import '../../../core/firebase/firebase_service.dart';
+import '../../../core/storage/secure_storage_service.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../../../repositories/base_repository.dart';
 import '../models/file_metadata_model.dart';
@@ -26,9 +28,29 @@ class FileRepository extends BaseRepository {
   }
 
   /// Generates or derives a Key Encryption Key (KEK) for the user to securely wrap DEKs.
-  Uint8List _getUserKek() {
-    final salt = Uint8List.fromList('NEUROVAULT_VAULT_KEY_SALT_v1'.codeUnits);
-    return CryptoEngine.deriveMasterKey('neurovault_user_master_seed', salt, iterations: 10000);
+  /// Eliminates static "neurovault_user_master_seed" and static global salt by utilizing
+  /// a unique per-user vault salt and user-specific secret from secure storage.
+  Future<Uint8List> _getUserKek() async {
+    final secureStorage = SecureStorageService();
+    String? userSecret = await secureStorage.getUserMasterSecret();
+    String? userSalt = await secureStorage.getUserVaultSalt();
+
+    if (userSecret == null || userSecret.isEmpty) {
+      final email = await secureStorage.getUserEmail() ?? 'vault_user';
+      final random = Random.secure();
+      final entropy = base64UrlEncode(List<int>.generate(32, (_) => random.nextInt(256)));
+      userSecret = 'nv_sec_${email}_$entropy';
+      await secureStorage.saveUserMasterSecret(userSecret);
+    }
+
+    if (userSalt == null || userSalt.isEmpty) {
+      final random = Random.secure();
+      userSalt = base64UrlEncode(List<int>.generate(16, (_) => random.nextInt(256)));
+      await secureStorage.saveUserVaultSalt(userSalt);
+    }
+
+    final saltBytes = Uint8List.fromList(userSalt.codeUnits);
+    return CryptoEngine.deriveMasterKey(userSecret, saltBytes, iterations: 10000);
   }
 
   /// Zero-Trust Upload Pipeline (Client-Side Encryption + 100% Online Cloud Upload)
@@ -56,7 +78,7 @@ class FileRepository extends BaseRepository {
       encryptedBytes = await CryptoEngine.encryptChunkAsync(fileBytes, symmetricKey, 0);
 
       // Secure Envelope Encryption: Wrap DEK with user KEK before storing in metadata
-      final kek = _getUserKek();
+      final kek = await _getUserKek();
       final wrappedKeyBytes = CryptoEngine.wrapKey(symmetricKey, kek);
       encodedKey = base64Encode(wrappedKeyBytes);
       _logger.info('[FileRepository] AES-256-GCM encryption and KEK key-wrapping done. Encrypted size: ${encryptedBytes.length} bytes');
@@ -129,19 +151,39 @@ class FileRepository extends BaseRepository {
     if (encryptedAesKey.isNotEmpty) {
       try {
         final decodedBytes = base64Decode(encryptedAesKey);
-        final kek = _getUserKek();
+        final kek = await _getUserKek();
         if (decodedBytes.length == 32) {
           // Legacy direct DEK (32 bytes)
           symmetricKey = decodedBytes;
-          _logger.info('[FileRepository] Legacy direct AES key decoded successfully.');
+          _logger.info('[FileRepository] Legacy direct AES key decoded successfully. Migrating to wrapped DEK...');
+          try {
+            // Forward migration: wrap legacy DEK with user KEK and persist upgraded metadata
+            final wrapped = CryptoEngine.wrapKey(symmetricKey, kek);
+            await _firebaseService.updateFileKey(fileItem.id, base64Encode(wrapped), encryptionVersion: 2);
+            _logger.info('[FileRepository] File ${fileItem.id} key upgraded to wrapped format (encryptionVersion: 2).');
+          } catch (migrateErr) {
+            _logger.warn('[FileRepository] Key migration update skipped: $migrateErr');
+          }
         } else {
           // Secure Envelope Encryption: Unwrap DEK using user KEK
           symmetricKey = CryptoEngine.unwrapKey(decodedBytes, kek);
           _logger.info('[FileRepository] Enveloped AES key unwrapped and authenticated successfully.');
         }
       } catch (e, st) {
-        _logger.error('[FileRepository] AES key unwrap failed: $e', e, st);
-        throw Exception('Failed to decode/unwrap AES encryption key: $e');
+        // Fallback for backward compatibility with initial seed if user changed device
+        try {
+          final fallbackSalt = Uint8List.fromList('NEUROVAULT_VAULT_KEY_SALT_v1'.codeUnits);
+          final fallbackKek = CryptoEngine.deriveMasterKey('neurovault_user_master_seed', fallbackSalt, iterations: 10000);
+          final decodedBytes = base64Decode(encryptedAesKey);
+          symmetricKey = CryptoEngine.unwrapKey(decodedBytes, fallbackKek);
+          _logger.info('[FileRepository] Decoded with legacy development seed. Upgrading key to user-specific KEK...');
+          final kek = await _getUserKek();
+          final wrapped = CryptoEngine.wrapKey(symmetricKey, kek);
+          await _firebaseService.updateFileKey(fileItem.id, base64Encode(wrapped), encryptionVersion: 2);
+        } catch (_) {
+          _logger.error('[FileRepository] AES key unwrap failed: $e', e, st);
+          throw Exception('Failed to decode/unwrap AES encryption key: $e');
+        }
       }
     } else {
       _logger.error('[FileRepository] AES key is empty — file cannot be decrypted.');

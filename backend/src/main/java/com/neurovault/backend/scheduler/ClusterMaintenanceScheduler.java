@@ -59,12 +59,18 @@ public class ClusterMaintenanceScheduler {
         this.replicationConfig = replicationConfig;
     }
 
+    private final java.util.concurrent.atomic.AtomicBoolean isRunning = new java.util.concurrent.atomic.AtomicBoolean(false);
+
     /**
      * Periodic task executing cluster health checks, repairs, and statistics updates.
      * Uses a fixed delay configuration matching replicationConfig properties.
      */
     @Scheduled(fixedDelayString = "${neurovault.replication.scheduler-interval-ms:30000}")
     public void runMaintenanceCycle() {
+        if (!isRunning.compareAndSet(false, true)) {
+            log.warn("Cluster maintenance cycle is already running. Skipping this scheduled execution.");
+            return;
+        }
         log.info("Starting scheduled cluster maintenance cycle...");
         try {
             // 1. Run Health Checks & Timeout Cleanups
@@ -89,6 +95,8 @@ public class ClusterMaintenanceScheduler {
             log.info("Scheduled cluster maintenance cycle completed successfully.");
         } catch (Exception e) {
             log.error("Error occurred during scheduled maintenance cycle", e);
+        } finally {
+            isRunning.set(false);
         }
     }
 

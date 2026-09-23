@@ -110,9 +110,23 @@
 
 ## 3. Storage Host Node Endpoints (`/api/storage`)
 
-### 3.1 Store Chunk
+Direct interaction with storage host nodes (via HTTP or WebRTC DataChannel) enforces fine-grained capability token authorization.
+
+### 3.1 Scoped Capability Token Claims
+```json
+{
+  "sub": "user@example.com",
+  "sessionId": "7b889b6c-2f47-4f8e-a226-e13d93bfbc32",
+  "hostId": "550e8400-e29b-41d4-a716-446655440000",
+  "chunkId": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+  "operation": "WRITE",
+  "exp": 1758654000
+}
+```
+
+### 3.2 Store Chunk
 - **Method:** `POST /api/storage/chunks`
-- **Headers:** `X-Chunk-Token: <token>` (or Host Owner `Authorization: Bearer <token>`)
+- **Headers:** `X-Chunk-Token: <token>` (must have claim `operation: WRITE` or `REPLICATE` and matching `chunkId` and `hostId`)
 - **Request Body:**
   ```json
   {
@@ -122,20 +136,36 @@
   ```
 - **Response:** `201 Created`
 
-### 3.2 Read Chunk
+### 3.3 Read Chunk
 - **Method:** `GET /api/storage/chunks/{chunkId}`
-- **Headers:** `X-Chunk-Token: <token>` (or Host Owner `Authorization: Bearer <token>`)
+- **Headers:** `X-Chunk-Token: <token>` (must have claim `operation: READ` and matching `chunkId`)
 - **Response:** `200 OK` (binary chunk stream)
 
 ---
 
-## 4. Standard Error Structure
+## 4. WebRTC Peer-to-Peer DataChannel Protocol
+
+When transferring chunks across NAT/firewalls between clients and remote hosts, WebRTC DataChannels are utilized via Firestore signaling (`signaling/{hostId}/sessions/{sessionId}`).
+
+### 4.1 Handshake Messages
+- **Upload Handshake:** Client sends `$chunkId|$chunkSizeBytes|$capabilityToken`
+  - Host validates capability token with operation `WRITE` before accepting binary frames.
+  - Slices are transmitted in bounded 64KB binary messages.
+  - End of transfer is signalled with `__EOF__`.
+  - Host responds with `ACK:$chunkId` or `ERR:forbidden:<reason>`.
+- **Download Handshake:** Client sends `GET|$chunkId|$capabilityToken`
+  - Host validates capability token with operation `READ` before streaming bytes.
+  - Slices are streamed in bounded 64KB frames, terminated with `__EOF__`.
+
+---
+
+## 5. Standard Error Structure
 
 ```json
 {
   "timestamp": "2026-09-23T21:30:00",
   "status": 403,
   "error": "Forbidden",
-  "message": "Access denied: You do not have permission to manage host 550e8400-e29b-41d4-a716-446655440000"
+  "message": "Access denied: Capability token does not grant WRITE permission on chunk 1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
 }
 ```

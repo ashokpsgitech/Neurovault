@@ -37,16 +37,19 @@ public class StorageController {
     private final HostRegistrationService hostRegistrationService;
     private final UserRepository userRepository;
     private final com.neurovault.backend.security.JwtUtils jwtUtils;
+    private final com.neurovault.backend.security.capability.CapabilityTokenService capabilityTokenService;
 
     public StorageController(
             StorageService storageService,
             HostRegistrationService hostRegistrationService,
             UserRepository userRepository,
-            com.neurovault.backend.security.JwtUtils jwtUtils) {
+            com.neurovault.backend.security.JwtUtils jwtUtils,
+            com.neurovault.backend.security.capability.CapabilityTokenService capabilityTokenService) {
         this.storageService = storageService;
         this.hostRegistrationService = hostRegistrationService;
         this.userRepository = userRepository;
         this.jwtUtils = jwtUtils;
+        this.capabilityTokenService = capabilityTokenService;
     }
 
     /**
@@ -116,8 +119,11 @@ public class StorageController {
             @Valid @RequestBody StoreChunkRequest request,
             Principal principal) {
         UUID targetHostId;
-        if (hostId != null && isValidChunkToken(chunkToken, hostId)) {
-            targetHostId = hostId;
+        if (chunkToken != null && !chunkToken.isBlank()) {
+            targetHostId = hostId != null ? hostId : resolveHostId(null, principal);
+            capabilityTokenService.validateToken(
+                    chunkToken, targetHostId, request.getChunkId(),
+                    com.neurovault.backend.security.capability.CapabilityOperation.WRITE);
         } else {
             targetHostId = resolveHostId(hostId, principal);
         }
@@ -143,8 +149,11 @@ public class StorageController {
             @RequestHeader(value = "X-Chunk-Token", required = false) String chunkToken,
             Principal principal) {
         UUID targetHostId;
-        if (hostId != null && isValidChunkToken(chunkToken, hostId)) {
-            targetHostId = hostId;
+        if (chunkToken != null && !chunkToken.isBlank()) {
+            targetHostId = hostId != null ? hostId : resolveHostId(null, principal);
+            capabilityTokenService.validateToken(
+                    chunkToken, targetHostId, chunkId,
+                    com.neurovault.backend.security.capability.CapabilityOperation.READ);
         } else {
             targetHostId = resolveHostId(hostId, principal);
         }
@@ -166,22 +175,6 @@ public class StorageController {
         log.info("DELETE /api/storage/chunks/{} for host {}", chunkId, targetHostId);
         storageService.deleteChunk(targetHostId, chunkId);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * Validates a scoped chunk capability token issued by the Coordinator.
-     */
-    private boolean isValidChunkToken(String chunkToken, UUID targetHostId) {
-        if (chunkToken == null || chunkToken.isBlank() || targetHostId == null) {
-            return false;
-        }
-        try {
-            String subject = jwtUtils.getUsernameFromToken(chunkToken);
-            return subject != null && subject.contains(":host:" + targetHostId);
-        } catch (Exception e) {
-            log.warn("Invalid or expired chunk capability token for host {}: {}", targetHostId, e.getMessage());
-            return false;
-        }
     }
 
     /**

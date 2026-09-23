@@ -7,6 +7,7 @@ import com.neurovault.backend.exception.ResourceNotFoundException;
 import com.neurovault.backend.repository.HostRepository;
 import com.neurovault.backend.repository.StorageContainerRepository;
 import com.neurovault.backend.storage.config.StorageProperties;
+import com.neurovault.backend.storage.container.ContainerContext;
 import com.neurovault.backend.storage.container.ContainerManager;
 import com.neurovault.backend.storage.dto.ChunkMetadataDto;
 import com.neurovault.backend.storage.dto.StorageStatusResponse;
@@ -20,6 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -27,14 +30,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Service bridging REST controllers with the StorageEngine and ContainerManager.
- * Also persists container metadata to PostgreSQL via StorageContainerRepository.
- *
- * <p>This service coordinates between:
- * <ul>
- *   <li>The database (Host, StorageContainer entities)</li>
- *   <li>The binary container file (ContainerManager, StorageEngine)</li>
- * </ul>
+ * Service bridging REST controllers and data plane services with StorageEngine and ContainerManager.
+ * Manages multi-host container concurrency and coordinates with PostgreSQL metadata.
  */
 @Service
 public class StorageService {
@@ -63,12 +60,6 @@ public class StorageService {
 
     /**
      * Creates a new storage container for a host.
-     *
-     * @param hostId        the UUID of the host
-     * @param size          the reservation size
-     * @param containerPath optional client-specified path for the container file;
-     *                      if null or blank, uses the default server-side path
-     * @return storage status after creation
      */
     @Transactional
     public StorageStatusResponse createStorage(UUID hostId, StorageReservationSize size, String containerPath) {
@@ -77,7 +68,6 @@ public class StorageService {
         Host host = hostRepository.findById(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("Host not found with ID: " + hostId));
 
-        // Secure path resolution: client-specified path must reside strictly within the managed storage base directory
         Path resolvedPath;
         if (containerPath != null && !containerPath.isBlank()) {
             Path candidate = Paths.get(containerPath).normalize().toAbsolutePath();
@@ -96,17 +86,15 @@ public class StorageService {
             resolvedPath = resolveContainerPath(hostId);
         }
 
-        // Create the binary container file on disk if it does not exist
-        if (!java.nio.file.Files.exists(resolvedPath)) {
+        if (!Files.exists(resolvedPath)) {
             log.info("Creating disk container file at: {}", resolvedPath);
-            containerManager.createContainer(resolvedPath, size.getBytes());
-            storageEngine.initialize();
+            containerManager.createContainer(hostId, resolvedPath, size.getBytes());
+            storageEngine.initialize(hostId);
         } else {
             log.info("Disk container file already exists at: {}, opening container", resolvedPath);
-            ensureContainerOpen(resolvedPath);
+            ensureContainerOpen(hostId, resolvedPath);
         }
 
-        // Persist container metadata to the database
         StorageContainer containerEntity;
         java.util.Optional<StorageContainer> existingContainer = containerRepository.findByHostId(hostId);
         if (existingContainer.isPresent()) {
@@ -125,20 +113,17 @@ public class StorageService {
 
         containerRepository.save(containerEntity);
 
-        // Update the host's reserved capacity
         host.setReservedCapacityBytes(size.getBytes());
         hostRepository.save(host);
 
         log.info("Storage container created for host {} at {} ({} bytes locked on disk)",
                 hostId, resolvedPath, size.getBytes());
 
-        return buildStatusResponse(host, containerEntity);
+        return buildStatusResponse(hostId, host, containerEntity);
     }
 
     /**
-     * Deletes a host's storage container (both file and DB record).
-     *
-     * @param hostId the UUID of the host
+     * Deletes a host's storage container.
      */
     @Transactional
     public void deleteStorage(UUID hostId) {
@@ -151,14 +136,9 @@ public class StorageService {
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
         Path containerPath = Paths.get(containerEntity.getFilePath());
-
-        // Close and delete the binary container file
-        containerManager.deleteContainer(containerPath);
-
-        // Remove from database
+        containerManager.deleteContainer(hostId, containerPath);
         containerRepository.delete(containerEntity);
 
-        // Reset host storage capacity
         host.setReservedCapacityBytes(0L);
         host.setUsedCapacityBytes(0L);
         hostRepository.save(host);
@@ -168,9 +148,6 @@ public class StorageService {
 
     /**
      * Returns the storage status of a host's container.
-     *
-     * @param hostId the UUID of the host
-     * @return storage status response
      */
     @Transactional(readOnly = true)
     public StorageStatusResponse getStorageStatus(UUID hostId) {
@@ -180,43 +157,51 @@ public class StorageService {
         StorageContainer containerEntity = containerRepository.findByHostId(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
-        // Ensure the container is open for reading live metrics
-        ensureContainerOpen(containerEntity);
+        ensureContainerOpen(hostId, containerEntity);
 
-        return StorageStatusResponse.builder()
-                .containerSizeBytes(containerEntity.getTotalSize())
-                .usedSpaceBytes(storageEngine.calculateUsedSpace())
-                .freeSpaceBytes(storageEngine.calculateFreeSpace())
-                .chunkCount(storageEngine.countActiveChunks())
-                .hostStatus(host.getStatus().name())
-                .containerStatus(containerEntity.getStatus().name())
-                .build();
+        return buildStatusResponse(hostId, host, containerEntity);
     }
 
     /**
      * Stores an encrypted chunk in the host's container.
-     *
-     * @param hostId  the UUID of the host
-     * @param request the chunk data and metadata
-     * @return the metadata of the stored chunk
      */
     @Transactional
     public ChunkMetadataDto storeChunk(UUID hostId, StoreChunkRequest request) {
         StorageContainer containerEntity = containerRepository.findByHostId(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
-        ensureContainerOpen(containerEntity);
+        ensureContainerOpen(hostId, containerEntity);
 
         UUID ownerId = request.getOwnerId() != null
                 ? request.getOwnerId()
                 : (containerEntity.getHost().getOwner() != null ? containerEntity.getHost().getOwner().getId() : UUID.randomUUID());
 
         ChunkMetadata metadata = storageEngine.storeChunk(
-                request.getChunkId(), ownerId, request.getData());
+                hostId, request.getChunkId(), ownerId, request.getData());
 
-        // Update used capacity in the host entity
         Host host = containerEntity.getHost();
-        host.setUsedCapacityBytes(storageEngine.calculateUsedSpace());
+        host.setUsedCapacityBytes(storageEngine.calculateUsedSpace(hostId));
+        hostRepository.save(host);
+
+        return mapToDto(metadata);
+    }
+
+    /**
+     * Stores a chunk via bounded streaming without loading into memory.
+     */
+    @Transactional
+    public ChunkMetadataDto storeChunkStream(UUID hostId, UUID chunkId, UUID ownerId,
+                                            InputStream in, long size, String expectedSha256) {
+        StorageContainer containerEntity = containerRepository.findByHostId(hostId)
+                .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
+
+        ensureContainerOpen(hostId, containerEntity);
+
+        ChunkMetadata metadata = storageEngine.storeChunkStream(
+                hostId, chunkId, ownerId, in, size, expectedSha256);
+
+        Host host = containerEntity.getHost();
+        host.setUsedCapacityBytes(storageEngine.calculateUsedSpace(hostId));
         hostRepository.save(host);
 
         return mapToDto(metadata);
@@ -224,10 +209,6 @@ public class StorageService {
 
     /**
      * Reads an encrypted chunk from the host's container.
-     *
-     * @param hostId  the UUID of the host
-     * @param chunkId the UUID of the chunk
-     * @return the raw encrypted bytes
      */
     public byte[] readChunk(UUID hostId, UUID chunkId) {
         if (hostId == null) {
@@ -237,99 +218,95 @@ public class StorageService {
         StorageContainer containerEntity = containerRepository.findByHostId(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
-        ensureContainerOpen(containerEntity);
+        ensureContainerOpen(hostId, containerEntity);
 
-        return storageEngine.readChunk(chunkId);
+        return storageEngine.readChunk(hostId, chunkId);
+    }
+
+    /**
+     * Opens a read stream for a chunk.
+     */
+    public InputStream readChunkStream(UUID hostId, UUID chunkId) {
+        if (hostId == null) {
+            throw new BadRequestException("hostId is required to read a chunk");
+        }
+
+        StorageContainer containerEntity = containerRepository.findByHostId(hostId)
+                .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
+
+        ensureContainerOpen(hostId, containerEntity);
+
+        return storageEngine.readChunkStream(hostId, chunkId);
     }
 
     /**
      * Deletes a chunk from the host's container.
-     *
-     * @param hostId  the UUID of the host
-     * @param chunkId the UUID of the chunk to delete
      */
     @Transactional
     public void deleteChunk(UUID hostId, UUID chunkId) {
         StorageContainer containerEntity = containerRepository.findByHostId(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
-        ensureContainerOpen(containerEntity);
+        ensureContainerOpen(hostId, containerEntity);
 
-        storageEngine.deleteChunk(chunkId);
+        storageEngine.deleteChunk(hostId, chunkId);
 
-        // Update used capacity
         Host host = containerEntity.getHost();
-        host.setUsedCapacityBytes(storageEngine.calculateUsedSpace());
+        host.setUsedCapacityBytes(storageEngine.calculateUsedSpace(hostId));
         hostRepository.save(host);
     }
 
     /**
      * Lists all active chunks in the host's container.
-     *
-     * @param hostId the UUID of the host
-     * @return list of chunk metadata DTOs
      */
     public List<ChunkMetadataDto> listChunks(UUID hostId) {
         StorageContainer containerEntity = containerRepository.findByHostId(hostId)
                 .orElseThrow(() -> new ResourceNotFoundException("No storage container found for host: " + hostId));
 
-        ensureContainerOpen(containerEntity);
+        ensureContainerOpen(hostId, containerEntity);
 
-        return storageEngine.listChunks().stream()
+        return storageEngine.listChunks(hostId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
 
+    public boolean verifyChunkIntegrity(UUID hostId, UUID chunkId, String expectedSha256) {
+        return storageEngine.verifyChunkIntegrity(hostId, chunkId, expectedSha256);
+    }
+
     // ---- Private helpers ----
 
-    /**
-     * Resolves the file path for a host's container.
-     */
     private Path resolveContainerPath(UUID hostId) {
         return Paths.get(storageProperties.getBaseDir(), hostId.toString(), CONTAINER_FILENAME);
     }
 
-    /**
-     * Ensures the container file is open. If not, opens it and re-initializes the engine.
-     */
-    private void ensureContainerOpen(StorageContainer containerEntity) {
-        ensureContainerOpen(Paths.get(containerEntity.getFilePath()));
+    public void ensureContainerOpen(UUID hostId, StorageContainer containerEntity) {
+        ensureContainerOpen(hostId, Paths.get(containerEntity.getFilePath()));
     }
 
-    private void ensureContainerOpen(Path path) {
-        Path normalizedTarget = path.normalize().toAbsolutePath();
-        Path currentlyOpen = containerManager.getContainerPath() != null ? containerManager.getContainerPath().normalize().toAbsolutePath() : null;
-
-        if (!containerManager.isOpen() || !normalizedTarget.equals(currentlyOpen)) {
+    public void ensureContainerOpen(UUID hostId, Path path) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        if (ctx == null || !ctx.isOpen()) {
             try {
-                if (containerManager.isOpen()) {
-                    containerManager.closeContainer();
-                }
-                containerManager.openContainer(normalizedTarget);
-                storageEngine.initialize();
+                containerManager.openContainer(hostId, path);
+                storageEngine.initialize(hostId);
             } catch (ContainerException e) {
-                throw new ContainerException("Failed to open container at " + path, e);
+                throw new ContainerException("Failed to open container for host " + hostId + " at " + path, e);
             }
         }
     }
 
-    /**
-     * Builds a StorageStatusResponse from entity data and the storage engine's live metrics.
-     */
-    private StorageStatusResponse buildStatusResponse(Host host, StorageContainer containerEntity) {
+    private StorageStatusResponse buildStatusResponse(UUID hostId, Host host, StorageContainer containerEntity) {
         return StorageStatusResponse.builder()
                 .containerSizeBytes(containerEntity.getTotalSize())
-                .usedSpaceBytes(storageEngine.calculateUsedSpace())
-                .freeSpaceBytes(storageEngine.calculateFreeSpace())
-                .chunkCount(storageEngine.countActiveChunks())
+                .usedSpaceBytes(storageEngine.calculateUsedSpace(hostId))
+                .freeSpaceBytes(storageEngine.calculateFreeSpace(hostId))
+                .chunkCount(storageEngine.countActiveChunks(hostId))
                 .hostStatus(host.getStatus().name())
                 .containerStatus(containerEntity.getStatus().name())
                 .build();
     }
 
-    /**
-     * Maps a ChunkMetadata model to a ChunkMetadataDto.
-     */
     private ChunkMetadataDto mapToDto(ChunkMetadata metadata) {
         return ChunkMetadataDto.builder()
                 .chunkId(metadata.getChunkId())

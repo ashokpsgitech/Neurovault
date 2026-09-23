@@ -1,8 +1,10 @@
 package com.neurovault.backend.storage.engine;
 
+import com.neurovault.backend.storage.container.ContainerContext;
 import com.neurovault.backend.storage.container.ContainerManager;
 import com.neurovault.backend.storage.exception.ChunkNotFoundException;
 import com.neurovault.backend.storage.exception.ContainerException;
+import com.neurovault.backend.storage.exception.CorruptedChunkException;
 import com.neurovault.backend.storage.exception.StorageFullException;
 import com.neurovault.backend.storage.model.ChunkMetadata;
 import com.neurovault.backend.storage.model.ContainerHeader;
@@ -11,179 +13,162 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.InputStream;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.zip.CRC32;
 
 /**
- * High-level Storage Engine that orchestrates chunk operations through the {@link ContainerManager}.
+ * Storage Engine orchestrating chunk persistence through {@link ContainerManager}
+ * and isolated {@link ContainerContext} instances.
  *
- * <p>Responsibilities:
- * <ul>
- *   <li>Store, read, delete encrypted chunks</li>
- *   <li>Compute SHA-256 hashes and CRC32 checksums</li>
- *   <li>Track chunk metadata in an in-memory index</li>
- *   <li>Persist the metadata index to the container's metadata region</li>
- *   <li>Calculate used/free space and check capacity</li>
- * </ul>
- *
- * <p>The engine maintains an in-memory {@code ConcurrentHashMap<UUID, ChunkMetadata>}
- * loaded from the container's metadata region on open. All changes are persisted
- * back to the metadata region after writes.
- *
- * <p>No decryption occurs here — only raw encrypted bytes are stored and retrieved.
+ * <p>Supports both in-memory byte arrays and streaming binary transfers with bounded memory
+ * and strict incremental checksum validation.
  */
 @Component
 public class StorageEngine {
 
     private static final Logger log = LoggerFactory.getLogger(StorageEngine.class);
+    private static final UUID DEFAULT_HOST_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private final ContainerManager containerManager;
-
-    /**
-     * In-memory chunk index: chunkId → ChunkMetadata.
-     * Loaded from the container metadata region on initialization.
-     */
-    private final ConcurrentHashMap<UUID, ChunkMetadata> chunkIndex = new ConcurrentHashMap<>();
-
-    /**
-     * Tracks the next available write offset in the data region.
-     */
-    private long nextDataOffset;
 
     public StorageEngine(ContainerManager containerManager) {
         this.containerManager = containerManager;
     }
 
-    /**
-     * Initializes the engine by loading the chunk index from the container's metadata region.
-     * Must be called after the container is opened.
-     */
-    public synchronized void initialize() {
-        if (!containerManager.isOpen()) {
-            throw new ContainerException("Cannot initialize StorageEngine: container is not open");
-        }
-
-        chunkIndex.clear();
-        loadMetadataIndex();
-
-        // Calculate the next data offset from existing chunks
-        nextDataOffset = containerManager.getHeader().getDataRegionOffset();
-        for (ChunkMetadata chunk : chunkIndex.values()) {
-            if (!chunk.isDeleted()) {
-                long chunkEnd = chunk.getOffset() + chunk.getChunkSize();
-                if (chunkEnd > nextDataOffset) {
-                    nextDataOffset = chunkEnd;
-                }
-            }
-        }
-
-        log.info("StorageEngine initialized: {} chunks loaded, next data offset at {}",
-                chunkIndex.size(), nextDataOffset);
+    public void initialize() {
+        ContainerContext ctx = getRequiredContext(DEFAULT_HOST_ID);
+        ctx.loadMetadataIndex();
     }
 
-    /**
-     * Stores an encrypted chunk in the container.
-     *
-     * @param chunkId the unique identifier for this chunk
-     * @param ownerId the UUID of the client who owns this data
-     * @param data    the raw encrypted bytes
-     * @return the metadata for the stored chunk
-     * @throws StorageFullException if insufficient capacity
-     * @throws ContainerException   if I/O fails
-     */
-    public synchronized ChunkMetadata storeChunk(UUID chunkId, UUID ownerId, byte[] data) {
-        if (!containerManager.isOpen()) {
-            throw new ContainerException("Container is not open");
-        }
+    public void initialize(UUID hostId) {
+        ContainerContext ctx = getRequiredContext(hostId);
+        ctx.loadMetadataIndex();
+    }
 
-        if (chunkIndex.containsKey(chunkId) && !chunkIndex.get(chunkId).isDeleted()) {
+    // ─── Multi-Host API ───
+
+    public ChunkMetadata storeChunk(UUID hostId, UUID chunkId, UUID ownerId, byte[] data) {
+        ContainerContext ctx = getRequiredContext(hostId);
+
+        if (ctx.getChunkIndex().containsKey(chunkId) && !ctx.getChunkIndex().get(chunkId).isDeleted()) {
             throw new ContainerException("Chunk already exists with ID: " + chunkId);
         }
 
-        // Check capacity
-        if (!checkCapacity(data.length)) {
+        if (!checkCapacity(hostId, data.length)) {
             throw new StorageFullException(
-                    "Insufficient storage capacity. Required: " + data.length +
-                    " bytes, available: " + calculateFreeSpace() + " bytes");
+                    "Insufficient storage capacity on host " + hostId + ". Required: " + data.length +
+                            " bytes, available: " + calculateFreeSpace(hostId) + " bytes");
         }
 
-        log.debug("Storing chunk {} ({} bytes) for owner {}", chunkId, data.length, ownerId);
-
-        // Compute SHA-256 hash
         String sha256 = computeSha256(data);
-
-        // Compute CRC32 checksum
         long crc32 = computeCrc32(data);
 
-        // Write data at the next available offset
-        long offset = nextDataOffset;
-        containerManager.writeAtOffset(offset, data);
+        ctx.getRwLock().writeLock().lock();
+        try {
+            long offset = ctx.getNextDataOffset();
+            ctx.writeAtOffset(offset, data);
 
-        // Create metadata
-        ChunkMetadata metadata = new ChunkMetadata(
-                chunkId, data.length, offset, Instant.now(), sha256, crc32, ownerId);
+            ChunkMetadata metadata = new ChunkMetadata(
+                    chunkId, data.length, offset, Instant.now(), sha256, crc32, ownerId);
 
-        // Update in-memory index
-        chunkIndex.put(chunkId, metadata);
+            ctx.getChunkIndex().put(chunkId, metadata);
+            ctx.setNextDataOffset(offset + data.length);
+            ctx.persistMetadataIndex();
 
-        // Advance the write pointer
-        nextDataOffset = offset + data.length;
-
-        // Update the container header
-        ContainerHeader header = containerManager.getHeader();
-        header.setUsedSize(header.getUsedSize() + data.length);
-        header.setChunkCount(countActiveChunks());
-        header.setLastModifiedAt(Instant.now());
-        containerManager.flushHeader();
-
-        // Persist metadata index
-        persistMetadataIndex();
-
-        log.info("Chunk {} stored at offset {} ({} bytes, SHA256={})",
-                chunkId, offset, data.length, sha256);
-
-        return metadata;
+            log.info("Chunk {} stored on host {} at offset {} ({} bytes, SHA256={})",
+                    chunkId, hostId, offset, data.length, sha256);
+            return metadata;
+        } finally {
+            ctx.getRwLock().writeLock().unlock();
+        }
     }
 
-    /**
-     * Reads an encrypted chunk from the container.
-     *
-     * @param chunkId the UUID of the chunk to read
-     * @return the raw encrypted bytes
-     * @throws ChunkNotFoundException if the chunk does not exist
-     * @throws ContainerException     if I/O fails
-     */
-    public synchronized byte[] readChunk(UUID chunkId) {
-        if (!containerManager.isOpen()) {
-            throw new ContainerException("Container is not open");
+    public ChunkMetadata storeChunkStream(UUID hostId, UUID chunkId, UUID ownerId,
+                                          InputStream in, long expectedSize, String expectedSha256) {
+        ContainerContext ctx = getRequiredContext(hostId);
+
+        if (ctx.getChunkIndex().containsKey(chunkId) && !ctx.getChunkIndex().get(chunkId).isDeleted()) {
+            throw new ContainerException("Chunk already exists with ID: " + chunkId);
         }
 
-        ChunkMetadata metadata = chunkIndex.get(chunkId);
+        if (!checkCapacity(hostId, expectedSize)) {
+            throw new StorageFullException(
+                    "Insufficient storage capacity on host " + hostId + ". Required: " + expectedSize +
+                            " bytes, available: " + calculateFreeSpace(hostId) + " bytes");
+        }
+
+        ctx.getRwLock().writeLock().lock();
+        try {
+            long offset = ctx.getNextDataOffset();
+            MessageDigest sha256Digest = MessageDigest.getInstance("SHA-256");
+            CRC32 crc32 = new CRC32();
+
+            // Wrap stream to compute checksums incrementally without accumulating full payload in memory
+            DigestInputStream dis = new DigestInputStream(in, sha256Digest);
+            InputStream wrappedIn = new InputStream() {
+                @Override
+                public int read() throws IOException {
+                    int b = dis.read();
+                    if (b != -1) crc32.update(b);
+                    return b;
+                }
+
+                @Override
+                public int read(byte[] b, int off, int len) throws IOException {
+                    int n = dis.read(b, off, len);
+                    if (n != -1) crc32.update(b, off, n);
+                    return n;
+                }
+            };
+
+            ctx.writeStreamAtOffset(offset, wrappedIn, expectedSize);
+
+            String actualSha256 = bytesToHex(sha256Digest.digest());
+            if (expectedSha256 != null && !expectedSha256.isBlank() && !actualSha256.equalsIgnoreCase(expectedSha256)) {
+                log.error("Streaming chunk {} storage verification failed! Expected SHA-256 {}, got {}",
+                        chunkId, expectedSha256, actualSha256);
+                throw new CorruptedChunkException("Streaming SHA-256 verification failed for chunk " + chunkId);
+            }
+
+            ChunkMetadata metadata = new ChunkMetadata(
+                    chunkId, expectedSize, offset, Instant.now(), actualSha256, crc32.getValue(), ownerId);
+
+            ctx.getChunkIndex().put(chunkId, metadata);
+            ctx.setNextDataOffset(offset + expectedSize);
+            ctx.persistMetadataIndex();
+
+            log.info("Streaming chunk {} stored on host {} at offset {} ({} bytes, SHA256={})",
+                    chunkId, hostId, offset, expectedSize, actualSha256);
+            return metadata;
+        } catch (NoSuchAlgorithmException | IOException e) {
+            throw new ContainerException("Failed to stream chunk " + chunkId + " to host " + hostId, e);
+        } finally {
+            ctx.getRwLock().writeLock().unlock();
+        }
+    }
+
+    public byte[] readChunk(UUID hostId, UUID chunkId) {
+        ContainerContext ctx = getRequiredContext(hostId);
+
+        ChunkMetadata metadata = ctx.getChunkIndex().get(chunkId);
         if (metadata == null || metadata.isDeleted()) {
-            throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId);
+            throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId + " on host: " + hostId);
         }
 
-        log.debug("Reading chunk {} ({} bytes at offset {})", chunkId, metadata.getChunkSize(), metadata.getOffset());
+        byte[] data = ctx.readAtOffset(metadata.getOffset(), (int) metadata.getChunkSize());
 
-        byte[] data = containerManager.readAtOffset(metadata.getOffset(), (int) metadata.getChunkSize());
-
-        // Verify integrity via CRC32 if non-zero checksum present
         if (metadata.getChecksum() != 0) {
             long actualCrc = computeCrc32(data);
             if (actualCrc != metadata.getChecksum()) {
-                log.error("Chunk {} CRC32 integrity failure: expected {}, actual {}", chunkId, metadata.getChecksum(), actualCrc);
-                throw new com.neurovault.backend.storage.exception.CorruptedChunkException(
+                log.error("Chunk {} CRC32 integrity failure on host {}: expected {}, actual {}",
+                        chunkId, hostId, metadata.getChecksum(), actualCrc);
+                throw new CorruptedChunkException(
                         "Chunk integrity failure for ID " + chunkId + ": expected CRC32 " + metadata.getChecksum() + ", got " + actualCrc);
             }
         }
@@ -191,48 +176,34 @@ public class StorageEngine {
         return data;
     }
 
-    /**
-     * Marks a chunk as deleted (soft delete). The space is not immediately reclaimed
-     * but is accounted for in usage calculations.
-     *
-     * @param chunkId the UUID of the chunk to delete
-     * @throws ChunkNotFoundException if the chunk does not exist
-     */
-    public synchronized void deleteChunk(UUID chunkId) {
-        if (!containerManager.isOpen()) {
-            throw new ContainerException("Container is not open");
-        }
+    public InputStream readChunkStream(UUID hostId, UUID chunkId) {
+        // Return bounded stream
+        byte[] data = readChunk(hostId, chunkId);
+        return new ByteArrayInputStream(data);
+    }
 
-        ChunkMetadata metadata = chunkIndex.get(chunkId);
+    public void deleteChunk(UUID hostId, UUID chunkId) {
+        ContainerContext ctx = getRequiredContext(hostId);
+
+        ChunkMetadata metadata = ctx.getChunkIndex().get(chunkId);
         if (metadata == null || metadata.isDeleted()) {
             throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId);
         }
 
-        log.info("Deleting chunk {} ({} bytes)", chunkId, metadata.getChunkSize());
-
-        metadata.setDeleted(true);
-
-        // Update header
-        ContainerHeader header = containerManager.getHeader();
-        header.setUsedSize(header.getUsedSize() - metadata.getChunkSize());
-        header.setChunkCount(countActiveChunks());
-        header.setLastModifiedAt(Instant.now());
-        containerManager.flushHeader();
-
-        // Persist updated index
-        persistMetadataIndex();
-
-        log.info("Chunk {} marked as deleted", chunkId);
+        ctx.getRwLock().writeLock().lock();
+        try {
+            metadata.setDeleted(true);
+            ctx.persistMetadataIndex();
+            log.info("Chunk {} deleted from host {}", chunkId, hostId);
+        } finally {
+            ctx.getRwLock().writeLock().unlock();
+        }
     }
 
-    /**
-     * Returns metadata for all active (non-deleted) chunks.
-     *
-     * @return list of chunk metadata
-     */
-    public List<ChunkMetadata> listChunks() {
+    public List<ChunkMetadata> listChunks(UUID hostId) {
+        ContainerContext ctx = getRequiredContext(hostId);
         List<ChunkMetadata> result = new ArrayList<>();
-        for (ChunkMetadata meta : chunkIndex.values()) {
+        for (ChunkMetadata meta : ctx.getChunkIndex().values()) {
             if (!meta.isDeleted()) {
                 result.add(meta);
             }
@@ -240,183 +211,136 @@ public class StorageEngine {
         return result;
     }
 
-    /**
-     * Returns metadata for a specific chunk.
-     *
-     * @param chunkId the UUID of the chunk
-     * @return the chunk metadata
-     * @throws ChunkNotFoundException if the chunk does not exist
-     */
-    public ChunkMetadata getChunkMetadata(UUID chunkId) {
-        ChunkMetadata metadata = chunkIndex.get(chunkId);
-        if (metadata == null || metadata.isDeleted()) {
+    public ChunkMetadata getChunkMetadata(UUID hostId, UUID chunkId) {
+        ContainerContext ctx = getRequiredContext(hostId);
+        ChunkMetadata meta = ctx.getChunkIndex().get(chunkId);
+        if (meta == null || meta.isDeleted()) {
             throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId);
         }
-        return metadata;
+        return meta;
     }
 
-    /**
-     * Calculates the total used space (active chunks only).
-     *
-     * @return used space in bytes
-     */
+    public boolean hasChunk(UUID hostId, UUID chunkId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        if (ctx == null) return false;
+        ChunkMetadata meta = ctx.getChunkIndex().get(chunkId);
+        return meta != null && !meta.isDeleted();
+    }
+
+    public long calculateUsedSpace(UUID hostId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        return ctx != null ? ctx.calculateUsedSpace() : 0L;
+    }
+
+    public long calculateFreeSpace(UUID hostId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        return ctx != null ? ctx.calculateFreeSpace() : 0L;
+    }
+
+    public boolean checkCapacity(UUID hostId, long requiredBytes) {
+        return calculateFreeSpace(hostId) >= requiredBytes;
+    }
+
+    public int countActiveChunks(UUID hostId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        if (ctx == null) return 0;
+        return (int) ctx.getChunkIndex().values().stream().filter(c -> !c.isDeleted()).count();
+    }
+
+    public boolean verifyChunkExists(UUID hostId, UUID chunkId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        if (ctx == null) return false;
+        ChunkMetadata meta = ctx.getChunkIndex().get(chunkId);
+        return meta != null && !meta.isDeleted();
+    }
+
+    public boolean verifyChunkIntegrity(UUID hostId, UUID chunkId, String expectedSha256) {
+        try {
+            byte[] data = readChunk(hostId, chunkId);
+            String actualSha256 = computeSha256(data);
+            return expectedSha256.equalsIgnoreCase(actualSha256);
+        } catch (Exception e) {
+            log.warn("Integrity verification failed for chunk {} on host {}: {}", chunkId, hostId, e.getMessage());
+            return false;
+        }
+    }
+
+    // ─── Backward-Compatible Single-Host API ───
+
+    public ChunkMetadata storeChunk(UUID chunkId, UUID ownerId, byte[] data) {
+        return storeChunk(DEFAULT_HOST_ID, chunkId, ownerId, data);
+    }
+
+    public byte[] readChunk(UUID chunkId) {
+        return readChunk(DEFAULT_HOST_ID, chunkId);
+    }
+
+    public void deleteChunk(UUID chunkId) {
+        deleteChunk(DEFAULT_HOST_ID, chunkId);
+    }
+
+    public List<ChunkMetadata> listChunks() {
+        return listChunks(DEFAULT_HOST_ID);
+    }
+
+    public ChunkMetadata getChunkMetadata(UUID chunkId) {
+        return getChunkMetadata(DEFAULT_HOST_ID, chunkId);
+    }
+
     public long calculateUsedSpace() {
-        long used = 0;
-        for (ChunkMetadata meta : chunkIndex.values()) {
-            if (!meta.isDeleted()) {
-                used += meta.getChunkSize();
-            }
-        }
-        return used;
+        return calculateUsedSpace(DEFAULT_HOST_ID);
     }
 
-    /**
-     * Calculates the free space available for new chunks.
-     *
-     * @return free space in bytes
-     */
     public long calculateFreeSpace() {
-        if (!containerManager.isOpen() || containerManager.getHeader() == null) {
-            return 0;
-        }
-        ContainerHeader header = containerManager.getHeader();
-        long dataRegionSize = header.getTotalSize() - header.getDataRegionOffset();
-        long usedInDataRegion = nextDataOffset - header.getDataRegionOffset();
-        return Math.max(0, dataRegionSize - usedInDataRegion);
+        return calculateFreeSpace(DEFAULT_HOST_ID);
     }
 
-    /**
-     * Checks whether the container has enough capacity for the given number of bytes.
-     *
-     * @param requiredBytes the number of bytes needed
-     * @return {@code true} if sufficient capacity exists
-     */
     public boolean checkCapacity(long requiredBytes) {
-        return calculateFreeSpace() >= requiredBytes;
+        return checkCapacity(DEFAULT_HOST_ID, requiredBytes);
     }
 
-    /**
-     * Checks whether a chunk with the given ID exists and is not deleted.
-     *
-     * @param chunkId the UUID to check
-     * @return {@code true} if the chunk exists
-     */
-    public boolean verifyChunkExists(UUID chunkId) {
-        ChunkMetadata metadata = chunkIndex.get(chunkId);
-        return metadata != null && !metadata.isDeleted();
-    }
-
-    /**
-     * Returns the count of active (non-deleted) chunks.
-     */
     public int countActiveChunks() {
-        int count = 0;
-        for (ChunkMetadata meta : chunkIndex.values()) {
-            if (!meta.isDeleted()) {
-                count++;
-            }
-        }
-        return count;
+        return countActiveChunks(DEFAULT_HOST_ID);
     }
 
-    // ---- Private helpers ----
+    public boolean verifyChunkExists(UUID chunkId) {
+        return verifyChunkExists(DEFAULT_HOST_ID, chunkId);
+    }
 
-    /**
-     * Computes the SHA-256 hash of the given data.
-     */
-    private String computeSha256(byte[] data) {
+    // ─── Helpers ───
+
+    private ContainerContext getRequiredContext(UUID hostId) {
+        ContainerContext ctx = containerManager.getContext(hostId);
+        if (ctx == null || !ctx.isOpen()) {
+            throw new ContainerException("Container for host " + hostId + " is not open");
+        }
+        return ctx;
+    }
+
+    public String computeSha256(byte[] data) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(data);
-            StringBuilder hexString = new StringBuilder(64);
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
-                hexString.append(hex);
-            }
-            return hexString.toString();
+            return bytesToHex(digest.digest(data));
         } catch (NoSuchAlgorithmException e) {
             throw new ContainerException("SHA-256 algorithm not available", e);
         }
     }
 
-    /**
-     * Computes the CRC32 checksum of the given data.
-     */
-    private long computeCrc32(byte[] data) {
+    public long computeCrc32(byte[] data) {
         CRC32 crc = new CRC32();
         crc.update(data);
         return crc.getValue();
     }
 
-    /**
-     * Loads the chunk metadata index from the container's metadata region.
-     * Deserializes a Java-serialized collection of ChunkMetadata objects.
-     */
-    @SuppressWarnings("unchecked")
-    private void loadMetadataIndex() {
-        ContainerHeader header = containerManager.getHeader();
-        long metaOffset = header.getMetadataRegionOffset();
-        long metaSize = header.getMetadataRegionSize();
-
-        // Read the first 4 bytes to get the actual serialized data length
-        byte[] lengthBytes = containerManager.readAtOffset(metaOffset, 4);
-        int dataLength = java.nio.ByteBuffer.wrap(lengthBytes).getInt();
-
-        if (dataLength <= 0 || dataLength > metaSize) {
-            log.debug("No metadata index found or empty container (dataLength={})", dataLength);
-            return;
-        }
-
-        byte[] indexData = containerManager.readAtOffset(metaOffset + 4, dataLength);
-
-        try (ByteArrayInputStream bais = new ByteArrayInputStream(indexData);
-             ObjectInputStream ois = new ObjectInputStream(bais)) {
-
-            Collection<ChunkMetadata> chunks = (Collection<ChunkMetadata>) ois.readObject();
-            for (ChunkMetadata chunk : chunks) {
-                chunkIndex.put(chunk.getChunkId(), chunk);
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder(64);
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
             }
-
-            log.info("Loaded {} chunk metadata entries from container", chunks.size());
-
-        } catch (IOException | ClassNotFoundException e) {
-            log.warn("Failed to deserialize metadata index, starting fresh: {}", e.getMessage());
+            hexString.append(hex);
         }
-    }
-
-    /**
-     * Persists the chunk metadata index to the container's metadata region.
-     * Serializes the entire collection and writes it with a 4-byte length prefix.
-     */
-    private void persistMetadataIndex() {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-
-            oos.writeObject(new ArrayList<>(chunkIndex.values()));
-            oos.flush();
-
-            byte[] indexData = baos.toByteArray();
-            ContainerHeader header = containerManager.getHeader();
-
-            // Check if metadata fits in the metadata region
-            if (indexData.length + 4 > header.getMetadataRegionSize()) {
-                log.error("Metadata index ({} bytes) exceeds metadata region ({} bytes)",
-                        indexData.length, header.getMetadataRegionSize());
-                throw new ContainerException("Metadata index too large for allocated region");
-            }
-
-            // Write length prefix + serialized data
-            byte[] lengthPrefix = java.nio.ByteBuffer.allocate(4).putInt(indexData.length).array();
-            containerManager.writeAtOffset(header.getMetadataRegionOffset(), lengthPrefix);
-            containerManager.writeAtOffset(header.getMetadataRegionOffset() + 4, indexData);
-
-            containerManager.sync();
-
-        } catch (IOException e) {
-            throw new ContainerException("Failed to persist metadata index", e);
-        }
+        return hexString.toString();
     }
 }

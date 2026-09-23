@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import '../../../core/network/p2p_webrtc_service.dart';
+import '../../../core/security/capability_token_validator.dart';
 import '../../../core/utils/debug_log_service.dart';
 import '../data/host_repository.dart';
 
@@ -141,12 +142,20 @@ class ChunkHttpServer {
           final chunkToken = request.headers.value('X-Chunk-Token') ??
               request.headers.value('Authorization')?.replaceFirst(RegExp(r'^Bearer\s+'), '');
 
-          if (chunkToken == null || chunkToken.trim().isEmpty) {
-            DebugLogService().warn('[ChunkHttpServer] Blocked unauthenticated request to $chunkId from ${request.connectionInfo?.remoteAddress.address}');
+          final expectedOp = request.method == 'POST' ? 'WRITE' : 'READ';
+          final validation = CapabilityTokenValidator.validate(
+            token: chunkToken,
+            expectedChunkId: chunkId,
+            expectedOperation: expectedOp,
+            expectedHostId: _hostId,
+          );
+
+          if (!validation.isValid) {
+            DebugLogService().warn('[ChunkHttpServer] Blocked unauthorized request to $chunkId: ${validation.error}');
             request.response
-              ..statusCode = HttpStatus.unauthorized
+              ..statusCode = HttpStatus.forbidden
               ..headers.contentType = ContentType.json
-              ..write('{"error":"Unauthorized: Missing required chunk capability token"}');
+              ..write('{"error":"Forbidden: ${validation.error}"}');
             await request.response.close();
             return;
           }

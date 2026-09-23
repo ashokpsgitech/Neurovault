@@ -9,7 +9,9 @@ import java.util.UUID;
  * Entity representing a replica of a chunk stored on a host.
  */
 @Entity
-@Table(name = "chunk_replicas")
+@Table(name = "chunk_replicas", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_replica_chunk_host", columnNames = {"chunk_id", "host_id"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -53,7 +55,13 @@ public class ChunkReplica {
     }
 
     public enum Status {
+        PLANNED,
+        RESERVED,
+        TRANSFERRING,
+        VERIFIED,
         ACTIVE,
+        FAILED,
+        RETRYING,
         MISSING,
         CORRUPTED
     }

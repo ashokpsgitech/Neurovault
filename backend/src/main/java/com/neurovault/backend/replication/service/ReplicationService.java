@@ -69,11 +69,19 @@ public class ReplicationService {
                     .orElseThrow(() -> new ReplicationException("Host not found: " + hostId));
 
             // Prevent duplicate replicas on the same host for the same chunk
-            boolean alreadyExists = existingReplicas.stream()
-                    .anyMatch(r -> r.getHost().getId().equals(hostId)
-                            && r.getStatus() == ChunkReplica.Status.ACTIVE);
-            if (alreadyExists) {
-                log.warn("Replica already exists for chunk {} on host {} — skipping",
+            Optional<ChunkReplica> existing = existingReplicas.stream()
+                    .filter(r -> r.getHost().getId().equals(hostId))
+                    .findFirst();
+            if (existing.isPresent()) {
+                ChunkReplica existingReplica = existing.get();
+                if (existingReplica.getStatus() != ChunkReplica.Status.ACTIVE) {
+                    existingReplica.setStatus(ChunkReplica.Status.ACTIVE);
+                    ChunkReplica updated = chunkReplicaRepository.save(existingReplica);
+                    replicas.add(updated);
+                } else {
+                    replicas.add(existingReplica);
+                }
+                log.info("Replica already exists for chunk {} on host {} — marked ACTIVE",
                         chunkId, hostId);
                 continue;
             }
@@ -157,21 +165,16 @@ public class ReplicationService {
      * @return list of under-replicated chunk IDs with their deficit
      */
     public Map<UUID, Integer> getUnderReplicatedChunks() {
-        List<Chunk> activeChunks = chunkRepository.findByStatus(Chunk.Status.ACTIVE);
+        List<Object[]> rows = chunkReplicaRepository.findUnderReplicatedChunksAggregate(config.getFactor());
         Map<UUID, Integer> underReplicated = new LinkedHashMap<>();
-
-        for (Chunk chunk : activeChunks) {
-            long activeCount = chunkReplicaRepository.findByChunkId(chunk.getId()).stream()
-                    .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
-                    .count();
-
-            int deficit = config.getFactor() - (int) activeCount;
+        for (Object[] row : rows) {
+            UUID chunkId = (UUID) row[0];
+            int deficit = ((Number) row[1]).intValue();
             if (deficit > 0) {
-                underReplicated.put(chunk.getId(), deficit);
+                underReplicated.put(chunkId, deficit);
             }
         }
-
-        log.info("Found {} under-replicated chunks", underReplicated.size());
+        log.info("Found {} under-replicated chunks using aggregate query", underReplicated.size());
         return underReplicated;
     }
 

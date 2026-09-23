@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:uuid/uuid.dart';
+import '../security/capability_token_validator.dart';
 import '../utils/debug_log_service.dart';
 
 /// ───────────────────────────────────────────────────────────────
@@ -67,6 +68,7 @@ class P2PWebRTCService {
     required String hostId,
     required String chunkId,
     required Uint8List chunkBytes,
+    String? capabilityToken,
     Duration timeout = const Duration(seconds: 45),
   }) async {
     final sessionId = _uuid.v4();
@@ -113,8 +115,8 @@ class P2PWebRTCService {
         if (state == RTCDataChannelState.RTCDataChannelOpen) {
           // Channel open — send chunk size header then chunk bytes
           try {
-            // 1. Send handshake: chunkId|size
-            final handshake = '$chunkId|${chunkBytes.length}';
+            // 1. Send handshake: chunkId|size|capabilityToken
+            final handshake = '$chunkId|${chunkBytes.length}|${capabilityToken ?? ''}';
             dc!.send(RTCDataChannelMessage(handshake));
 
             // 2. Send chunk bytes in 64KB slices (WebRTC message size limit)
@@ -163,6 +165,7 @@ class P2PWebRTCService {
         'type': 'upload',
         'chunkId': chunkId,
         'chunkSize': chunkBytes.length,
+        if (capabilityToken != null) 'capabilityToken': capabilityToken,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -226,6 +229,7 @@ class P2PWebRTCService {
   Future<Uint8List?> downloadChunkViaPeer({
     required String hostId,
     required String chunkId,
+    String? capabilityToken,
     Duration timeout = const Duration(seconds: 60),
   }) async {
     final sessionId = _uuid.v4();
@@ -268,13 +272,21 @@ class P2PWebRTCService {
 
       dc.onDataChannelState = (state) {
         DebugLogService().info('[P2PRTC] Download DataChannel state → $state');
-        if (state == RTCDataChannelState.RTCDataChannelClosed) {
+        if (state == RTCDataChannelState.RTCDataChannelOpen) {
+          final req = 'GET|$chunkId|${capabilityToken ?? ''}';
+          dc!.send(RTCDataChannelMessage(req));
+        } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
           if (!completer.isCompleted) completer.complete(null);
         }
       };
 
       dc.onMessage = (msg) {
         if (!receivingBinary) {
+          if (msg.text.startsWith('ERR:')) {
+            DebugLogService().warn('[P2PRTC] Host rejected download for $chunkId: ${msg.text}');
+            if (!completer.isCompleted) completer.complete(null);
+            return;
+          }
           // First message is the header: "chunkId|size"
           final parts = msg.text.split('|');
           if (parts.length == 2) {
@@ -312,6 +324,7 @@ class P2PWebRTCService {
         'offer': offer.sdp,
         'type': 'download',
         'chunkId': chunkId,
+        if (capabilityToken != null) 'capabilityToken': capabilityToken,
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -451,8 +464,24 @@ class P2PWebRTCService {
         channel.onMessage = (msg) async {
           if (!receivingBinary) {
             final parts = msg.text.split('|');
-            if (parts.length == 2) {
+            if (parts.length >= 2) {
               expectedSize = int.tryParse(parts[1]);
+              final token = (parts.length >= 3 && parts[2].isNotEmpty)
+                  ? parts[2]
+                  : sessionData['capabilityToken']?.toString();
+              final hostId = sessionRef.parent.parent?.id;
+              final validation = CapabilityTokenValidator.validate(
+                token: token,
+                expectedChunkId: chunkId,
+                expectedOperation: 'WRITE',
+                expectedHostId: hostId,
+              );
+              if (!validation.isValid) {
+                DebugLogService().warn('[P2PRTC] [HOST] Upload rejected: ${validation.error}');
+                channel.send(RTCDataChannelMessage('ERR:forbidden:${validation.error}'));
+                await sessionRef.update({'status': 'error'});
+                return;
+              }
               receivingBinary = true;
             } else if (msg.text == '__EOF__') {
               await _finalizeUploadWrite(
@@ -567,8 +596,25 @@ class P2PWebRTCService {
       pc.onDataChannel = (channel) {
         DebugLogService().info('[P2PRTC] [HOST] Download DataChannel received from client: ${channel.label}');
 
-        Future<void> sendChunkData() async {
+        Future<void> sendChunkData([String? tokenFromMsg]) async {
           try {
+            final token = (tokenFromMsg != null && tokenFromMsg.isNotEmpty)
+                ? tokenFromMsg
+                : sessionData['capabilityToken']?.toString();
+            final hostId = sessionRef.parent.parent?.id;
+            final validation = CapabilityTokenValidator.validate(
+              token: token,
+              expectedChunkId: chunkId,
+              expectedOperation: 'READ',
+              expectedHostId: hostId,
+            );
+            if (!validation.isValid) {
+              DebugLogService().warn('[P2PRTC] [HOST] Download rejected: ${validation.error}');
+              channel.send(RTCDataChannelMessage('ERR:forbidden:${validation.error}'));
+              await sessionRef.update({'status': 'error'});
+              return;
+            }
+
             final bytes = await onRead(chunkId);
             if (bytes != null && bytes.isNotEmpty) {
               channel.send(RTCDataChannelMessage('$chunkId|${bytes.length}'));
@@ -594,6 +640,14 @@ class P2PWebRTCService {
             try { channel.send(RTCDataChannelMessage('ERR:$e')); } catch (_) {}
           }
         }
+
+        channel.onMessage = (msg) {
+          if (msg.text.startsWith('GET|')) {
+            final parts = msg.text.split('|');
+            final token = parts.length >= 3 ? parts[2] : null;
+            sendChunkData(token);
+          }
+        };
 
         if (channel.state == RTCDataChannelState.RTCDataChannelOpen) {
           sendChunkData();

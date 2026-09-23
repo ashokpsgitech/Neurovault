@@ -8,7 +8,9 @@ import java.util.UUID;
  * Entity representing a single encrypted file chunk.
  */
 @Entity
-@Table(name = "chunks")
+@Table(name = "chunks", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_chunk_file_index", columnNames = {"file_id", "chunk_index"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

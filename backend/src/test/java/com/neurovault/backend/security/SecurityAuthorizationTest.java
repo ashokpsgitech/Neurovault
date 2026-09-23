@@ -270,17 +270,28 @@ class SecurityAuthorizationTest {
             storageController.storeChunk(hostBob.getId(), null, storeReq, alicePrincipal);
         });
 
-        // Now Coordinator generates valid chunk token for Bob's host
+        // Now Coordinator generates valid WRITE chunk token for Bob's host
         UUID sessionId = UUID.randomUUID();
-        String validToken = coordinatorService.generateChunkToken(sessionId, hostBob.getId(), 0);
+        String writeToken = coordinatorService.generateChunkToken(
+                sessionId, hostBob.getId(), chunkId, 0,
+                com.neurovault.backend.security.capability.CapabilityOperation.WRITE);
 
-        // Alice stores chunk using the chunk token -> succeeds!
-        var storedResponse = storageController.storeChunk(hostBob.getId(), validToken, storeReq, alicePrincipal);
+        // Alice stores chunk using the WRITE chunk token -> succeeds!
+        var storedResponse = storageController.storeChunk(hostBob.getId(), writeToken, storeReq, alicePrincipal);
         assertNotNull(storedResponse);
         assertEquals(chunkId, storedResponse.getBody().getChunkId());
 
-        // Alice reads chunk using the chunk token -> succeeds!
-        var readResponse = storageController.readChunk(chunkId, hostBob.getId(), validToken, alicePrincipal);
+        // Attempting to read with the WRITE token is strictly rejected!
+        assertThrows(AccessDeniedException.class, () -> {
+            storageController.readChunk(chunkId, hostBob.getId(), writeToken, alicePrincipal);
+        });
+
+        // Generate distinct READ chunk token -> read succeeds!
+        String readToken = coordinatorService.generateChunkToken(
+                sessionId, hostBob.getId(), chunkId, 0,
+                com.neurovault.backend.security.capability.CapabilityOperation.READ);
+
+        var readResponse = storageController.readChunk(chunkId, hostBob.getId(), readToken, alicePrincipal);
         assertNotNull(readResponse);
         assertArrayEquals(new byte[]{10, 20, 30, 40}, readResponse.getBody());
     }

@@ -46,6 +46,17 @@ public class ReplicationTask {
     @Column(name = "last_error", length = 1000)
     private String lastError;
 
+    @Column(name = "worker_id", length = 100)
+    private String workerId;
+
+    @Builder.Default
+    @Column(name = "max_attempts", nullable = false)
+    private int maxAttempts = 3;
+
+    @Builder.Default
+    @Column(name = "backoff_seconds", nullable = false)
+    private int backoffSeconds = 30;
+
     @Column(name = "lease_expires_at")
     private LocalDateTime leaseExpiresAt;
 
