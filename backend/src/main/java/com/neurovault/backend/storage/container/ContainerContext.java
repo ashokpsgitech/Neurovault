@@ -19,6 +19,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.zip.CRC32;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 /**
  * Encapsulates the runtime context and state of an isolated host container.
  *
@@ -30,6 +35,10 @@ import java.util.zip.CRC32;
 public class ContainerContext implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(ContainerContext.class);
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     /** Magic bytes for crash-safe metadata index region: "NVID" (NeuroVault Index Data) */
     public static final int INDEX_MAGIC = 0x4E564944;
@@ -253,6 +262,60 @@ public class ContainerContext implements Closeable {
     }
 
     /**
+     * Returns a streaming {@link InputStream} for a chunk stored at the given file offset and length.
+     *
+     * <p>This is a true streaming implementation that reads from {@link FileChannel} using
+     * bounded 64KB buffers without materializing the full chunk in memory (O(1) memory).
+     * The read lock is held for the lifetime of the returned stream — callers MUST close it.
+     *
+     * <p>Fixes NV-P0-04: previously the streaming read path fell back to loading the entire
+     * chunk array into memory via {@code readAtOffset()} before wrapping it in a
+     * {@code ByteArrayInputStream}. This implementation uses a lazy FileChannel-backed
+     * bounded-buffer approach instead.
+     *
+     * @param offset  absolute file offset of the chunk data
+     * @param length  exact length of the chunk in bytes
+     * @return bounded InputStream backed by FileChannel — caller must close
+     */
+    public InputStream readStreamAtOffset(long offset, long length) {
+        rwLock.readLock().lock();
+        ensureOpen();
+
+        // The read lock is acquired here and released when the stream is closed.
+        // The stream reads lazily from the FileChannel with a bounded 64KB buffer.
+        final long[] position = {offset};
+        final long[] remaining = {length};
+        final byte[] buf = new byte[65536];
+
+        return new InputStream() {
+            @Override
+            public int read() throws IOException {
+                byte[] single = new byte[1];
+                int n = read(single, 0, 1);
+                return n == -1 ? -1 : (single[0] & 0xFF);
+            }
+
+            @Override
+            public int read(byte[] b, int off, int len) throws IOException {
+                if (remaining[0] <= 0) return -1;
+                int toRead = (int) Math.min(len, Math.min(remaining[0], buf.length));
+                ByteBuffer buffer = ByteBuffer.wrap(buf, 0, toRead);
+                int n = fileChannel.read(buffer, position[0]);
+                if (n <= 0) return -1;
+                System.arraycopy(buf, 0, b, off, n);
+                position[0] += n;
+                remaining[0] -= n;
+                return n;
+            }
+
+            @Override
+            public void close() {
+                rwLock.readLock().unlock();
+            }
+        };
+    }
+
+    /**
      * Flushes system buffers to persistent storage (fsync).
      */
     public void sync() {
@@ -281,20 +344,16 @@ public class ContainerContext implements Closeable {
     }
 
     /**
-     * Crash-safe metadata index persistence.
-     * Writes [INDEX_MAGIC 4B][LENGTH 4B][CRC32 8B][SERIALIZED DATA] to metadata region.
+     * Crash-safe metadata index persistence (NV-P0-05).
+     * Writes [INDEX_MAGIC 4B][LENGTH 4B][CRC32 8B][JSON UTF-8 DATA] to metadata region.
+     * Uses standard cross-platform JSON format compatible with Flutter and mobile hosts.
      */
     public void persistMetadataIndex() {
         rwLock.writeLock().lock();
         try {
             ensureOpen();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-                oos.writeObject(new ArrayList<>(chunkIndex.values()));
-                oos.flush();
-            }
+            byte[] serialized = OBJECT_MAPPER.writeValueAsBytes(new ArrayList<>(chunkIndex.values()));
 
-            byte[] serialized = baos.toByteArray();
             long metaSize = header.getMetadataRegionSize();
             if (serialized.length + 16 > metaSize) {
                 throw new ContainerException("Metadata index exceeds allocated metadata region size");
@@ -333,7 +392,7 @@ public class ContainerContext implements Closeable {
     /**
      * Crash-safe metadata index loading.
      * Validates magic bytes and CRC32 checksum before applying in-memory index.
-     * Supports backward compatibility with legacy 4-byte length prefix format.
+     * Supports both modern JSON format and legacy Java serialization format (NV-P0-05).
      */
     @SuppressWarnings("unchecked")
     public void loadMetadataIndex() {
@@ -376,8 +435,8 @@ public class ContainerContext implements Closeable {
                     }
                 }
             } else if (firstInt > 0 && firstInt <= metaSize - 4) {
-                // Backward compatibility: Legacy 4-byte length prefix
-                log.info("Reading legacy metadata format for host {}", hostId);
+                // Backward compatibility: Legacy 4-byte length prefix (e.g. Flutter format or old Java)
+                log.info("Reading legacy/direct length-prefixed metadata format for host {}", hostId);
                 int dataLength = firstInt;
                 ByteBuffer dataBuf = ByteBuffer.allocate(dataLength);
                 fileChannel.read(dataBuf, metaOffset + 4);
@@ -387,15 +446,30 @@ public class ContainerContext implements Closeable {
             }
 
             if (serializedData != null && serializedData.length > 0) {
-                try (ByteArrayInputStream bais = new ByteArrayInputStream(serializedData);
-                     ObjectInputStream ois = new ObjectInputStream(bais)) {
-                    Collection<ChunkMetadata> chunks = (Collection<ChunkMetadata>) ois.readObject();
-                    for (ChunkMetadata chunk : chunks) {
-                        chunkIndex.put(chunk.getChunkId(), chunk);
+                // Check if modern JSON format (starts with '[' or '{') or legacy Java serialization (0xAC 0xED)
+                if (serializedData[0] == '[' || serializedData[0] == '{') {
+                    try {
+                        List<ChunkMetadata> chunks = OBJECT_MAPPER.readValue(serializedData,
+                                new TypeReference<List<ChunkMetadata>>() {});
+                        for (ChunkMetadata chunk : chunks) {
+                            chunkIndex.put(chunk.getChunkId(), chunk);
+                        }
+                        log.info("Loaded {} chunks into index from JSON for host {}", chunkIndex.size(), hostId);
+                    } catch (Exception e) {
+                        log.error("Failed to parse JSON chunk metadata index for host {}: {}", hostId, e.getMessage());
                     }
-                    log.info("Loaded {} chunks into index for host {}", chunkIndex.size(), hostId);
-                } catch (Exception e) {
-                    log.error("Failed to deserialize chunk metadata index for host {}: {}", hostId, e.getMessage());
+                } else {
+                    // Legacy Java ObjectInputStream fallback
+                    try (ByteArrayInputStream bais = new ByteArrayInputStream(serializedData);
+                         ObjectInputStream ois = new ObjectInputStream(bais)) {
+                        Collection<ChunkMetadata> chunks = (Collection<ChunkMetadata>) ois.readObject();
+                        for (ChunkMetadata chunk : chunks) {
+                            chunkIndex.put(chunk.getChunkId(), chunk);
+                        }
+                        log.info("Loaded {} chunks into index from legacy binary for host {}", chunkIndex.size(), hostId);
+                    } catch (Exception e) {
+                        log.error("Failed to deserialize legacy chunk metadata index for host {}: {}", hostId, e.getMessage());
+                    }
                 }
             }
         } catch (IOException e) {

@@ -127,54 +127,80 @@ public class SelfHealingServiceTest {
     }
 
     @Test
-    public void testHealChunk_Success() {
-        // Place 1 replica on HostA. Deficit = 2
-        replicationService.assignReplicas(chunk.getId(), List.of(hostA.getId()));
-
+    public void testHealChunk_NoActiveSource_UnrecoverableCase() {
+        // No replicas exist at all - no ACTIVE source.
+        // NV-P0-01 fix: healChunk must refuse to create phantom ACTIVE replicas.
+        // Previously this would call assignReplicas() and create fake ACTIVE replicas.
         int repaired = selfHealingService.healChunk(chunk.getId(), 2);
-        assertEquals(2, repaired);
 
-        // Verify active replicas count is now 3
+        // Must return 0 - cannot heal without a verified physical source
+        assertEquals(0, repaired);
+
+        // Must NOT have created any phantom ACTIVE replicas
         long activeReplicas = chunkReplicaRepository.findByChunkId(chunk.getId()).stream()
                 .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
                 .count();
-        assertEquals(3, activeReplicas);
+        assertEquals(0, activeReplicas);
     }
 
     @Test
-    public void testRunHealingCycle_Success() {
-        // Deficit = 3 (since no replicas exist)
+    public void testHealChunk_WithActiveSource_TransferFails_NoPhantomReplicas() {
+        // Create a legitimate ACTIVE source replica directly (simulates data plane having stored bytes)
+        ChunkReplica sourceReplica = chunkReplicaRepository.save(ChunkReplica.builder()
+                .chunk(chunk)
+                .host(hostA)
+                .containerOffsetBytes(0L)
+                .status(ChunkReplica.Status.ACTIVE)
+                .build());
+
+        // healChunk will find an ACTIVE source and attempt physical copyChunk.
+        // In this integration test, the physical containers don't exist so copyChunk will throw.
+        // NV-P0-01 fix: the failure must NOT create phantom ACTIVE replicas.
+        int repaired = selfHealingService.healChunk(chunk.getId(), 2);
+
+        // Physical transfer fails -> 0 successfully repaired
+        assertEquals(0, repaired);
+
+        // Only the original sourceReplica should remain ACTIVE - no phantom replicas
+        long activeReplicas = chunkReplicaRepository.findByChunkId(chunk.getId()).stream()
+                .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
+                .count();
+        assertEquals(1, activeReplicas, "Only the original ACTIVE source replica should remain - no phantom replicas");
+    }
+
+    @Test
+    public void testRunHealingCycle_NoActiveSource_UnrecoverablePath() {
+        // No replicas exist - no ACTIVE source anywhere.
+        // NV-P0-01 fix: cycle must detect unrecoverable state and NOT create phantom replicas.
         RepairResultDto result = selfHealingService.runHealingCycle();
 
+        // The chunk is under-replicated (deficit=3)
         assertEquals(1, result.getChunksInspected());
+        // Since sourceHostId == null, we return 0 repaired immediately
         assertEquals(3, result.getRepairsInitiated());
-        assertEquals(3, result.getRepairsSucceeded());
-        assertEquals(0, result.getRepairsFailed());
+        assertEquals(0, result.getRepairsSucceeded());
+        assertEquals(3, result.getRepairsFailed());
 
-        // Verify replicas placed across all 3 hosts
-        List<ChunkReplica> replicas = chunkReplicaRepository.findByChunkId(chunk.getId());
-        assertEquals(3, replicas.size());
-
-        // Verify durable ReplicationTask records were persisted
-        var tasks = taskRepository.findByChunkId(chunk.getId());
-        assertEquals(3, tasks.size());
-        assertEquals(ReplicationTask.Status.SUCCEEDED, tasks.get(0).getStatus());
+        // No phantom replicas created
+        long activeReplicas = chunkReplicaRepository.findByChunkId(chunk.getId()).stream()
+                .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
+                .count();
+        assertEquals(0, activeReplicas, "No phantom ACTIVE replicas should be created without physical source");
     }
 
     @Test
     public void testRunHealingCycle_InsufficientHosts() {
-        // Delete HostB and HostC container or mark them offline to leave only HostA
+        // Put HostB and HostC offline to simulate limited replacement options.
         hostB.setStatus(Host.Status.OFFLINE);
         hostRepository.save(hostB);
         hostC.setStatus(Host.Status.OFFLINE);
         hostRepository.save(hostC);
 
-        // Only Host A is available. Healing should restore 1 replica and fail remaining 2
+        // Without any ACTIVE source, the cycle should detect unrecoverable state.
         RepairResultDto result = selfHealingService.runHealingCycle();
 
         assertEquals(1, result.getChunksInspected());
-        assertEquals(3, result.getRepairsInitiated());
-        assertEquals(1, result.getRepairsSucceeded());
-        assertEquals(2, result.getRepairsFailed());
+        // 0 repaired because no ACTIVE source replica exists
+        assertEquals(0, result.getRepairsSucceeded());
     }
 }

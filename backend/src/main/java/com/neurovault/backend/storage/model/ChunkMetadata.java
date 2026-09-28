@@ -103,6 +103,31 @@ public class ChunkMetadata implements Serializable {
         this.deleted = deleted;
     }
 
+    // Cross-platform compatibility with Flutter / Dart NVLT container index (NV-P0-05)
+    public long getLength() {
+        return chunkSize;
+    }
+
+    public void setLength(long length) {
+        this.chunkSize = length;
+    }
+
+    public String getSha256() {
+        return sha256Hash;
+    }
+
+    public void setSha256(String sha256) {
+        this.sha256Hash = sha256;
+    }
+
+    public long getCreatedAt() {
+        return creationTime != null ? creationTime.toEpochMilli() : 0L;
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.creationTime = Instant.ofEpochMilli(createdAt);
+    }
+
     @Override
     public String toString() {
         return "ChunkMetadata{" +

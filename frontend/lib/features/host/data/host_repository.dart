@@ -337,10 +337,19 @@ class HostRepository extends BaseRepository {
       // 2. Read Metadata Index from container metadata region (offset 256)
       await raf.setPosition(metadataOffset);
       final idxLenBytes = await raf.read(4);
-      final int idxLen = (idxLenBytes.length == 4) ? ByteData.sublistView(idxLenBytes).getInt32(0, Endian.big) : 0;
+      final int firstInt = (idxLenBytes.length == 4) ? ByteData.sublistView(idxLenBytes).getInt32(0, Endian.big) : 0;
+
+      int idxLen = 0;
+      if (firstInt == 0x4E564944) { // "NVID" magic from backend ContainerContext
+        final lenBytes = await raf.read(4);
+        idxLen = (lenBytes.length == 4) ? ByteData.sublistView(lenBytes).getInt32(0, Endian.big) : 0;
+        await raf.read(8); // skip 8-byte CRC32
+      } else {
+        idxLen = firstInt;
+      }
 
       List<Map<String, dynamic>> chunkEntries = [];
-      if (idxLen > 0 && idxLen < metadataSize - 4) {
+      if (idxLen > 0 && idxLen < metadataSize - 16) {
         final idxPayload = await raf.read(idxLen);
         try {
           final decoded = jsonDecode(utf8.decode(idxPayload)) as List<dynamic>;
@@ -354,7 +363,8 @@ class HostRepository extends BaseRepository {
       int nextOffset = dataRegionOffset;
       for (final entry in chunkEntries) {
         if (entry['deleted'] != true) {
-          final int entryEnd = (entry['offset'] as int? ?? 0) + (entry['length'] as int? ?? 0);
+          final int length = (entry['length'] ?? entry['chunkSize']) as int? ?? 0;
+          final int entryEnd = (entry['offset'] as int? ?? 0) + length;
           if (entryEnd > nextOffset) {
             nextOffset = entryEnd;
           }
@@ -452,8 +462,18 @@ class HostRepository extends BaseRepository {
       final idxLenBytes = await raf.read(4);
       if (idxLenBytes.length < 4) return null;
 
-      final int idxLen = ByteData.sublistView(idxLenBytes).getInt32(0, Endian.big);
-      if (idxLen <= 0 || idxLen > metadataSize - 4) return null;
+      final int firstInt = ByteData.sublistView(idxLenBytes).getInt32(0, Endian.big);
+      int idxLen = 0;
+      if (firstInt == 0x4E564944) { // "NVID" magic from backend ContainerContext
+        final lenBytes = await raf.read(4);
+        if (lenBytes.length < 4) return null;
+        idxLen = ByteData.sublistView(lenBytes).getInt32(0, Endian.big);
+        await raf.read(8); // skip 8-byte CRC32
+      } else {
+        idxLen = firstInt;
+      }
+
+      if (idxLen <= 0 || idxLen > metadataSize - 16) return null;
 
       final idxPayload = await raf.read(idxLen);
       final decoded = jsonDecode(utf8.decode(idxPayload)) as List<dynamic>;
@@ -482,7 +502,7 @@ class HostRepository extends BaseRepository {
       }
 
       final int offset = matchEntry['offset'] as int? ?? 0;
-      final int length = matchEntry['length'] as int? ?? 0;
+      final int length = (matchEntry['length'] ?? matchEntry['chunkSize']) as int? ?? 0;
 
       if (offset <= 0 || length <= 0) return null;
 

@@ -19,12 +19,15 @@ import java.util.stream.Collectors;
 /**
  * Core Replication Manager responsible for maintaining chunk replica metadata.
  *
- * <p>Handles the full lifecycle of replicas: assignment, removal, status updates,
- * verification, and metadata generation. This service operates at the <strong>metadata
- * level</strong> — it creates and manages {@link ChunkReplica} records but does not
- * perform actual byte-level data transfer (which is the Data Plane's responsibility).</p>
+ * <p>This service operates at the <strong>metadata level</strong> — it creates and manages
+ * {@link ChunkReplica} records but does NOT perform actual byte-level data transfer
+ * (which is the Data Plane's responsibility via {@code ReplicationTransferService}).
  *
- * @author NeuroVault Team
+ * <p><strong>NV-P0-02 Fix:</strong> {@link #assignReplicas} now creates replicas in
+ * {@code PLANNED} status only. Replicas can only be promoted to {@code ACTIVE} by
+ * {@code ReplicationTransferService.copyChunk()} after verified physical byte transfer.
+ * Callers that previously passed hostIds expecting instant ACTIVE replicas must now
+ * invoke the data-plane transfer service.
  */
 @Slf4j
 @Service
@@ -46,58 +49,65 @@ public class ReplicationService {
     }
 
     /**
-     * Assigns replicas for a chunk on the given hosts.
+     * Assigns replica placement intent for a chunk on the given hosts.
      *
-     * <p>Creates a {@link ChunkReplica} record for each host with status {@code ACTIVE}.</p>
+     * <p><strong>Important:</strong> This method creates replicas in {@code PLANNED} status.
+     * Replicas are NOT usable for reads until physical bytes are transferred and verified
+     * by the data plane, which will promote status to {@code ACTIVE}.
+     *
+     * <p>This method intentionally cannot create {@code ACTIVE} replicas. The only path
+     * to {@code ACTIVE} is {@code ReplicationTransferService.copyChunk()} which enforces
+     * physical byte verification before promotion.
      *
      * @param chunkId the chunk to replicate
      * @param hostIds the hosts on which to place replicas
-     * @return list of created replica records
+     * @return list of created PLANNED replica records
      * @throws ReplicationException if the chunk or any host is not found
      */
     @Transactional
     public List<ChunkReplica> assignReplicas(UUID chunkId, List<UUID> hostIds) {
-        log.info("Assigning {} replicas for chunk {}", hostIds.size(), chunkId);
+        log.info("Assigning {} PLANNED replica slots for chunk {}", hostIds.size(), chunkId);
 
         Chunk chunk = chunkRepository.findById(chunkId)
                 .orElseThrow(() -> new ReplicationException("Chunk not found: " + chunkId));
 
         List<ChunkReplica> existingReplicas = chunkReplicaRepository.findByChunkId(chunkId);
         List<ChunkReplica> replicas = new ArrayList<>();
+
         for (UUID hostId : hostIds) {
             Host host = hostRepository.findById(hostId)
                     .orElseThrow(() -> new ReplicationException("Host not found: " + hostId));
 
-            // Prevent duplicate replicas on the same host for the same chunk
+            // Check for existing replica on this host
             Optional<ChunkReplica> existing = existingReplicas.stream()
                     .filter(r -> r.getHost().getId().equals(hostId))
                     .findFirst();
+
             if (existing.isPresent()) {
                 ChunkReplica existingReplica = existing.get();
-                if (existingReplica.getStatus() != ChunkReplica.Status.ACTIVE) {
-                    existingReplica.setStatus(ChunkReplica.Status.ACTIVE);
-                    ChunkReplica updated = chunkReplicaRepository.save(existingReplica);
-                    replicas.add(updated);
-                } else {
-                    replicas.add(existingReplica);
-                }
-                log.info("Replica already exists for chunk {} on host {} — marked ACTIVE",
-                        chunkId, hostId);
+                // Return existing replica regardless of status — do NOT promote to ACTIVE here.
+                // Physical verification by ReplicationTransferService is required for promotion.
+                log.info("Replica already exists for chunk {} on host {} with status {} — returning existing",
+                        chunkId, hostId, existingReplica.getStatus());
+                replicas.add(existingReplica);
                 continue;
             }
 
+            // Create new replica in PLANNED status — NOT ACTIVE.
+            // The data plane (ReplicationTransferService) must transfer physical bytes
+            // and verify checksums before promoting this to ACTIVE.
             ChunkReplica replica = ChunkReplica.builder()
                     .chunk(chunk)
                     .host(host)
-                    .containerOffsetBytes(0L) // Will be set by the storage engine
-                    .status(ChunkReplica.Status.ACTIVE)
+                    .containerOffsetBytes(0L)
+                    .status(ChunkReplica.Status.PLANNED)
                     .build();
 
             ChunkReplica saved = chunkReplicaRepository.save(replica);
             replicas.add(saved);
             existingReplicas.add(saved);
-            log.debug("Created replica {} for chunk {} on host {}",
-                    replica.getId(), chunkId, hostId);
+            log.debug("Created PLANNED replica {} for chunk {} on host {} — awaiting physical transfer",
+                    saved.getId(), chunkId, hostId);
         }
 
         return replicas;
@@ -135,14 +145,14 @@ public class ReplicationService {
         replica.setStatus(newStatus);
         chunkReplicaRepository.save(replica);
 
-        log.info("Updated replica {} status: {} → {}", replicaId, oldStatus, newStatus);
+        log.info("Updated replica {} status: {} -> {}", replicaId, oldStatus, newStatus);
     }
 
     /**
      * Verifies the replica count for a chunk and returns the deficit.
      *
      * @param chunkId the chunk to verify
-     * @return the deficit (target − active count); 0 or negative means fully replicated
+     * @return the deficit (target - active count); 0 or negative means fully replicated
      */
     public int verifyReplicaCount(UUID chunkId) {
         long activeCount = chunkReplicaRepository.findByChunkId(chunkId).stream()

@@ -2,15 +2,22 @@ package com.neurovault.backend.replication.service;
 
 import com.neurovault.backend.entity.*;
 import com.neurovault.backend.repository.*;
+import com.neurovault.backend.storage.container.ContainerManager;
+import com.neurovault.backend.storage.engine.StorageEngine;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,8 +32,10 @@ import static org.junit.jupiter.api.Assertions.*;
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
 @ActiveProfiles("test")
-@Transactional
 public class LoadBalancingServiceTest {
+
+    @TempDir
+    Path tempDir;
 
     @Autowired
     private LoadBalancingService loadBalancingService;
@@ -52,6 +61,12 @@ public class LoadBalancingServiceTest {
     @Autowired
     private ChunkReplicaRepository chunkReplicaRepository;
 
+    @Autowired
+    private ContainerManager containerManager;
+
+    @Autowired
+    private StorageEngine storageEngine;
+
     private User testUser;
     private Host hostA;
     private Host hostB;
@@ -62,6 +77,7 @@ public class LoadBalancingServiceTest {
     @BeforeEach
     public void setup() {
         chunkReplicaRepository.deleteAll();
+        chunkReplicaRepository.flush();
         chunkRepository.deleteAll();
         fileMetadataRepository.deleteAll();
         containerRepository.deleteAll();
@@ -106,6 +122,13 @@ public class LoadBalancingServiceTest {
                 .build());
     }
 
+    @AfterEach
+    public void teardown() {
+        if (hostA != null) containerManager.closeContainer(hostA.getId());
+        if (hostB != null) containerManager.closeContainer(hostB.getId());
+        if (hostC != null) containerManager.closeContainer(hostC.getId());
+    }
+
     private Host createHealthyHost(String name) {
         Host host = hostRepository.save(Host.builder()
                 .owner(testUser)
@@ -117,9 +140,13 @@ public class LoadBalancingServiceTest {
                 .lastHeartbeat(LocalDateTime.now())
                 .build());
 
+        Path containerPath = tempDir.resolve("container-" + host.getId() + ".container");
+        containerManager.createContainer(host.getId(), containerPath, 10 * 1024 * 1024L);
+        storageEngine.initialize(host.getId());
+
         containerRepository.save(StorageContainer.builder()
                 .host(host)
-                .filePath("/tmp/" + name)
+                .filePath(containerPath.toString())
                 .totalSize(10000L)
                 .status(StorageContainer.Status.ACTIVE)
                 .build());
@@ -127,34 +154,60 @@ public class LoadBalancingServiceTest {
         return host;
     }
 
+    private ChunkReplica createActiveReplica(Chunk chunk, Host host) throws Exception {
+        byte[] data = ("Payload-for-chunk-" + chunk.getId()).getBytes(StandardCharsets.UTF_8);
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        String hash = HexFormat.of().formatHex(md.digest(data));
+        chunk.setChecksum(hash);
+        chunk.setSizeBytes((long) data.length);
+        chunkRepository.save(chunk);
+
+        storageEngine.storeChunkStream(host.getId(), chunk.getId(), testUser.getId(),
+                new ByteArrayInputStream(data), data.length, hash);
+
+        return chunkReplicaRepository.save(ChunkReplica.builder()
+                .chunk(chunk)
+                .host(host)
+                .containerOffsetBytes(0L)
+                .status(ChunkReplica.Status.ACTIVE)
+                .build());
+    }
+
+    private ChunkReplica createActiveReplicaDbOnly(Chunk chunk, Host host) {
+        return chunkReplicaRepository.save(ChunkReplica.builder()
+                .chunk(chunk)
+                .host(host)
+                .containerOffsetBytes(0L)
+                .status(ChunkReplica.Status.ACTIVE)
+                .build());
+    }
+
     @Test
     public void testAnalyzeDistribution_BalancedVsImbalanced() {
-        // Balanced: 1 replica each on all three hosts
-        replicationService.assignReplicas(chunk1.getId(), List.of(hostA.getId(), hostB.getId(), hostC.getId()));
+        createActiveReplicaDbOnly(chunk1, hostA);
+        createActiveReplicaDbOnly(chunk1, hostB);
+        createActiveReplicaDbOnly(chunk1, hostC);
 
         assertFalse(loadBalancingService.analyzeDistribution(), "Perfectly balanced cluster shouldn't need rebalancing");
 
-        // Imbalanced: Host A holds 2, Host B holds 0, Host C holds 0
         chunkReplicaRepository.deleteAll();
-        replicationService.assignReplicas(chunk1.getId(), List.of(hostA.getId()));
-        replicationService.assignReplicas(chunk2.getId(), List.of(hostA.getId()));
+        chunkReplicaRepository.flush();
+        createActiveReplicaDbOnly(chunk1, hostA);
+        createActiveReplicaDbOnly(chunk2, hostA);
 
         assertTrue(loadBalancingService.analyzeDistribution(), "Highly imbalanced cluster should prompt rebalancing");
     }
 
     @Test
-    public void testRebalanceCluster_SuccessfulMigration() {
-        // Overload Host A: store both chunk1 and chunk2 replicas on Host A
-        replicationService.assignReplicas(chunk1.getId(), List.of(hostA.getId()));
-        replicationService.assignReplicas(chunk2.getId(), List.of(hostA.getId()));
+    public void testRebalanceCluster_SuccessfulMigration() throws Exception {
+        createActiveReplica(chunk1, hostA);
+        createActiveReplica(chunk2, hostA);
 
-        // Underloaded: Host B has 0, Host C has 0
         int migrated = loadBalancingService.rebalanceCluster();
         assertEquals(1, migrated, "Should migrate 1 replica to balance the load");
 
         Map<UUID, Integer> distribution = loadBalancingService.getLoadDistribution();
         assertEquals(1, distribution.get(hostA.getId()));
-        // The migrated one must be on Host B or Host C
         assertTrue(distribution.get(hostB.getId()) == 1 || distribution.get(hostC.getId()) == 1);
     }
 }

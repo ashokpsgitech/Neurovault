@@ -31,17 +31,20 @@ public class LoadBalancingService {
     private static final double IMBALANCE_CV_THRESHOLD = 0.5;
 
     private final ReplicationService replicationService;
+    private final ReplicationTransferService replicationTransferService;
     private final HostSelectionService hostSelectionService;
     private final ChunkReplicaRepository chunkReplicaRepository;
     private final HostRepository hostRepository;
     private final ReplicationConfig config;
 
     public LoadBalancingService(ReplicationService replicationService,
+                                ReplicationTransferService replicationTransferService,
                                 HostSelectionService hostSelectionService,
                                 ChunkReplicaRepository chunkReplicaRepository,
                                 HostRepository hostRepository,
                                 ReplicationConfig config) {
         this.replicationService = replicationService;
+        this.replicationTransferService = replicationTransferService;
         this.hostSelectionService = hostSelectionService;
         this.chunkReplicaRepository = chunkReplicaRepository;
         this.hostRepository = hostRepository;
@@ -191,20 +194,23 @@ public class LoadBalancingService {
                     continue; // No suitable target for this chunk
                 }
 
-                // Perform the migration: create new replica, then remove old one
+                // Perform the migration: physically transfer bytes to target host first (NV-P1-07)
                 try {
-                    replicationService.assignReplicas(chunkId, List.of(targetHostId));
+                    ChunkReplica newReplica = replicationTransferService.copyChunk(overloadedHostId, targetHostId, chunkId, null);
+                    if (newReplica == null || newReplica.getStatus() != ChunkReplica.Status.ACTIVE) {
+                        log.warn("Migration failed: target replica for chunk {} on host {} did not reach ACTIVE state",
+                                chunkId, targetHostId);
+                        continue;
+                    }
+
+                    // Once physical data is verified on target host, safely remove old replica from overloaded host
                     replicationService.removeReplica(replicaToMove.getId());
 
-                    // Update capacity accounting
+                    // Update capacity accounting on overloaded host (target host capacity was already updated in copyChunk)
                     long chunkSize = replicaToMove.getChunk().getSizeBytes();
                     hostRepository.findById(overloadedHostId).ifPresent(h -> {
                         h.setUsedCapacityBytes(Math.max(0,
                                 h.getUsedCapacityBytes() - chunkSize));
-                        hostRepository.save(h);
-                    });
-                    hostRepository.findById(targetHostId).ifPresent(h -> {
-                        h.setUsedCapacityBytes(h.getUsedCapacityBytes() + chunkSize);
                         hostRepository.save(h);
                     });
 
@@ -213,12 +219,12 @@ public class LoadBalancingService {
                     distribution.merge(targetHostId, 1, Integer::sum);
 
                     migrated++;
-                    log.debug("Migrated replica for chunk {} from host {} to host {}",
+                    log.info("Migrated replica for chunk {} from host {} to host {}",
                             chunkId, overloadedHostId, targetHostId);
 
                 } catch (Exception e) {
-                    log.warn("Failed to migrate replica for chunk {}: {}",
-                            chunkId, e.getMessage());
+                    log.warn("Failed to migrate replica for chunk {} from {} to {}: {}",
+                            chunkId, overloadedHostId, targetHostId, e.getMessage());
                 }
             }
         }

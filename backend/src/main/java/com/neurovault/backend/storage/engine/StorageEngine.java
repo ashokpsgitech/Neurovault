@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
@@ -79,7 +78,20 @@ public class StorageEngine {
 
             ctx.getChunkIndex().put(chunkId, metadata);
             ctx.setNextDataOffset(offset + data.length);
-            ctx.persistMetadataIndex();
+
+            // NV-P0-03: persist metadata AFTER bytes are durable.
+            // If persistMetadataIndex throws, we roll back the in-memory index entry
+            // so the orphaned physical bytes are not visible as a valid chunk.
+            try {
+                ctx.persistMetadataIndex();
+            } catch (Exception e) {
+                log.error("ROLLBACK: metadata persistence failed for chunk {} on host {} — marking deleted",
+                        chunkId, hostId, e);
+                metadata.setDeleted(true);
+                ctx.setNextDataOffset(offset); // reclaim space logically
+                throw new ContainerException("Metadata persistence failed for chunk " + chunkId +
+                        " — physical bytes written but chunk marked invalid", e);
+            }
 
             log.info("Chunk {} stored on host {} at offset {} ({} bytes, SHA256={})",
                     chunkId, hostId, offset, data.length, sha256);
@@ -141,7 +153,19 @@ public class StorageEngine {
 
             ctx.getChunkIndex().put(chunkId, metadata);
             ctx.setNextDataOffset(offset + expectedSize);
-            ctx.persistMetadataIndex();
+
+            // NV-P0-03: persist metadata AFTER bytes are durable.
+            // If persistMetadataIndex throws, roll back the in-memory index entry.
+            try {
+                ctx.persistMetadataIndex();
+            } catch (Exception e) {
+                log.error("ROLLBACK: metadata persistence failed for streaming chunk {} on host {} — marking deleted",
+                        chunkId, hostId, e);
+                metadata.setDeleted(true);
+                ctx.setNextDataOffset(offset); // reclaim space logically
+                throw new ContainerException("Metadata persistence failed for chunk " + chunkId +
+                        " — physical bytes written but chunk marked invalid", e);
+            }
 
             log.info("Streaming chunk {} stored on host {} at offset {} ({} bytes, SHA256={})",
                     chunkId, hostId, offset, expectedSize, actualSha256);
@@ -176,10 +200,28 @@ public class StorageEngine {
         return data;
     }
 
+    /**
+     * Returns a streaming {@link InputStream} for a chunk, backed by the container's
+     * {@link java.nio.channels.FileChannel} with bounded 64KB reads.
+     *
+     * <p><strong>NV-P0-04 Fix:</strong> Previously this method called {@code readChunk()}
+     * which materialized the full chunk byte array in heap memory before wrapping it in a
+     * {@code ByteArrayInputStream}. This implementation uses
+     * {@link ContainerContext#readStreamAtOffset} to stream directly from the FileChannel
+     * with O(1) memory overhead regardless of chunk size.
+     *
+     * <p>The caller MUST close the returned stream to release the underlying read lock.
+     */
     public InputStream readChunkStream(UUID hostId, UUID chunkId) {
-        // Return bounded stream
-        byte[] data = readChunk(hostId, chunkId);
-        return new ByteArrayInputStream(data);
+        ContainerContext ctx = getRequiredContext(hostId);
+
+        ChunkMetadata metadata = ctx.getChunkIndex().get(chunkId);
+        if (metadata == null || metadata.isDeleted()) {
+            throw new ChunkNotFoundException("Chunk not found with ID: " + chunkId + " on host: " + hostId);
+        }
+
+        // Return a FileChannel-backed streaming InputStream — O(1) memory, no heap accumulation.
+        return ctx.readStreamAtOffset(metadata.getOffset(), metadata.getChunkSize());
     }
 
     public void deleteChunk(UUID hostId, UUID chunkId) {

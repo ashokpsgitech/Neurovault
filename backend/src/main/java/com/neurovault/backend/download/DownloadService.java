@@ -86,11 +86,23 @@ public class DownloadService {
         for (Chunk chunk : chunks) {
             List<ChunkReplica> replicas = chunkReplicaRepository.findByChunkId(chunk.getId());
 
-            Host targetHost = replicas.stream()
-                    .map(ChunkReplica::getHost)
-                    .filter(h -> h != null && h.getStatus() == Host.Status.ONLINE)
+            // Prioritize ACTIVE replicas on ONLINE hosts (NV-P1-08)
+            ChunkReplica selectedReplica = replicas.stream()
+                    .filter(r -> r.getStatus() == ChunkReplica.Status.ACTIVE)
+                    .filter(r -> r.getHost() != null && r.getHost().getStatus() == Host.Status.ONLINE)
                     .findFirst()
                     .orElse(null);
+
+            // Fallback to any non-corrupted/non-failed replica on an ONLINE host
+            if (selectedReplica == null) {
+                selectedReplica = replicas.stream()
+                        .filter(r -> r.getStatus() != ChunkReplica.Status.CORRUPTED && r.getStatus() != ChunkReplica.Status.FAILED)
+                        .filter(r -> r.getHost() != null && r.getHost().getStatus() == Host.Status.ONLINE)
+                        .findFirst()
+                        .orElse(null);
+            }
+
+            Host targetHost = selectedReplica != null ? selectedReplica.getHost() : null;
 
             boolean isAvailable = (targetHost != null);
             UUID hostId = null;
@@ -103,10 +115,12 @@ public class DownloadService {
                 hostId = targetHost.getId();
                 hostName = targetHost.getName() != null ? targetHost.getName() : "Host-Node";
                 publicIp = targetHost.getPublicIp() != null ? targetHost.getPublicIp() : "localhost";
-                downloadToken = coordinatorService.generateChunkToken(session.getId(), hostId, chunk.getChunkIndex());
+                downloadToken = coordinatorService.generateChunkToken(
+                        session.getId(), hostId, chunk.getId(), chunk.getChunkIndex(),
+                        com.neurovault.backend.security.capability.CapabilityOperation.READ);
                 downloadUrl = String.format("%s://%s:%d/api/storage/chunks/%s", scheme, publicIp, hostPort, chunk.getId());
             } else {
-                log.warn("No ONLINE host replica found for chunk {} (fileId={})", chunk.getId(), fileId);
+                log.warn("No healthy ONLINE host replica found for chunk {} (fileId={})", chunk.getId(), fileId);
             }
 
             chunkLocations.add(ChunkLocationDto.builder()

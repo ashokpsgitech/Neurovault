@@ -127,9 +127,12 @@ public class ReplicationServiceTest {
         assertEquals(2, replicas.size());
         assertEquals(2, chunkReplicaRepository.findByChunkId(chunk.getId()).size());
 
+        // NV-P0-02: assignReplicas() creates PLANNED replicas (placement intent only).
+        // Only the data plane (ReplicationTransferService) can promote replicas to ACTIVE
+        // after verified physical byte transfer.
         ChunkReplica r1 = replicas.get(0);
         assertEquals(chunk.getId(), r1.getChunk().getId());
-        assertEquals(ChunkReplica.Status.ACTIVE, r1.getStatus());
+        assertEquals(ChunkReplica.Status.PLANNED, r1.getStatus());
     }
 
     @Test
@@ -173,19 +176,32 @@ public class ReplicationServiceTest {
         assertEquals(1, underReplicated.size());
         assertEquals(3, underReplicated.get(chunk.getId()));
 
-        // Assign 2 replicas
-        replicationService.assignReplicas(chunk.getId(), List.of(hostA.getId(), hostB.getId()));
+        // NV-P0-02: assignReplicas() creates PLANNED replicas (placement intent).
+        // PLANNED replicas do NOT count toward the active replication factor.
+        // Only ACTIVE replicas (promoted by the data plane after physical transfer) reduce the deficit.
+        List<ChunkReplica> plannedReplicas = replicationService.assignReplicas(
+                chunk.getId(), List.of(hostA.getId(), hostB.getId()));
+        assertEquals(ChunkReplica.Status.PLANNED, plannedReplicas.get(0).getStatus());
 
-        // Deficit should now be 1
+        // Deficit is still 3 because PLANNED replicas don't count
+        assertEquals(3, replicationService.verifyReplicaCount(chunk.getId()));
+        assertEquals(1, replicationService.getUnderReplicatedChunks().size());
+
+        // Simulate data plane promoting both replicas to ACTIVE after verified physical transfer
+        replicationService.updateReplicaStatus(plannedReplicas.get(0).getId(), ChunkReplica.Status.ACTIVE);
+        replicationService.updateReplicaStatus(plannedReplicas.get(1).getId(), ChunkReplica.Status.ACTIVE);
+
+        // Deficit should now be 1 (2 ACTIVE, target=3)
         assertEquals(1, replicationService.verifyReplicaCount(chunk.getId()));
         Map<UUID, Integer> underReplicatedAfter = replicationService.getUnderReplicatedChunks();
         assertEquals(1, underReplicatedAfter.size());
         assertEquals(1, underReplicatedAfter.get(chunk.getId()));
 
-        // Assign 3rd replica
-        replicationService.assignReplicas(chunk.getId(), List.of(hostC.getId()));
+        // Assign and promote 3rd replica
+        List<ChunkReplica> thirdReplica = replicationService.assignReplicas(chunk.getId(), List.of(hostC.getId()));
+        replicationService.updateReplicaStatus(thirdReplica.get(0).getId(), ChunkReplica.Status.ACTIVE);
 
-        // Deficit should be 0
+        // Deficit should be 0 — fully replicated
         assertEquals(0, replicationService.verifyReplicaCount(chunk.getId()));
         assertTrue(replicationService.getUnderReplicatedChunks().isEmpty());
     }

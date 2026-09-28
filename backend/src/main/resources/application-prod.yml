@@ -1,0 +1,29 @@
+# Production configuration for NeuroVault Backend
+# Strictly enforces production security invariants:
+# 1. Flyway-managed schema with ddl-auto=validate (NV-P1-19)
+# 2. APP_JWT_SECRET environment variable is strictly required with NO default fallback (NV-P1-20)
+# 3. Secure transport defaults
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER:org.postgresql.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+app:
+  jwt:
+    # Strictly required: No default secret allowed in production
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000}
+
+neurovault:
+  host:
+    use-tls: ${NEUROVAULT_USE_TLS:true}

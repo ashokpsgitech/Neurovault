@@ -23,21 +23,10 @@ import java.util.stream.Collectors;
 /**
  * Core Self-Healing Engine for NeuroVault.
  *
- * <p>Implements verified physical replica recovery workflow:
- * <ol>
- *   <li>Detect under-replicated chunks based on ACTIVE physical replicas</li>
- *   <li>For each under-replicated chunk:
- *     <ol>
- *       <li>Locate surviving verified source replicas</li>
- *       <li>Determine exact replica deficit</li>
- *       <li>Find eligible replacement hosts</li>
- *       <li>Atomically claim a durable replication task</li>
- *       <li>Physically copy encrypted data via {@link ReplicationTransferService}</li>
- *       <li>Verify physical checksums and reserve/commit storage capacity</li>
- *       <li>Publish recovery events and update metrics</li>
- *     </ol>
- *   </li>
- * </ol>
+ * <p>Core Invariant: Replicas are NEVER marked ACTIVE without verified physical bytes.
+ * There is NO fallback path that creates metadata-only ACTIVE replicas. If no ACTIVE
+ * source replica exists, the chunk data is permanently lost and this service refuses
+ * to create phantom replica records.
  */
 @Slf4j
 @Service
@@ -51,6 +40,9 @@ public class SelfHealingService {
     private final HostRepository hostRepository;
     private final ReplicationTaskRepository taskRepository;
     private final ReplicationTransferService replicationTransferService;
+
+    /** Stable worker identity across healing cycles (NV-P1-05). */
+    private final String stableWorkerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
 
     public SelfHealingService(ReplicationService replicationService,
                               HostSelectionService hostSelectionService,
@@ -72,11 +64,11 @@ public class SelfHealingService {
 
     /**
      * Runs a full self-healing cycle: scans for under-replicated chunks and
-     * initiates repairs up to {@code maxConcurrentRepairs}.
+     * initiates repairs up to maxConcurrentRepairs.
      */
     @Transactional
     public RepairResultDto runHealingCycle() {
-        log.info("═══ Starting self-healing cycle ═══");
+        log.info("Starting self-healing cycle");
 
         Map<UUID, Integer> underReplicated = replicationService.getUnderReplicatedChunks();
         int chunksInspected = underReplicated.size();
@@ -86,7 +78,7 @@ public class SelfHealingService {
         List<String> details = new ArrayList<>();
 
         if (underReplicated.isEmpty()) {
-            log.info("All chunks are fully replicated — no repairs needed");
+            log.info("All chunks are fully replicated - no repairs needed");
             return RepairResultDto.builder()
                     .chunksInspected(0)
                     .repairsInitiated(0)
@@ -97,7 +89,7 @@ public class SelfHealingService {
                     .build();
         }
 
-        log.warn("Found {} under-replicated chunks — initiating physical repairs", chunksInspected);
+        log.warn("Found {} under-replicated chunks - initiating physical repairs", chunksInspected);
 
         for (Map.Entry<UUID, Integer> entry : underReplicated.entrySet()) {
             if (repairsInitiated >= config.getMaxConcurrentRepairs()) {
@@ -123,22 +115,20 @@ public class SelfHealingService {
                 }
                 if (repaired < deficit) {
                     details.add(String.format("Chunk %s: %d replicas could not be restored " +
-                            "(insufficient hosts)", chunkId, deficit - repaired));
+                            "(insufficient hosts or no source)", chunkId, deficit - repaired));
                 }
             } catch (Exception e) {
                 log.error("Failed to heal chunk {}: {}", chunkId, e.getMessage(), e);
                 repairsInitiated++;
                 repairsFailed++;
-                details.add(String.format("Chunk %s: repair failed — %s",
+                details.add(String.format("Chunk %s: repair failed - %s",
                         chunkId, e.getMessage()));
-
                 eventPublisher.publishChunkEvent(this, ClusterEventType.REPAIR_FAILED,
                         chunkId, "Repair failed: " + e.getMessage());
             }
         }
 
-        log.info("═══ Self-healing cycle complete: inspected={}, initiated={}, " +
-                        "succeeded={}, failed={} ═══",
+        log.info("Self-healing cycle complete: inspected={}, initiated={}, succeeded={}, failed={}",
                 chunksInspected, repairsInitiated, repairsSucceeded, repairsFailed);
 
         return RepairResultDto.builder()
@@ -153,10 +143,20 @@ public class SelfHealingService {
 
     /**
      * Heals a single under-replicated chunk by physically replicating it onto selected hosts.
+     *
+     * <p>NV-P0-01 Fix: There is NO fallback path that creates metadata-only ACTIVE replicas.
+     * The only way a replica becomes ACTIVE is via ReplicationTransferService.copyChunk(),
+     * which enforces the full verified lifecycle:
+     * PLANNED -> RESERVED -> TRANSFERRING -> VERIFIED -> ACTIVE
+     *
+     * <p>If no ACTIVE source replica exists (data permanently lost), this method returns 0
+     * immediately without creating any phantom replica records.
+     *
+     * @return number of replicas actually restored with verified physical bytes
      */
     @Transactional
     public int healChunk(UUID chunkId, int deficit) {
-        log.info("Healing chunk {} — deficit: {}", chunkId, deficit);
+        log.info("Healing chunk {} - deficit: {}", chunkId, deficit);
 
         eventPublisher.publishChunkEvent(this, ClusterEventType.REPAIR_INITIATED,
                 chunkId, "Initiating repair for deficit of " + deficit);
@@ -174,8 +174,20 @@ public class SelfHealingService {
                 .findFirst()
                 .orElse(null);
 
+        // Invariant: NEVER heal without a surviving physical source.
+        // If no ACTIVE replica exists, data is permanently lost.
+        // Previously (NV-P0-01) this fell back to assignReplicas() creating phantom ACTIVE replicas.
+        // That fallback is now permanently removed.
+        if (sourceHostId == null) {
+            log.error("UNRECOVERABLE: Chunk {} has zero ACTIVE source replicas. " +
+                    "Physical bytes are gone - refusing to create phantom replicas.", chunkId);
+            eventPublisher.publishChunkEvent(this, ClusterEventType.REPAIR_FAILED,
+                    chunkId, "Unrecoverable: no surviving source replica - data may be permanently lost");
+            return 0;
+        }
+
         int repaired = 0;
-        String workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
+        String workerId = this.stableWorkerId;
 
         for (int i = 0; i < deficit; i++) {
             Host replacementHost = null;
@@ -183,7 +195,6 @@ public class SelfHealingService {
             try {
                 replacementHost = hostSelectionService.selectReplacementHost(chunkId, currentHostIds);
 
-                // Create durable task record in PENDING status
                 task = ReplicationTask.builder()
                         .chunkId(chunkId)
                         .sourceHostId(sourceHostId)
@@ -197,31 +208,23 @@ public class SelfHealingService {
                         .build();
                 task = taskRepository.save(task);
 
-                // Atomic lease claiming: ensures only one worker claims and processes the task
                 int claimed = taskRepository.claimTaskAtomic(
                         task.getId(), workerId, LocalDateTime.now().plusMinutes(5), LocalDateTime.now());
 
                 if (claimed > 0) {
                     taskRepository.markRunning(task.getId(), workerId, LocalDateTime.now());
 
-                    if (sourceHostId != null) {
-                        try {
-                            replicationTransferService.copyChunk(sourceHostId, replacementHost.getId(), chunkId, null);
-                        } catch (Exception e) {
-                            log.warn("Physical streaming transfer failed for chunk {}: {}. Falling back to replica assignment.", chunkId, e.getMessage());
-                            replicationService.assignReplicas(chunkId, List.of(replacementHost.getId()));
-                        }
-                    } else {
-                        // Bootstrap / initial placement when no surviving replica exists yet
-                        replicationService.assignReplicas(chunkId, List.of(replacementHost.getId()));
-                    }
+                    // Physical streaming transfer - MUST succeed before replica is marked ACTIVE.
+                    // ReplicationTransferService enforces PLANNED->RESERVED->TRANSFERRING->VERIFIED->ACTIVE.
+                    // There is NO fallback that bypasses physical verification.
+                    replicationTransferService.copyChunk(sourceHostId, replacementHost.getId(), chunkId, null);
 
                     taskRepository.markSucceeded(task.getId(), workerId, LocalDateTime.now());
                     task.setStatus(ReplicationTask.Status.SUCCEEDED);
                     task.setCompletedAt(LocalDateTime.now());
                     taskRepository.save(task);
                 } else {
-                    log.warn("Task {} already claimed by another worker, skipping duplicate execution", task.getId());
+                    log.warn("Task {} already claimed by another worker, skipping", task.getId());
                     continue;
                 }
 
@@ -234,16 +237,17 @@ public class SelfHealingService {
                 analyticsService.incrementRecoveryCount();
                 repaired++;
 
-                log.info("  → Replica {}/{} physically created and verified on host {} for chunk {} (task={})",
+                log.info("  -> Replica {}/{} physically created and verified on host {} for chunk {} (task={})",
                         repaired, deficit, replacementHost.getName(), chunkId, task.getId());
 
             } catch (InsufficientHostsException e) {
-                log.warn("  → No more eligible hosts for chunk {} (placed {}/{})",
+                log.warn("  -> No more eligible hosts for chunk {} (placed {}/{})",
                         chunkId, repaired, deficit);
                 break;
             } catch (Exception e) {
                 log.error("Failed to physically replicate chunk {} to host {}: {}",
-                        chunkId, replacementHost != null ? replacementHost.getId() : "unknown", e.getMessage(), e);
+                        chunkId, replacementHost != null ? replacementHost.getId() : "unknown",
+                        e.getMessage(), e);
                 if (task != null) {
                     taskRepository.markFailed(task.getId(), workerId, e.getMessage(), LocalDateTime.now());
                 }
@@ -252,7 +256,7 @@ public class SelfHealingService {
 
         if (repaired == deficit) {
             eventPublisher.publishChunkEvent(this, ClusterEventType.REPAIR_COMPLETED,
-                    chunkId, "All " + deficit + " replicas restored and verified");
+                    chunkId, "All " + deficit + " replicas physically restored and verified");
         }
 
         return repaired;

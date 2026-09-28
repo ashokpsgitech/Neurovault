@@ -109,8 +109,13 @@ public class CapabilityTokenService {
     }
 
     /**
+     * Cache tracking consumed token IDs (JTIs) for replay prevention on single-use operations (NV-P0-06).
+     */
+    private final java.util.concurrent.ConcurrentHashMap<String, Instant> consumedTokens = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
      * Strictly validates a capability token against the expected request parameters.
-     * Throws {@link AccessDeniedException} if any claim does not match.
+     * Throws {@link AccessDeniedException} if any claim does not match or if a replay is detected.
      */
     public CapabilityToken validateToken(String tokenString, UUID expectedHostId, UUID expectedChunkId, CapabilityOperation expectedOp) {
         if (tokenString == null || tokenString.isBlank()) {
@@ -133,6 +138,7 @@ public class CapabilityTokenService {
             String hostIdStr = claims.get("hostId", String.class);
             String chunkIdStr = claims.get("chunkId", String.class);
             String opStr = claims.get("operation", String.class);
+            String jti = claims.getId();
 
             // Backward compatibility with legacy subject string: chunk-session:{sessionId}:host:{hostId}:index:{index}
             if (hostIdStr == null && claims.getSubject() != null && claims.getSubject().startsWith("chunk-session:")) {
@@ -152,19 +158,35 @@ public class CapabilityTokenService {
                 }
             }
 
-            // 2. Chunk Validation (Exact Match when specified)
-            if (expectedChunkId != null && chunkIdStr != null) {
-                if (!expectedChunkId.toString().equalsIgnoreCase(chunkIdStr)) {
-                    log.warn("Capability token chunk mismatch: token is for chunk {}, requested chunk {}", chunkIdStr, expectedChunkId);
+            // 2. Chunk Validation (Exact Match when specified - NV-P1-01 fix: cannot bypass by omitting claim)
+            if (expectedChunkId != null) {
+                if (chunkIdStr == null || !expectedChunkId.toString().equalsIgnoreCase(chunkIdStr)) {
+                    log.warn("Capability token chunk mismatch: token has chunk {}, expected {}", chunkIdStr, expectedChunkId);
                     throw new AccessDeniedException("Capability token chunk mismatch: unauthorized chunk access");
                 }
             }
 
-            // 3. Operation Validation (Exact Match)
-            if (expectedOp != null && opStr != null) {
-                if (!expectedOp.name().equalsIgnoreCase(opStr)) {
+            // 3. Operation Validation (Exact Match when specified - NV-P1-01 fix: cannot bypass by omitting claim)
+            if (expectedOp != null) {
+                if (opStr == null || !expectedOp.name().equalsIgnoreCase(opStr)) {
                     log.warn("Capability token operation mismatch: token authorizes {}, requested {}", opStr, expectedOp);
                     throw new AccessDeniedException("Capability token operation mismatch: unauthorized operation " + expectedOp);
+                }
+            }
+
+            // 4. Replay Prevention for WRITE operations (NV-P0-06 fix)
+            if (expectedOp == CapabilityOperation.WRITE && jti != null) {
+                Instant expiry = claims.getExpiration() != null
+                        ? claims.getExpiration().toInstant()
+                        : Instant.now().plusSeconds(defaultTtlSeconds);
+                Instant previous = consumedTokens.putIfAbsent(jti, expiry);
+                if (previous != null) {
+                    log.warn("Capability token replay detected for jti {}", jti);
+                    throw new AccessDeniedException("Capability token replay detected: token already consumed");
+                }
+                if (consumedTokens.size() > 5000) {
+                    Instant now = Instant.now();
+                    consumedTokens.entrySet().removeIf(e -> e.getValue().isBefore(now));
                 }
             }
 

@@ -123,7 +123,9 @@ public class UploadService {
                     .build();
             chunkRepository.save(pendingChunk);
 
-            String chunkToken = coordinatorService.generateChunkToken(session.getId(), hostId, i);
+            String chunkToken = coordinatorService.generateChunkToken(
+                    session.getId(), hostId, chunkId, i,
+                    com.neurovault.backend.security.capability.CapabilityOperation.WRITE);
 
             allocations.add(ChunkAllocationDto.builder()
                     .chunkId(chunkId)
@@ -194,15 +196,19 @@ public class UploadService {
                     }
                 }
                 try {
-                    java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-                    byte[] digestBytes = md.digest(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
-                    StringBuilder hex = new StringBuilder();
-                    for (byte b : digestBytes) {
-                        hex.append(String.format("%02x", b));
+                    if (request.getUploadedChunks().size() == 1 && request.getUploadedChunks().get(0).getChunkHash() != null) {
+                        computedFileHash = request.getUploadedChunks().get(0).getChunkHash();
+                    } else {
+                        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+                        byte[] digestBytes = md.digest(sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        StringBuilder hex = new StringBuilder("MERKLE:");
+                        for (byte b : digestBytes) {
+                            hex.append(String.format("%02x", b));
+                        }
+                        computedFileHash = hex.toString();
                     }
-                    computedFileHash = hex.toString();
                 } catch (Exception e) {
-                    throw new BadRequestException("Failed to compute SHA-256 file hash from chunks");
+                    throw new BadRequestException("Failed to compute composite file hash from chunks");
                 }
             } else {
                 throw new BadRequestException("File hash (SHA-256) is required for file completion");

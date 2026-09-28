@@ -94,21 +94,14 @@ public class ReplicationTransferService {
             }
         }
 
-        // 2. Capacity Reservation Check
-        long availableCapacity = targetHost.getTotalCapacityBytes()
-                - targetHost.getReservedCapacityBytes()
-                - targetHost.getUsedCapacityBytes();
-
-        if (availableCapacity < chunkSize) {
-            log.error("Insufficient capacity on target host {}: available {} bytes, required {} bytes",
-                    targetHostId, availableCapacity, chunkSize);
+        // 2. Atomic Capacity Reservation (NV-P1-03: atomic conditional update prevents race conditions)
+        int reservedRows = hostRepository.reserveCapacityAtomic(targetHostId, chunkSize);
+        if (reservedRows == 0) {
+            log.error("Insufficient capacity on target host {}: atomic reservation failed for {} bytes",
+                    targetHostId, chunkSize);
             throw new InsufficientCapacityException(
-                    "Target host " + targetHostId + " has insufficient capacity (" + availableCapacity + " < " + chunkSize + ")");
+                    "Target host " + targetHostId + " has insufficient unreserved capacity for " + chunkSize + " bytes");
         }
-
-        // Reserve capacity
-        targetHost.setReservedCapacityBytes(targetHost.getReservedCapacityBytes() + chunkSize);
-        hostRepository.save(targetHost);
 
         // 3. Lifecycle: PLANNED -> RESERVED
         ChunkReplica replica = existingTarget.orElseGet(() -> ChunkReplica.builder()
@@ -148,10 +141,8 @@ public class ReplicationTransferService {
             replica.setStatus(ChunkReplica.Status.VERIFIED);
             replica = replicaRepository.save(replica);
 
-            // 7. Lifecycle: VERIFIED -> ACTIVE (Commit capacity usage)
-            targetHost.setReservedCapacityBytes(Math.max(0, targetHost.getReservedCapacityBytes() - chunkSize));
-            targetHost.setUsedCapacityBytes(targetHost.getUsedCapacityBytes() + chunkSize);
-            hostRepository.save(targetHost);
+            // 7. Lifecycle: VERIFIED -> ACTIVE (Commit capacity usage atomically)
+            hostRepository.commitReservedCapacity(targetHostId, chunkSize);
 
             replica.setStatus(ChunkReplica.Status.ACTIVE);
             replica = replicaRepository.save(replica);
@@ -165,9 +156,8 @@ public class ReplicationTransferService {
             log.error("Physical replication failed for chunk {} → host {}: {}",
                     chunkId, targetHostId, e.getMessage(), e);
 
-            // Release capacity reservation on failure
-            targetHost.setReservedCapacityBytes(Math.max(0, targetHost.getReservedCapacityBytes() - chunkSize));
-            hostRepository.save(targetHost);
+            // Release capacity reservation on failure atomically
+            hostRepository.releaseCapacityReservation(targetHostId, chunkSize);
 
             replica.setStatus(ChunkReplica.Status.FAILED);
             replicaRepository.save(replica);
